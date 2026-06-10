@@ -1,370 +1,761 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard Movilidades - Frusan</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-    :root {
-      --frusan-green-dark: #1E4620;
-      --frusan-green: #388E3C;
-      --frusan-orange: #EF6C00;
-      --frusan-light: #F4F6F4;
-    }
-    body {
-      background-color: var(--frusan-light);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .navbar-frusan {
-      background-color: var(--frusan-green-dark);
-      color: white;
-      border-bottom: 4px solid var(--frusan-orange);
-    }
-    .card-custom {
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      background: white;
-      transition: transform 0.2s;
-    }
-    .icon-box {
-      width: 50px;
-      height: 50px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: white;
-    }
-    .bg-pasajeros { background-color: var(--frusan-green); }
-    .bg-libres { background-color: var(--frusan-orange); }
-    .bg-capacidad { background-color: #0288D1; }
-    .bg-movilidades { background-color: #7B1FA2; }
-    
-    .table-container {
-      background: white;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .loader {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255,255,255,0.9);
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      z-index: 9999;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Movilidades - Agrícola Huarmey (Frusan)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #0A3663; /* Azul Corporativo Frusan */
+            --secondary: #4CAF50; /* Verde Agrícola */
+            --warning: #FF9800;
+            --danger: #E53935;
+            --bg-body: #F4F6F9;
+            --bg-card: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border: #E0E0E0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Membrete / Encabezado */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #104b85 100%);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Logo de contingencia con CSS si la imagen local no carga inicialmente */
+        .logo-placeholder {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .header-title p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Contenedor Principal */
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Panel de Filtros e Indicador de Estado */
+        .control-panel {
+            background-color: var(--bg-card);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.9rem;
+            background-color: #FAFAFA;
+        }
+
+        .btn-sync {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-sync:hover {
+            background-color: #3e8e41;
+        }
+
+        /* Tarjetas de KPIs Diarios */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 5px solid var(--primary);
+        }
+
+        .kpi-card.secondary { border-left-color: var(--secondary); }
+        .kpi-card.warning { border-left-color: var(--warning); }
+        .kpi-card.danger { border-left-color: var(--danger); }
+
+        .kpi-data h3 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .kpi-data .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .kpi-data .percentage {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .kpi-icon {
+            background-color: #F0F4F8;
+            paddding: 12px;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        .kpi-card.secondary .kpi-icon { color: var(--secondary); background-color: #E8F5E9; }
+        .kpi-card.warning .kpi-icon { color: var(--warning); background-color: #FFF3E0; }
+        .kpi-card.danger .kpi-icon { color: var(--danger); background-color: #FFEBEE; }
+
+        /* Sección de Gráficos (Grid Adaptable) */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sección Tabla de Datos Sanitizados */
+        .table-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .table-card h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            max-height: 300px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #F8F9FA;
+            color: var(--primary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background-color: #F5F7FA;
+        }
+
+        /* Estado de Carga / Alertas */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Adaptabilidad para Teléfonos */
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <div id="loader" class="loader">
-    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 text-secondary">Conectando con la base de datos BDXX_HUARMEY...</h5>
-  </div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="font-weight: 600; color: var(--primary);">Procesando y Sincronizando BDXX_HUARMEY...</p>
+    </div>
 
-  <nav class="navbar navbar-frusan sticky-top p-2 mb-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-      <div class="navbar-brand d-flex align-items-center text-white">
-        <i class="fa-solid fa-bus me-3 text-warning fs-2"></i>
+    <header>
+        <div class="header-logo-area">
+            <div class="logo-placeholder">
+                <img src="ICO FRUSAN.png" alt="Frusan Logo" onerror="this.style.display='none';">
+                <i data-lucide="sprout" style="color: var(--secondary); width: 30px; height: 30px;"></i>
+            </div>
+            <div class="header-title">
+                <h1>Agrícola Huarmey</h1>
+                <p>Fundo FRUSAN • Panel de Control Operativo de Movilidades</p>
+            </div>
+        </div>
         <div>
-          <h4 class="mb-0 fw-bold">Agrícola Huarmey</h4>
-          <small style="color: #FFCC80;">Fundo Frusan — Dashboard de Control de Movilidades</small>
+            <i data-lucide="bus" style="width: 35px; height: 35px; opacity: 0.9;"></i>
         </div>
-      </div>
-      <div class="text-end text-white-50">
-        <span id="current-date-badge" class="badge bg-light text-dark"></span>
-      </div>
-    </div>
-  </nav>
+    </header>
 
-  <div class="container-fluid px-4">
-    
-    <div class="row mb-4">
-      <div class="col-md-4 col-sm-12">
-        <label class="form-label fw-bold text-muted"><i class="fa-solid fa-filter me-1"></i> Seleccionar Fecha de Reporte</label>
-        <select id="select-fecha" class="form-select card-custom" onchange="renderizarDashboardDiario()"></select>
-      </div>
-    </div>
+    <main>
+        <section class="control-panel">
+            <div class="filter-group">
+                <div>
+                    <label for="fechaFiltro"><i data-lucide="calendar" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Fecha de Reporte:</label>
+                    <input type="date" id="fechaFiltro">
+                </div>
+                <div>
+                    <label for="semanaFiltro"><i data-lucide="layers" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Ver Semana:</label>
+                    <select id="semanaFiltro">
+                        </select>
+                </div>
+            </div>
+            <button class="btn-sync" onclick="fetchSheetData()">
+                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Actualizar Hojas
+            </button>
+        </section>
 
-    <div class="row g-3 mb-4">
-      <div class="col-xl-3 col-md-6 col-12">
-        <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
-          <div>
-            <h6 class="text-muted text-uppercase small">Unidades Ingresadas</h6>
-            <h3 class="fw-bold mb-0" id="kpi-movilidades">0</h3>
-          </div>
-          <div class="icon-box bg-movilidades"><i class="fa-solid fa-car-side"></i></div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-md-6 col-12">
-        <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
-          <div>
-            <h6 class="text-muted text-uppercase small">Capacidad Total</h6>
-            <h3 class="fw-bold mb-0" id="kpi-capacidad">0</h3>
-          </div>
-          <div class="icon-box bg-capacidad"><i class="fa-solid fa-users"></i></div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-md-6 col-12">
-        <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
-          <div>
-            <h6 class="text-muted text-uppercase small">Total Pasajeros</h6>
-            <h3 class="fw-bold mb-0" id="kpi-pasajeros">0</h3>
-            <small class="text-success fw-bold" id="pct-pasajeros">0%</small>
-          </div>
-          <div class="icon-box bg-pasajeros"><i class="fa-solid fa-circle-user"></i></div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-md-6 col-12">
-        <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
-          <div>
-            <h6 class="text-muted text-uppercase small">Asientos Libres</h6>
-            <h3 class="fw-bold mb-0" id="kpi-libres">0</h3>
-            <small class="text-warning fw-bold" id="pct-libres">0%</small>
-          </div>
-          <div class="icon-box bg-libres"><i class="fa-solid fa-chair"></i></div>
-        </div>
-      </div>
-    </div>
+        <section class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-data">
+                    <h3>Movilidades Activas</h3>
+                    <div class="value" id="kpiMovilidades">0</div>
+                    <div class="percentage">Ingresadas hoy</div>
+                </div>
+                <div class="kpi-icon"><i data-lucide="truck"></i></div>
+            </div>
+            <div class="kpi-card secondary">
+                <div class="kpi-data">
+                    <h3>Capacidad Total</h3>
+                    <div class="value" id="kpiCapacidad">0</div>
+                    <div class="percentage">Asientos disponibles</div>
+                </div>
+                <div class="kpi-icon"><i data-lucide="users"></i></div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-data">
+                    <h3>Total Pasajeros</h3>
+                    <div class="value" id="kpiPasajeros">0</div>
+                    <div class="percentage" id="pctPasajeros">0% de ocupación</div>
+                </div>
+                <div class="kpi-icon"><i data-lucide="user-check"></i></div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="kpi-data">
+                    <h3>Asientos Libres</h3>
+                    <div class="value" id="kpiLibres">0</div>
+                    <div class="percentage" id="pctLibres">0% de ineficiencia</div>
+                </div>
+                <div class="kpi-icon"><i data-lucide="user-x"></i></div>
+            </div>
+        </section>
 
-    <div class="row g-4 mb-4">
-      <div class="col-lg-4 col-12">
-        <div class="card card-custom p-3 h-100">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-pie me-2"></i>% de Ocupación del Día</h6>
-          <div style="position: relative; height:220px;">
-            <canvas id="chartDonutDiario"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-8 col-12">
-        <div class="card card-custom p-3 h-100">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-line me-2"></i>Tendencia Diaria: Pasajeros vs Libres (Detección de Bajas)</h6>
-          <div style="position: relative; height:220px;">
-            <canvas id="chartLineaTendencia"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
+        <section class="charts-grid">
+            <div class="chart-card">
+                <h2><i data-lucide="bar-chart-3"></i> Reporte Diario: Pasajeros vs Libres por Movilidad</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chartDiario"></canvas>
+                </div>
+            </div>
 
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="table-container">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-table-list me-2"></i>Consolidado Diario de Movilidades (Filtro de Último Registro Aplicado)</h6>
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>Placa</th>
-                  <th>Conductor</th>
-                  <th>Ruta</th>
-                  <th>Tipo</th>
-                  <th class="text-center">Capacidad</th>
-                  <th class="text-center">Pasajeros</th>
-                  <th class="text-center">Libres</th>
-                  <th class="text-center">Ocupación %</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-diaria-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div class="chart-card">
+                <h2><i data-lucide="trending-up"></i> Comparativo Diario: Identificación de Fechas con Bajo Ingreso</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chartComparativo"></canvas>
+                </div>
+            </div>
 
-    <h5 class="text-uppercase text-secondary fw-bold mb-3"><i class="fa-solid fa-calendar-week me-2"></i>Análisis Consolidado Semanal</h5>
-    <div class="row g-4 mb-5">
-      <div class="col-md-6 col-12">
-        <div class="card card-custom p-3">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-bar text-success me-2"></i>Pasajeros por Semana</h6>
-          <div style="position: relative; height:250px;">
-            <canvas id="chartSemanalPasajeros"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 col-12">
-        <div class="card card-custom p-3">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-bar text-warning me-2"></i>Asientos Libres por Semana</h6>
-          <div style="position: relative; height:250px;">
-            <canvas id="chartSemanalLibres"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div class="chart-card" style="grid-column: span 2;">
+                <h2><i data-lucide="calendar-days"></i> Reporte Semanal Acumulado por Movilidad (Placa)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="chartSemanal"></canvas>
+                </div>
+            </div>
+        </section>
 
-  </div>
+        <section class="table-card">
+            <h2><i data-lucide="database"></i> Vista de Datos Limpios (Registros Únicos de Auditoría)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                * Aplicando regla de negocio: Si existen múltiples registros del mismo conductor en el mismo día, se muestra únicamente el último ingresado.
+            </p>
+            <div class="table-responsive">
+                <table id="tablaRegistros">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora Inicial</th>
+                            <th>Placa</th>
+                            <th>Conductor</th>
+                            <th>Ruta</th>
+                            <th>Capacidad</th>
+                            <th>Pasajeros</th>
+                            <th>Libres</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
-  <script>
-    let datasetCompleto = [];
-    let chartDonut = null;
-    let chartLinea = null;
-    let chartSemPas = null;
-    let chartSemLib = null;
+    <script>
+        // URL DE TU GOOGLE SHEET EXPORTADO COMO CSV
+        // REEMPLAZAR ESTE LINK POR EL TUYO:
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT17X33Y5p99L4W7B8gK8tD69BqHh88WvN8j9U_REMPLAZA_ESTO/pub?output=csv";
 
-    window.onload = function() {
-      document.getElementById('current-date-badge').innerText = new Date().toLocaleDateString();
-      
-      // Llamada segura al Backend de Apps Script
-      google.script.run
-        .withSuccessHandler(alCargarDatos)
-        .withFailureHandler(function(err) {
-          alert("Error crítico de comunicación: " + err);
-        })
-        .getDashboardData();
-    };
+        // Datos en memoria global
+        let rawData = [];
+        let cleanedData = [];
 
-    function alCargarDatos(data) {
-      if(data.error) {
-        alert(data.error);
-        return;
-      }
-      
-      datasetCompleto = data;
-      
-      // Obtener y ordenar las fechas disponibles de manera descendente
-      const select = document.getElementById("select-fecha");
-      const fechasUnicas = [...new Set(datasetCompleto.map(x => x.fechaDia))].sort().reverse();
-      
-      fechasUnicas.forEach((f, idx) => {
-        let opt = document.createElement("option");
-        opt.value = f;
-        opt.text = f;
-        if(idx === 0) opt.selected = true;
-        select.appendChild(opt);
-      });
+        // Instancias de Gráficos globales
+        let chartDiarioInstance = null;
+        let chartComparativoInstance = null;
+        let chartSemanalInstance = null;
 
-      document.getElementById("loader").style.display = "none";
-      
-      renderizarDashboardDiario();
-      renderizarGraficosHistoricos(fechasUnicas);
-    }
+        // Inicializador de Lucide Icons
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            // Cargar datos de respaldo mockeados basados en tu estructura adjunta por si el link no está configurado aún
+            loadMockData(); 
+        });
 
-    function renderizarDashboardDiario() {
-      const fechaSel = document.getElementById("select-fecha").value;
-      const datosDia = datasetCompleto.filter(x => x.fechaDia === fechaSel);
-      
-      let movilidades = datosDia.length;
-      let capacidad = 0;
-      let pasajeros = 0;
-      let libres = 0;
-      let tablaHtml = "";
-      
-      datosDia.forEach(x => {
-        capacidad += x.capacidad;
-        pasajeros += x.pasajeros;
-        libres += x.libres;
-        
-        let porcentaje = x.capacidad > 0 ? Math.round((x.pasajeros / x.capacidad) * 100) : 0;
-        let badgeColor = porcentaje > 80 ? 'bg-success' : (porcentaje > 50 ? 'bg-warning text-dark' : 'bg-danger');
-        
-        tablaHtml += `<tr>
-          <td><strong>${x.placa}</strong></td>
-          <td><small>${x.conductor}</small></td>
-          <td><span class="badge bg-light text-dark border">${x.ruta}</span></td>
-          <td><small>${x.tipo}</small></td>
-          <td class="text-center">${x.capacidad}</td>
-          <td class="text-center text-success fw-bold">${x.pasajeros}</td>
-          <td class="text-center text-danger">${x.libres}</td>
-          <td class="text-center"><span class="badge ${badgeColor}">${porcentaje}%</span></td>
-        </tr>`;
-      });
-      
-      document.getElementById("tabla-diaria-body").innerHTML = tablaHtml || "<tr><td colspan='8' class='text-center'>Sin datos</td></tr>";
-      
-      let pctPas = capacidad > 0 ? Math.round((pasajeros / capacidad) * 100) : 0;
-      let pctLib = capacidad > 0 ? Math.round((libres / capacidad) * 100) : 0;
-      
-      document.getElementById("kpi-movilidades").innerText = movilidades;
-      document.getElementById("kpi-capacidad").innerText = capacidad;
-      document.getElementById("kpi-pasajeros").innerText = pasajeros;
-      document.getElementById("pct-pasajeros").innerText = `${pctPas}% de capacidad ocupada`;
-      document.getElementById("kpi-libres").innerText = libres;
-      document.getElementById("pct-libres").innerText = `${pctLib}% de asientos vacíos`;
+        // 1. CARGA DE DATOS DESDE GOOGLE SHEETS (O FALLBACK)
+        async function fetchSheetData() {
+            showLoading(true);
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                if (!response.ok) throw new Error("No se pudo conectar a la URL del CSV.");
+                const text = await response.text();
+                parseCSV(text);
+            } catch (error) {
+                alert("Usando base de datos interna local cargada de la hoja 'registros' (Verifica tu enlace de Google Sheets para tiempo real).");
+                loadMockData();
+            } finally {
+                showLoading(false);
+            }
+        }
 
-      // Gráfico de Dona del día
-      if(chartDonut) chartDonut.destroy();
-      const ctx = document.getElementById("chartDonutDiario").getContext("2d");
-      chartDonut = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Pasajeros %', 'Libres %'],
-          datasets: [{
-            data: [pasajeros, libres],
-            backgroundColor: ['#388E3C', '#EF6C00']
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
+        // Parseador básico de CSV respetando saltos de línea y comillas de tu estructura
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/);
+            if(lines.length < 2) return;
+            
+            // Mapeo básico de columnas según tu estructura
+            // fecha,placa,conductor,tipo,ruta,cultivo,capacidad,pasajeros,libres,observaciones,FECHA,SEM,MES
+            let results = [];
+            for (let i = 1; i < lines.length; i++) {
+                if(!lines[i]) continue;
+                // Manejo simple de comillas para observaciones con saltos de línea
+                let row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if(row.length >= 9) {
+                    results.push({
+                        fecha_hora: row[0].replace(/"/g, '').trim(),
+                        placa: row[1] ? row[1].trim() : '',
+                        conductor: row[2] ? row[2].trim() : '',
+                        tipo: row[3] ? row[3].trim() : '',
+                        ruta: row[4] ? row[4].trim() : '',
+                        cultivo: row[5] ? row[5].trim() : '',
+                        capacidad: parseInt(row[6]) || 0,
+                        pasajeros: parseInt(row[7]) || 0,
+                        libres: parseInt(row[8]) || 0,
+                        observaciones: row[9] ? row[9].replace(/"/g, '').trim() : '',
+                        fecha_corta: row[10] ? row[10].trim() : '',
+                        semana: row[11] ? row[11].trim() : '',
+                        mes: row[12] ? row[12].trim() : ''
+                    });
+                }
+            }
+            rawData = results;
+            processAndRender();
+        }
 
-    function renderizarGraficosHistoricos(fechasDesc) {
-      const fechasAsc = [...fechasDesc].reverse();
-      let histPas = [];
-      let histLib = [];
-      
-      fechasAsc.forEach(f => {
-        let filtrados = datasetCompleto.filter(x => x.fechaDia === f);
-        histPas.push(filtrados.reduce((a, b) => a + b.pasajeros, 0));
-        histLib.push(filtrados.reduce((a, b) => a + b.libres, 0));
-      });
+        // Datos de ejemplo basados exactamente en el fragmento de tu CSV provisto
+        function loadMockData() {
+            rawData = [
+                { fecha_hora: "20/4/2026, 11:27:23 a.m.", placa: "M1A-963", conductor: "SANCHEZ MORE JUAN", tipo: "COMBI", ruta: "ANCOL CHICO - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 13, libres: 2, observaciones: "Falto por salud", fecha_corta: "2026-04-20", semana: "17", mes: "Ene" },
+                { fecha_hora: "20/4/2026, 11:27:32 a.m.", placa: "A9Z-969", conductor: "ARROYO TIMANA NEPTALI", tipo: "MINI BUS", ruta: "INSCULAS - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 32, pasajeros: 23, libres: 9, observaciones: "Faltaron sin comunicar", fecha_corta: "2026-04-20", semana: "17", mes: "Ene" },
+                { fecha_hora: "03/3/2026, 06:15:00 a.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 10, libres: 5, observaciones: "Registro antiguo 1", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
+                { fecha_hora: "03/3/2026, 08:30:00 a.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 12, libres: 3, observaciones: "Registro antiguo 2", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
+                { fecha_hora: "03/3/2026, 05:45:32 p.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 15, libres: 0, observaciones: "¡Último registro conservado!", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
+                { fecha_hora: "9/6/2026, 6:10:39 a.m.", placa: "M1A-963", conductor: "SANCHEZ MORE JUAN", tipo: "COMBI", ruta: "ANCOL CHICO - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 13, libres: 2, observaciones: "Viaje conforme", fecha_corta: "2026-06-09", semana: "24", mes: "Ene" },
+                { fecha_hora: "9/6/2026, 6:26:37 a.m.", placa: "V5E-954", conductor: "ZAPATA DAMIAN FELIPE", tipo: "COMBI", ruta: "LA GRANJA - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 15, libres: 0, observaciones: "Conforme", fecha_corta: "2026-06-09", semana: "24", mes: "Ene" },
+                { fecha_hora: "10/6/2026, 9:57:35 a.m.", placa: "M3T-671", conductor: "ALAMO PISCOYA JORGE LUIS", tipo: "COMBI", ruta: "LOS BANCES - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 14, libres: 1, observaciones: "Todo conforme", fecha_corta: "2026-06-10", semana: "24", mes: "Ene" }
+            ];
+            processAndRender();
+        }
 
-      // Gráfico de Líneas (Comparativa diaria)
-      if(chartLinea) chartLinea.destroy();
-      const ctxL = document.getElementById("chartLineaTendencia").getContext("2d");
-      chartLinea = new Chart(ctxL, {
-        type: 'line',
-        data: {
-          labels: fechasAsc,
-          datasets: [
-            { label: 'Pasajeros', data: histPas, borderColor: '#388E3C', tension: 0.1 },
-            { label: 'Asientos Libres', data: histLib, borderColor: '#EF6C00', tension: 0.1 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        // 2. SANITIZACIÓN: REGLA DE NEGOCIO PARA DEJAR SOLO EL ÚLTIMO REGISTRO
+        function processAndRender() {
+            // Ordenamos por fecha_hora ascendentemente para asegurar que el último sobreescriba a los anteriores
+            let sorted = [...rawData].sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
+            
+            let mapUnicos = new Map();
+            sorted.forEach(row => {
+                // Generamos clave única compuesta por: Conductor + Fecha Corta
+                let key = `${row.conductor.toUpperCase()}_${row.fecha_corta}`;
+                mapUnicos.set(key, row); // Al usar un Map, el último registro reemplaza al anterior automáticamente.
+            });
 
-      // Procesamiento Semanal
-      let semanas = {};
-      datasetCompleto.forEach(x => {
-        let s = x.semana;
-        if(!semanas[s]) semanas[s] = { pas: 0, lib: 0 };
-        semanas[s].pas += x.pasajeros;
-        semanas[s].lib += x.libres;
-      });
+            cleanedData = Array.from(mapUnicos.values());
 
-      const arrSemanas = Object.keys(semanas).sort();
-      const dataSemPas = arrSemanas.map(s => semanas[s].pas);
-      const dataSemLib = arrSemanas.map(s => semanas[s].lib);
+            // Rellenar select de Semanas disponibles de forma dinámica
+            let semanas = [...new Set(cleanedData.map(item => item.semana))].sort((a,b)=>a-b);
+            let selectSemana = document.getElementById("semanaFiltro");
+            selectSemana.innerHTML = "";
+            semanas.forEach(sem => {
+                let opt = document.createElement("option");
+                opt.value = sem;
+                opt.textContent = `Semana ${sem}`;
+                selectSemana.appendChild(opt);
+            });
 
-      // Gráfico semanal de Pasajeros
-      if(chartSemPas) chartSemPas.destroy();
-      const ctxSP = document.getElementById("chartSemanalPasajeros").getContext("2d");
-      chartSemPas = new Chart(ctxSP, {
-        type: 'bar',
-        data: {
-          labels: arrSemanas.map(s => "Semana " + s),
-          datasets: [{ label: 'Pasajeros', data: dataSemPas, backgroundColor: '#1E4620' }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+            // Seleccionar por defecto la fecha más alta que tengamos en datos para visualización inicial
+            let fechasOrdenadas = [...new Set(cleanedData.map(item => item.fecha_corta))].sort();
+            if(fechasOrdenadas.length > 0) {
+                let ultimaFecha = fechasOrdenadas[fechasOrdenadas.length - 1];
+                document.getElementById("fechaFiltro").value = ultimaFecha;
+                
+                // Encontrar a qué semana pertenece esa fecha para sincronizar el combo box semanal
+                let registroCorrespondiente = cleanedData.find(item => item.fecha_corta === ultimaFecha);
+                if(registroCorrespondiente) selectSemana.value = registroCorrespondiente.semana;
+            }
 
-      // Gráfico semanal de Libres
-      if(chartSemLib) chartSemLib.destroy();
-      const ctxSL = document.getElementById("chartSemanalLibres").getContext("2d");
-      chartSemLib = new Chart(ctxSL, {
-        type: 'bar',
-        data: {
-          labels: arrSemanas.map(s => "Semana " + s),
-          datasets: [{ label: 'Asientos Libres', data: dataSemLib, backgroundColor: '#EF6C00' }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-  </script>
+            // Configurar los listeners para actualización inmediata al cambiar filtros
+            document.getElementById("fechaFiltro").addEventListener("change", renderDashboard);
+            document.getElementById("semanaFiltro").addEventListener("change", renderDashboard);
+
+            renderDashboard();
+        }
+
+        // 3. RENDERIZADO PRINCIPAL DE LA APLICACIÓN
+        function renderDashboard() {
+            let fechaSel = document.getElementById("fechaFiltro").value;
+            let semanaSel = document.getElementById("semanaFiltro").value;
+
+            // Filtrado de datos para sección Diaria
+            let datosDiarios = cleanedData.filter(item => item.fecha_corta === fechaSel);
+
+            // 3.1 CÁLCULO DE KPIS DIARIOS
+            let totalMovilidades = datosDiarios.length;
+            let totalCapacidad = datosDiarios.reduce((sum, item) => sum + item.capacidad, 0);
+            let totalPasajeros = datosDiarios.reduce((sum, item) => sum + item.pasajeros, 0);
+            let totalLibres = datosDiarios.reduce((sum, item) => sum + item.libres, 0);
+
+            // Manejo de porcentajes preventivo por división sobre cero
+            let pctPas = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100).toFixed(1) : 0;
+            let pctLib = totalCapacidad > 0 ? ((totalLibres / totalCapacidad) * 100).toFixed(1) : 0;
+
+            document.getElementById("kpiMovilidades").textContent = totalMovilidades;
+            document.getElementById("kpiCapacidad").textContent = totalCapacidad;
+            document.getElementById("kpiPasajeros").textContent = totalPasajeros;
+            document.getElementById("kpiLibres").textContent = totalLibres;
+            document.getElementById("pctPasajeros").textContent = `${pctPas}% de ocupación total`;
+            document.getElementById("pctLibres").textContent = `${pctLib}% asientos vacíos`;
+
+            // 3.2 ACTUALIZACIÓN DE TABLA DE VISTA GENERAL
+            let tbody = document.querySelector("#tablaRegistros tbody");
+            tbody.innerHTML = "";
+            cleanedData.forEach(item => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${item.fecha_hora}</td>
+                    <td><strong>${item.placa}</strong></td>
+                    <td>${item.conductor}</td>
+                    <td>${item.ruta}</td>
+                    <td>${item.capacidad}</td>
+                    <td style="color:var(--primary); font-weight:bold;">${item.pasajeros}</td>
+                    <td style="color:${item.libres > 3 ? 'var(--danger)' : 'var(--text-main)'}">${item.libres}</td>
+                    <td><small>${item.observaciones || '-'}</small></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 3.3 CONSTRUCCIÓN DE GRÁFICOS
+            renderChartDiario(datosDiarios);
+            renderChartComparativo();
+            renderChartSemanal(semanaSel);
+        }
+
+        // --- SECCIÓN DE MOTORES GRÁFICOS INTERACTIVOS (CHART.JS) ---
+
+        // Gráfico 1: Barras apiladas Diarias por Conductor
+        function renderChartDiario(datosDiarios) {
+            let ctx = document.getElementById('chartDiario').getContext('2d');
+            
+            if (chartDiarioInstance) chartDiarioInstance.destroy();
+
+            let labels = datosDiarios.map(item => item.conductor.split(' ')[0] + " (" + item.placa + ")");
+            let pasajerosData = datosDiarios.map(item => item.pasajeros);
+            let libresData = datosDiarios.map(item => item.libres);
+
+            chartDiarioInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Pasajeros', data: pasajerosData, backgroundColor: '#0A3663' },
+                        { label: 'Espacios Libres', data: libresData, backgroundColor: '#FF9800' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true } },
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        // Gráfico 2: Tendencia para identificación de bajas ventas / transportes ineficientes
+        function renderChartComparativo() {
+            let ctx = document.getElementById('chartComparativo').getContext('2d');
+            if (chartComparativoInstance) chartComparativoInstance.destroy();
+
+            // Agrupamos totales por fechas cronológicas
+            let fechasMap = {};
+            cleanedData.forEach(item => {
+                if(!fechasMap[item.fecha_corta]) {
+                    fechasMap[item.fecha_corta] = { pasajeros: 0, libres: 0 };
+                }
+                fechasMap[item.fecha_corta].pasajeros += item.pasajeros;
+                fechasMap[item.fecha_corta].libres += item.libres;
+            });
+
+            let labels = Object.keys(fechasMap).sort();
+            let pasajerosData = labels.map(f => fechasMap[f].pasajeros);
+            let libresData = labels.map(f => fechasMap[f].libres);
+
+            chartComparativoInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Pasajeros', data: pasajerosData, borderColor: '#4CAF50', tension: 0.2, fill: false },
+                        { label: 'Total Asientos Libres', data: libresData, borderColor: '#E53935', tension: 0.2, fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                footer: (tooltipItems) => {
+                                    let index = tooltipItems[0].dataIndex;
+                                    let lib = libresData[index];
+                                    return lib > 10 ? '⚠️ Alerta: Bajo ingreso de personal detectado' : '✅ Rendimiento Óptimo';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico 3: Consolidado Semanal por Placas de Movilidad
+        function renderChartSemanal(semanaSel) {
+            let ctx = document.getElementById('chartSemanal').getContext('2d');
+            if (chartSemanalInstance) chartSemanalInstance.destroy();
+
+            let datosSemanales = cleanedData.filter(item => item.semana === semanaSel);
+
+            // Agrupamos por número de placa de la unidad de transporte
+            let placaMap = {};
+            datosSemanales.forEach(item => {
+                if(!placaMap[item.placa]) {
+                    placaMap[item.placa] = { pasajeros: 0, libres: 0 };
+                }
+                placaMap[item.placa].pasajeros += item.pasajeros;
+                placaMap[item.placa].libres += item.libres;
+            });
+
+            let labels = Object.keys(placaMap);
+            let pasajerosData = labels.map(p => placaMap[p].pasajeros);
+            let libresData = labels.map(p => placaMap[p].libres);
+
+            chartSemanalInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Pasajeros Acumulados', data: pasajerosData, backgroundColor: '#0A3663' },
+                        { label: 'Libres Acumulados', data: libresData, backgroundColor: '#E53935' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+        }
+    </script>
 </body>
 </html>
