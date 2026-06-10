@@ -4,36 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Unidades - Fundo Frusan</title>
+    <!-- Tailwind CSS para diseño responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons para iconografía -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- API OFICIAL DE GOOGLE PARA CONEXIÓN ESTABLE A SPREADSHEETS -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
     
     <style>
-        /* Personalización de colores corporativos basados en Frusan */
         :root {
             --frusan-green: #0A5C36;
             --frusan-light-green: #14824A;
-            --frusan-accent: #E67E22;
-            --frusan-dark: #1E293B;
+            --frusan-orange: #E67E22;
         }
         .bg-frusan { background-color: var(--frusan-green); }
         .bg-frusan-gradient { background: linear-gradient(135deg, var(--frusan-green) 0%, #05331E 100%); }
         .text-frusan { color: var(--frusan-green); }
         .border-frusan { border-color: var(--frusan-green); }
-        .focus-frusan:focus { border-color: var(--frusan-light-green); ring-color: var(--frusan-light-green); }
-        
-        /* Ajuste de scrollbar estético */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: var(--frusan-green); border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
-    <header class="bg-frusan-gradient text-white shadow-md sticky top-0 z-50 px-4 py-3 decoding-container">
+    <!-- HEADER / TOPBAR -->
+    <header class="bg-frusan-gradient text-white shadow-md sticky top-0 z-50 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div class="bg-white p-1.5 rounded-lg shadow-inner flex items-center justify-center">
+                    <!-- Contenedor optimizado para "ICO FRUSAN.png" -->
                     <div class="w-10 h-10 flex items-center justify-center font-bold text-xl text-frusan border-2 border-frusan rounded">
                         F
                     </div>
@@ -44,17 +43,21 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs">
-                <span id="connection-status" class="bg-yellow-500 text-white px-2 py-1 rounded-full flex items-center gap-1">
-                    <i data-lucide="refresh-cw" class="w-3 h-3 animate-spin"></i> Cargando base de datos...
-                </span>
-                <input type="date" id="filter-date" class="bg-white/10 border border-white/20 text-white rounded px-2 py-1 focus:outline-none focus:border-white text-sm" />
+            <!-- PANEL DE ESTADO DE CONEXIÓN REAL -->
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end text-xs">
+                <div id="connection-badge" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 font-medium transition-all duration-300">
+                    <i id="connection-icon" data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
+                    <span id="connection-text">Iniciando Google API...</span>
+                </div>
+                <input type="date" id="filter-date" class="bg-white/10 border border-white/20 text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-white text-sm" />
             </div>
         </div>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
 
+        <!-- TARJETAS METRICAS KPI -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
@@ -79,22 +82,24 @@
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">% Eficiencia de Carga</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">% Eficiencia de Ocupación</p>
                     <h3 id="kpi-efficiency" class="text-2xl font-bold text-slate-800 mt-1">0%</h3>
                 </div>
                 <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="percent"></i></div>
             </div>
         </section>
 
+        <!-- REPORTES DIARIOS Y SEMANALES -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
+            <!-- REPORTE DIARIO -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-100 gap-2 mb-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <i data-lucide="calendar" class="text-frusan"></i> Reporte de Movilidad Diario
+                            <i data-lucide="calendar" class="text-frusan"></i> Reporte Diario por Movilidad
                         </h2>
-                        <p class="text-xs text-slate-400">Detalle de porcentaje de ocupación por vehículo</p>
+                        <p class="text-xs text-slate-400">Capacidad, pasajeros, asientos libres y porcentaje ocupado</p>
                     </div>
                     <span id="current-selected-date" class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">--/--/----</span>
                 </div>
@@ -102,8 +107,8 @@
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-50 text-slate-500 uppercase text-xxs font-bold tracking-wider border-b border-slate-200">
-                                <th class="p-3">Placa / Conductor</th>
+                            <tr class="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
+                                <th class="p-3">Vehículo / Conductor</th>
                                 <th class="p-3">Ruta</th>
                                 <th class="p-3 text-center">Capacidad</th>
                                 <th class="p-3 text-center">Pasajeros</th>
@@ -113,32 +118,33 @@
                         </thead>
                         <tbody id="daily-table-body" class="divide-y divide-slate-100">
                             <tr>
-                                <td colspan="6" class="p-8 text-center text-slate-400">Selecciona o carga una fecha para visualizar datos.</td>
+                                <td colspan="6" class="p-8 text-center text-slate-400">Esperando conexión de datos...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- REPORTE SEMANAL -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col">
                 <div class="pb-3 border-b border-slate-100 mb-4">
                     <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="trending-up" class="text-frusan"></i> Reporte por Semana
+                        <i data-lucide="trending-up" class="text-frusan"></i> Registro por Semana
                     </h2>
-                    <p class="text-xs text-slate-400">Consolidado general de pasajeros vs asientos libres</p>
+                    <p class="text-xs text-slate-400">Total acumulado semanal de carga</p>
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Seleccionar Semana:</label>
-                    <select id="filter-week" class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg p-2 text-sm focus:outline-none focus:frusan-green"></select>
+                    <select id="filter-week" class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg p-2 text-sm focus:outline-none"></select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 mb-6">
-                    <div class="bg-blue-50/50 p-3 rounded-lg text-center">
+                    <div class="bg-blue-50 p-3 rounded-lg text-center">
                         <span class="text-xs text-blue-600 font-medium">Total Pasajeros</span>
                         <h4 id="week-total-passengers" class="text-xl font-bold text-slate-800 mt-1">0</h4>
                     </div>
-                    <div class="bg-orange-50/50 p-3 rounded-lg text-center">
+                    <div class="bg-orange-50 p-3 rounded-lg text-center">
                         <span class="text-xs text-orange-600 font-medium">Total Libres</span>
                         <h4 id="week-total-free" class="text-xl font-bold text-slate-800 mt-1">0</h4>
                     </div>
@@ -152,116 +158,150 @@
         </section>
     </main>
 
-    <footer class="bg-slate-900 text-slate-400 text-xs py-4 px-4 border-t border-slate-800 text-center">
-        <p>© 2026 Agrícola Huarmey - Sede Olmos (Fundo Frusan). Desarrollado para optimización de operaciones.</p>
+    <footer class="bg-slate-900 text-slate-400 text-xs py-4 px-4 text-center border-t border-slate-800">
+        <p>© 2026 Agrícola Huarmey - Control de Operaciones Fundo Frusan.</p>
     </footer>
 
+    <!-- LÓGICA DE CONEXIÓN ESTABLE MEDIANTE GOOGLE VISUALIZATION API -->
     <script>
-        // CONFIGURACIÓN DE LA BASE DE DATOS DE GOOGLE SHEETS (ENLACE CSV PUBLICADO)
-        const SPREADSHEET_CSV_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE_SHEETS_PUBLICADO_COMO_CSV";
+        // Pega aquí la URL compartida de tu archivo de Google Sheets
+        const CONFIG_SHEET_URL = "https://docs.google.com/spreadsheets/d/1w_IPWUIMV9xGGUxvOi1yRspAnRkTA9eyazpugSOev3o/edit?gid=59832466#gid=59832466";
 
         let rawData = [];
         let chartInstance = null;
 
-        // Inicializar Iconos de Lucide
-        document.addEventListener("DOMContentLoaded", () => {
+        // Cargar las librerías de Google de forma asíncrona segura
+        if (typeof google !== 'undefined') {
+            google.charts.load('current', { 'packages': ['corechart'] });
+            google.charts.setOnLoadCallback(conectarGoogleSheets);
+        } else {
+            window.addEventListener('load', () => {
+                actualizarEstadoConexion("error", "Falta Script de Google");
+            });
+        }
+
+        function actualizarEstadoConexion(estado, mensaje) {
+            const badge = document.getElementById("connection-badge");
+            const text = document.getElementById("connection-text");
+            const icon = document.getElementById("connection-icon");
+
+            icon.className = "w-3.5 h-3.5"; // reset animacion
+            
+            if (estado === "loading") {
+                badge.className = "bg-yellow-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 font-medium";
+                icon.classList.add("animate-spin");
+                icon.setAttribute("data-lucide", "refresh-cw");
+            } else if (estado === "success") {
+                badge.className = "bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 font-medium";
+                icon.setAttribute("data-lucide", "check-circle");
+            } else {
+                badge.className = "bg-red-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 font-medium";
+                icon.setAttribute("data-lucide", "alert-triangle");
+            }
+            text.innerText = mensaje;
+            lucide.createIcons();
+        }
+
+        function conectarGoogleSheets() {
+            actualizarEstadoConexion("loading", "Conectando a Google Sheets...");
+
+            // Si no se ha configurado la URL real, cargar datos demostrativos estructurados del Excel para asegurar cero errores
+            if (CONFIG_SHEET_URL.includes("TU_ID_DE_HOJA_AQUÍ")) {
+                setTimeout(() => {
+                    console.log("Modo Demo activo. Usando estructura mapeada de BDXX_HUARMEY.xlsx");
+                    procesarDataLocal();
+                }, 1000);
+                return;
+            }
+
+            try {
+                // Extraer ID de la Hoja de Cálculo limpiamente de la URL provista
+                const matches = CONFIG_SHEET_URL.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (!matches) {
+                    actualizarEstadoConexion("error", "URL de Google Sheet inválida");
+                    return;
+                }
+                const sheetId = matches[1];
+                
+                // Construcción de Query seguro para evitar CORS
+                const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+                
+                const query = new google.visualization.Query(queryUrl);
+                query.send(handleQueryResponse);
+            } catch (e) {
+                actualizarEstadoConexion("error", "Error crítico de ejecución");
+            }
+        }
+
+        function handleQueryResponse(response) {
+            if (response.isError()) {
+                actualizarEstadoConexion("error", "Acceso denegado. ¡Revisa el paso 3 de compartir!");
+                console.error(response.getMessage() + " " + response.getDetailedMessage());
+                return;
+            }
+
+            const dataTable = response.getDataTable();
+            const numRows = dataTable.getNumberOfRows();
+            const numCols = dataTable.getNumberOfColumns();
+            
+            // Mapear dinámicamente las columnas de la cabecera (Fila 1) del Sheet
+            let headers = [];
+            for (let c = 0; c < numCols; c++) {
+                headers.push(dataTable.getColumnLabel(c).trim().toUpperCase());
+            }
+
+            rawData = [];
+            for (let r = 0; r < numRows; r++) {
+                let rowObj = {};
+                for (let c = 0; c < numCols; c++) {
+                    let val = dataTable.getValue(r, c);
+                    // Formatear fechas devueltas por Google Object si aplica
+                    if (val instanceof Date) {
+                        val = val.getFullYear() + "-" + String(val.getMonth() + 1).padStart(2, '0') + "-" + String(val.getDate()).padStart(2, '0');
+                    }
+                    rowObj[headers[c] || `COL_${c}`] = val !== null ? String(val) : '';
+                }
+                rawData.push(rowObj);
+            }
+
+            // Validar si las columnas obligatorias del Excel existen
+            if(rawData.length > 0 && !rawData[0].hasOwnProperty('FECHA')) {
+                // Intento alternativo de lectura si los labels no se cargaron arriba de la fila 0
+                actualizarEstadoConexion("error", "La tabla de Google Sheets no tiene la columna 'FECHA'");
+                return;
+            }
+
+            actualizarEstadoConexion("success", "Sincronizado en Vivo");
+            inicializarFiltrosYComponentes();
+        }
+
+        function inicializarFiltrosYComponentes() {
             lucide.createIcons();
             initChart();
-            fetchDataFromSheets();
-        });
-
-        // Consumo Asíncrono de la base de datos de Google Sheets
-        async function fetchDataFromSheets() {
-            const statusEl = document.getElementById('connection-status');
-            try {
-                // Si aún no configuras tu url real, simulará con la data estructurada de tu excel adjunto
-                let responseText = "";
-                if(SPREADSHEET_CSV_URL.includes("AQUÍ_PEGA_TU_URL")) {
-                    console.warn("Utilizando datos locales de simulación basados en estructura de tu archivo.");
-                    responseText = generateMockData(); 
-                } else {
-                    const response = await fetch(SPREADSHEET_CSV_URL);
-                    responseText = await response.text();
-                }
-
-                rawData = parseCSV(responseText);
-                
-                statusEl.className = "bg-green-600 text-white px-2 py-1 rounded-full flex items-center gap-1";
-                statusEl.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3"></i> Sincronizado`;
-                lucide.createIcons();
-
-                setupFilters();
-                renderDashboard();
-
-            } catch (error) {
-                console.error("Error al conectar con Google Sheets: ", error);
-                statusEl.className = "bg-red-600 text-white px-2 py-1 rounded-full flex items-center gap-1";
-                statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> Error de Conexión`;
-                lucide.createIcons();
-            }
-        }
-
-        // Parseador Estricto de CSV considerando saltos de línea dentro de comillas (Observaciones)
-        function parseCSV(text) {
-            let lines = [];
-            let row = [""];
-            let inQuotes = false;
-
-            for (let i = 0; i < text.length; i++) {
-                let c = text[i];
-                let next = text[i+1];
-                if (c === '"') {
-                    if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; }
-                    else { inQuotes = !inQuotes; }
-                } else if (c === ',' && !inQuotes) {
-                    row.push('');
-                } else if ((c === '\r' || c === '\n') && !inQuotes) {
-                    if (c === '\r' && next === '\n') { i++; }
-                    lines.push(row);
-                    row = [''];
-                } else {
-                    row[row.length - 1] += c;
-                }
-            }
-            if (row.length > 1 || row[0] !== '') lines.push(row);
             
-            // Mapear cabeceras con filas de datos de tu excel
-            const headers = lines[0].map(h => h.trim().toUpperCase());
-            return lines.slice(1).map(line => {
-                let obj = {};
-                headers.forEach((header, index) => {
-                    obj[header] = line[index] ? line[index].trim() : '';
-                });
-                return obj;
-            }).filter(item => item.FECHA); // Filtrar filas vacías
-        }
-
-        // Configurar los selectores dinámicos basados en los datos reales de la BD
-        function setupFilters() {
             const dateInput = document.getElementById('filter-date');
             const weekSelect = document.getElementById('filter-week');
 
-            // Obtener la fecha más reciente de la data para ponerla por defecto
-            const uniqueDates = [...new Set(rawData.map(item => item.FECHA))].sort().reverse();
+            // Obtener fechas únicas ordenadas descendentemente (más recientes primero)
+            const uniqueDates = [...new Set(rawData.map(item => item.FECHA))].filter(Boolean).sort().reverse();
             if(uniqueDates.length > 0) {
                 dateInput.value = uniqueDates[0];
             }
 
-            // Obtener semanas únicas
-            const uniqueWeeks = [...new Set(rawData.map(item => item.SEM))].sort((a,b) => parseInt(a)-parseInt(b));
+            // Obtener semanas únicas según estructura de tu Excel columna 'SEM'
+            const uniqueWeeks = [...new Set(rawData.map(item => item.SEM))].filter(Boolean).sort((a,b) => parseInt(a)-parseInt(b));
             weekSelect.innerHTML = uniqueWeeks.map(w => `<option value="${w}">Semana ${w}</option>`).join('');
 
-            // Escuchar eventos de cambio
             dateInput.addEventListener('change', renderDashboard);
             weekSelect.addEventListener('change', updateWeeklyReport);
+
+            renderDashboard();
         }
 
-        // Renderizado Dinámico de KPI y Reportes
         function renderDashboard() {
             const selectedDate = document.getElementById('filter-date').value;
             document.getElementById('current-selected-date').innerText = formatDateDisplay(selectedDate);
 
-            // Filtrar data del día seleccionado
             const dailyData = rawData.filter(item => item.FECHA === selectedDate);
             const tbody = document.getElementById('daily-table-body');
             
@@ -270,7 +310,7 @@
             let totalFree = 0;
 
             if(dailyData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No hay registros de transportes para la fecha seleccionada.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Sin datos registrados para el día seleccionado.</td></tr>`;
             } else {
                 tbody.innerHTML = dailyData.map(row => {
                     const cap = parseInt(row.CAPACIDAD) || 0;
@@ -282,50 +322,39 @@
                     totalFree += lib;
 
                     const percent = cap > 0 ? Math.round((pas / cap) * 100) : 0;
-                    
-                    // Color dinámico según la optimización de espacio
                     let progressColor = 'bg-frusan';
-                    if (percent > 95) progressColor = 'bg-red-600'; // Al límite o sobrecarga
-                    else if (percent < 50) progressColor = 'bg-yellow-500'; // Subutilizado
+                    if (percent > 95) progressColor = 'bg-red-600';
+                    else if (percent < 50) progressColor = 'bg-yellow-500';
 
                     return `
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr class="hover:bg-slate-50 transition-colors text-xs sm:text-sm">
                             <td class="p-3">
-                                <div class="font-bold text-slate-700">${row.PLACA}</div>
-                                <div class="text-xs text-slate-400 truncate max-w-[150px]">${row.CONDUCTOR}</div>
+                                <div class="font-bold text-slate-700">${row.PLACA || 'S/P'}</div>
+                                <div class="text-xs text-slate-400 truncate max-w-[130px]">${row.CONDUCTOR || 'No Asignado'}</div>
                             </td>
-                            <td class="p-3 text-xs text-slate-500 font-medium">${row.RUTA}</td>
+                            <td class="p-3 text-xs text-slate-500 font-medium">${row.RUTA || '-'}</td>
                             <td class="p-3 text-center font-semibold">${cap}</td>
                             <td class="p-3 text-center text-blue-600 font-semibold">${pas}</td>
                             <td class="p-3 text-center text-orange-600 font-semibold">${lib}</td>
-                            <td class="p-3">
-                                <div class="flex items-center justify-end gap-2">
-                                    <span class="text-xs font-bold text-slate-700">${percent}%</span>
-                                    <div class="w-16 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
-                                        <div class="${progressColor} h-full" style="width: ${percent}%"></div>
-                                    </div>
-                                </div>
+                            <td class="p-3 text-right">
+                                <span class="font-bold text-slate-800">${percent}%</span>
                             </td>
                         </tr>
                     `;
                 }).join('');
             }
 
-            // Actualizar KPIs Diarios
             document.getElementById('kpi-units').innerText = dailyData.length;
             document.getElementById('kpi-passengers').innerText = totalPassengers;
             document.getElementById('kpi-free').innerText = totalFree;
             document.getElementById('kpi-efficiency').innerText = totalCapacity > 0 ? `${Math.round((totalPassengers / totalCapacity) * 100)}%` : '0%';
 
-            // Intentar emparejar la semana de la fecha actual seleccionada para actualizar el reporte semanal de manera intuitiva
-            if(dailyData.length > 0) {
-                const correspondingWeek = dailyData[0].SEM;
-                document.getElementById('filter-week').value = correspondingWeek;
+            if(dailyData.length > 0 && dailyData[0].SEM) {
+                document.getElementById('filter-week').value = dailyData[0].SEM;
             }
             updateWeeklyReport();
         }
 
-        // Actualizar sección acumulativa semanal y gráfico
         function updateWeeklyReport() {
             const selectedWeek = document.getElementById('filter-week').value;
             const weekData = rawData.filter(item => item.SEM === selectedWeek);
@@ -341,54 +370,49 @@
             document.getElementById('week-total-passengers').innerText = weekPassengers.toLocaleString();
             document.getElementById('week-total-free').innerText = weekFree.toLocaleString();
 
-            // Actualizar Gráfico de Chart.js sin parpadeo
             if(chartInstance) {
                 chartInstance.data.datasets[0].data = [weekPassengers, weekFree];
                 chartInstance.update();
             }
         }
 
-        // Inicializador de Gráfico Circular
         function initChart() {
+            if(chartInstance) return;
             const ctx = document.getElementById('weeklyChart').getContext('2d');
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Pasajeros Movilizados', 'Asientos Libres'],
+                    labels: ['Pasajeros', 'Asientos Libres'],
                     datasets: [{
                         data: [0, 0],
                         backgroundColor: ['#0A5C36', '#E67E22'],
-                        borderWidth: 2,
-                        hoverOffset: 4
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
-                    },
-                    cutout: '70%'
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+                    cutout: '75%'
                 }
             });
         }
 
-        // Formateador visual estético para fecha
         function formatDateDisplay(dateStr) {
             if(!dateStr) return '--/--/----';
             const parts = dateStr.split('-');
-            if(parts.length !== 3) return dateStr;
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
         }
 
-        // Generador de Respaldo: Datos de simulación idénticos a la estructura de tu archivo CSV
-        function generateMockData() {
-            return `fecha,placa,conductor,tipo,ruta,cultivo,capacidad,pasajeros,libres,observaciones,FECHA,SEM,MES
-20/4/2026 11:27,M1A-963,SANCHEZ MORE JUAN,COMBI,ANCOL CHICO - SEDE OLMOS,SERVICIOS GENERALES,15,13,2,Salud,2026-06-09,24,Ene
-20/4/2026 11:27,A9Z-969,ARROYO TIMANA NEPTALI,MINI BUS,INSCULAS - SEDE OLMOS,SERVICIOS GENERALES,32,23,9,Faltaron,2026-06-09,24,Ene
-20/4/2026 11:27,M3T-671,ALAMO PISCOYA JORGE LUIS,COMBI,LOS BANCES - SEDE OLMOS,SERVICIOS GENERALES,15,12,3,,2026-06-09,24,Ene
-20/4/2026 11:27,V5E-954,ZAPATA DAMIAN FELIPE,COMBI,LA GRANJA - SEDE OLMOS,SERVICIOS GENERALES,15,15,0,Todo Conforme,2026-06-10,24,Ene
-20/4/2026 11:27,M1A-963,SANCHEZ MORE JUAN,COMBI,ANCOL CHICO - SEDE OLMOS,SERVICIOS GENERALES,15,10,5,,2026-06-10,24,Ene`;
+        // Simulación en caso falte configurar la URL de Google para que la App abra de todas formas
+        function procesarDataLocal() {
+            rawData = [
+                { FECHA: "2026-06-09", PLACA: "M1A-963", CONDUCTOR: "SANCHEZ MORE JUAN", RUTA: "ANCOL CHICO - SEDE OLMOS", CAPACIDAD: "15", PASAJEROS: "13", LIBRES: "2", SEM: "24" },
+                { FECHA: "2026-06-09", PLACA: "A9Z-969", CONDUCTOR: "ARROYO TIMANA NEPTALI", RUTA: "INSCULAS - SEDE OLMOS", CAPACIDAD: "32", PASAJEROS: "23", LIBRES: "9", SEM: "24" },
+                { FECHA: "2026-06-10", PLACA: "V5E-954", CONDUCTOR: "ZAPATA DAMIAN FELIPE", RUTA: "LA GRANJA - SEDE OLMOS", CAPACIDAD: "15", PASAJEROS: "15", LIBRES: "0", SEM: "24" }
+            ];
+            actualizarEstadoConexion("success", "Modo de Vista Previa (Demo)");
+            inicializarFiltrosYComponentes();
         }
     </script>
 </body>
