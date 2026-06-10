@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Movilidades - Frusan</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -15,18 +14,15 @@
       --frusan-orange: #EF6C00;
       --frusan-light: #F4F6F4;
     }
-    
     body {
       background-color: var(--frusan-light);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
     .navbar-frusan {
       background-color: var(--frusan-green-dark);
       color: white;
       border-bottom: 4px solid var(--frusan-orange);
     }
-    
     .card-custom {
       border: none;
       border-radius: 12px;
@@ -34,11 +30,6 @@
       background: white;
       transition: transform 0.2s;
     }
-    
-    .card-custom:hover {
-      transform: translateY(-2px);
-    }
-    
     .icon-box {
       width: 50px;
       height: 50px;
@@ -49,7 +40,6 @@
       font-size: 24px;
       color: white;
     }
-    
     .bg-pasajeros { background-color: var(--frusan-green); }
     .bg-libres { background-color: var(--frusan-orange); }
     .bg-capacidad { background-color: #0288D1; }
@@ -61,13 +51,6 @@
       padding: 15px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    
-    /* Ajustes responsivos */
-    @media (max-width: 768px) {
-      .navbar-brand h4 { font-size: 1.1rem; }
-      .icon-box { width: 40px; height: 40px; font-size: 18px; }
-    }
-    
     .loader {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -82,19 +65,19 @@
 
   <div id="loader" class="loader">
     <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 text-secondary">Procesando datos de BDXX_HUARMEY...</h5>
+    <h5 class="mt-3 text-secondary">Conectando con la base de datos BDXX_HUARMEY...</h5>
   </div>
 
   <nav class="navbar navbar-frusan sticky-top p-2 mb-4">
     <div class="container-fluid d-flex justify-content-between align-items-center">
       <div class="navbar-brand d-flex align-items-center text-white">
-        <i class="fa-solid fa-tractor me-2 text-warning fs-3"></i>
+        <i class="fa-solid fa-bus me-3 text-warning fs-2"></i>
         <div>
           <h4 class="mb-0 fw-bold">Agrícola Huarmey</h4>
-          <small style="color: #FFCC80;">Fundo Frusan — Reporte de Movilidades</small>
+          <small style="color: #FFCC80;">Fundo Frusan — Dashboard de Control de Movilidades</small>
         </div>
       </div>
-      <div class="text-end text-white-50 d-none d-sm-block">
+      <div class="text-end text-white-50">
         <span id="current-date-badge" class="badge bg-light text-dark"></span>
       </div>
     </div>
@@ -103,30 +86,29 @@
   <div class="container-fluid px-4">
     
     <div class="row mb-4">
-      <div class="col-md-4 col-sm-6 mb-2">
-        <label class="form-label fw-bold text-muted"><i class="fa-solid fa-calendar-day me-1"></i> Seleccionar Día para Reporte Diario</label>
+      <div class="col-md-4 col-sm-12">
+        <label class="form-label fw-bold text-muted"><i class="fa-solid fa-filter me-1"></i> Seleccionar Fecha de Reporte</label>
         <select id="select-fecha" class="form-select card-custom" onchange="renderizarDashboardDiario()"></select>
       </div>
     </div>
 
-    <h5 class="text-uppercase text-secondary fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Indicadores del Día</h5>
     <div class="row g-3 mb-4">
       <div class="col-xl-3 col-md-6 col-12">
         <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
           <div>
-            <h6 class="text-muted text-uppercase small">Movilidades Ingresadas</h6>
+            <h6 class="text-muted text-uppercase small">Unidades Ingresadas</h6>
             <h3 class="fw-bold mb-0" id="kpi-movilidades">0</h3>
           </div>
-          <div class="icon-box bg-movilidades"><i class="fa-solid fa-bus"></i></div>
+          <div class="icon-box bg-movilidades"><i class="fa-solid fa-car-side"></i></div>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 col-12">
         <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
           <div>
-            <h6 class="text-muted text-uppercase small">Capacidad Total Terórica</h6>
+            <h6 class="text-muted text-uppercase small">Capacidad Total</h6>
             <h3 class="fw-bold mb-0" id="kpi-capacidad">0</h3>
           </div>
-          <div class="icon-box bg-capacidad"><i class="fa-solid fa-users-rays"></i></div>
+          <div class="icon-box bg-capacidad"><i class="fa-solid fa-users"></i></div>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 col-12">
@@ -136,13 +118,13 @@
             <h3 class="fw-bold mb-0" id="kpi-pasajeros">0</h3>
             <small class="text-success fw-bold" id="pct-pasajeros">0%</small>
           </div>
-          <div class="icon-box bg-pasajeros"><i class="fa-solid fa-user-check"></i></div>
+          <div class="icon-box bg-pasajeros"><i class="fa-solid fa-circle-user"></i></div>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 col-12">
         <div class="card card-custom p-3 d-flex flex-row align-items-center justify-content-between">
           <div>
-            <h6 class="text-muted text-uppercase small">Asientos Libres Total</h6>
+            <h6 class="text-muted text-uppercase small">Asientos Libres</h6>
             <h3 class="fw-bold mb-0" id="kpi-libres">0</h3>
             <small class="text-warning fw-bold" id="pct-libres">0%</small>
           </div>
@@ -154,20 +136,16 @@
     <div class="row g-4 mb-4">
       <div class="col-lg-4 col-12">
         <div class="card card-custom p-3 h-100">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-donut me-2"></i>Ocupación Porcentual Diaria</h6>
-          <div style="position: relative; height:240px; margin: auto;">
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-pie me-2"></i>% de Ocupación del Día</h6>
+          <div style="position: relative; height:220px;">
             <canvas id="chartDonutDiario"></canvas>
           </div>
         </div>
       </div>
-      
       <div class="col-lg-8 col-12">
         <div class="card card-custom p-3 h-100">
-          <h6 class="fw-bold text-secondary mb-3">
-            <i class="fa-solid fa-chart-line me-2"></i>Comparativo Diario: Pasajeros vs Libres 
-            <span class="badge bg-danger ms-2 text-wrap" style="font-size:0.75rem;">Monitoreo de Eficiencia por Carro</span>
-          </h6>
-          <div style="position: relative; height:250px;">
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-line me-2"></i>Tendencia Diaria: Pasajeros vs Libres (Detección de Bajas)</h6>
+          <div style="position: relative; height:220px;">
             <canvas id="chartLineaTendencia"></canvas>
           </div>
         </div>
@@ -177,7 +155,7 @@
     <div class="row mb-4">
       <div class="col-12">
         <div class="table-container">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-list-check me-2"></i>Consolidado Diario por Unidad (Último Registro Validado)</h6>
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-table-list me-2"></i>Consolidado Diario de Movilidades (Filtro de Último Registro Aplicado)</h6>
           <div class="table-responsive">
             <table class="table table-hover align-middle">
               <thead class="table-light">
@@ -185,35 +163,34 @@
                   <th>Placa</th>
                   <th>Conductor</th>
                   <th>Ruta</th>
-                  <th>Tipo Unidad</th>
+                  <th>Tipo</th>
                   <th class="text-center">Capacidad</th>
                   <th class="text-center">Pasajeros</th>
                   <th class="text-center">Libres</th>
-                  <th class="text-center">Eficiencia %</th>
+                  <th class="text-center">Ocupación %</th>
                 </tr>
               </thead>
-              <tbody id="tabla-diaria-body">
-                </tbody>
+              <tbody id="tabla-diaria-body"></tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
 
-    <h5 class="text-uppercase text-secondary fw-bold mb-3"><i class="fa-solid fa-calendar-weeks me-2"></i>Análisis Acumulado Semanal</h5>
+    <h5 class="text-uppercase text-secondary fw-bold mb-3"><i class="fa-solid fa-calendar-week me-2"></i>Análisis Consolidado Semanal</h5>
     <div class="row g-4 mb-5">
       <div class="col-md-6 col-12">
         <div class="card card-custom p-3">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-bar me-2"></i>Pasajeros Totales Transportados por Semana</h6>
-          <div style="position: relative; height:280px;">
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-bar text-success me-2"></i>Pasajeros por Semana</h6>
+          <div style="position: relative; height:250px;">
             <canvas id="chartSemanalPasajeros"></canvas>
           </div>
         </div>
       </div>
       <div class="col-md-6 col-12">
         <div class="card card-custom p-3">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-couch me-2"></i>Asientos Desperdiciados (Libres) por Semana</h6>
-          <div style="position: relative; height:280px;">
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-bar text-warning me-2"></i>Asientos Libres por Semana</h6>
+          <div style="position: relative; height:250px;">
             <canvas id="chartSemanalLibres"></canvas>
           </div>
         </div>
@@ -223,228 +200,167 @@
   </div>
 
   <script>
-    // Variables globales de almacenamiento
-    let rawDataset = [];
-    let chartDonutInstance = null;
-    let chartLineaInstance = null;
-    let chartSemPasajerosInstance = null;
-    let chartSemLibresInstance = null;
+    let datasetCompleto = [];
+    let chartDonut = null;
+    let chartLinea = null;
+    let chartSemPas = null;
+    let chartSemLib = null;
 
-    // Inicializador al cargar ventana
     window.onload = function() {
-      // Poner la fecha actual en la interfaz
-      const hoy = new Date();
-      document.getElementById('current-date-badge').innerText = 'Fecha de Consulta: ' + hoy.toLocaleDateString();
+      document.getElementById('current-date-badge').innerText = new Date().toLocaleDateString();
       
-      // Llamar al Backend de Apps Script
+      // Llamada segura al Backend de Apps Script
       google.script.run
-        .withSuccessHandler(procesarDatosExitoso)
+        .withSuccessHandler(alCargarDatos)
         .withFailureHandler(function(err) {
-          alert("Error al conectar con la base de datos: " + err);
+          alert("Error crítico de comunicación: " + err);
         })
         .getDashboardData();
     };
 
-    function procesarDatosExitoso(data) {
+    function alCargarDatos(data) {
       if(data.error) {
         alert(data.error);
         return;
       }
       
-      rawDataset = data;
+      datasetCompleto = data;
       
-      // 1. Población del Selector de Fechas Disponibles (Únicas y Ordenadas)
-      const selectFecha = document.getElementById("select-fecha");
-      const fechasUnicas = [...new Set(rawDataset.map(item => item.fechaDia))].sort().reverse();
+      // Obtener y ordenar las fechas disponibles de manera descendente
+      const select = document.getElementById("select-fecha");
+      const fechasUnicas = [...new Set(datasetCompleto.map(x => x.fechaDia))].sort().reverse();
       
-      fechasUnicas.forEach((fecha, index) => {
-        let option = document.createElement("option");
-        option.value = fecha;
-        // Formatear para mostrar visualmente agradable
-        option.text = fecha; 
-        if(index === 0) option.selected = true; // Seleccionar el día más reciente por defecto
-        selectFecha.appendChild(option);
+      fechasUnicas.forEach((f, idx) => {
+        let opt = document.createElement("option");
+        opt.value = f;
+        opt.text = f;
+        if(idx === 0) opt.selected = true;
+        select.appendChild(opt);
       });
 
-      // Ocultar pantalla de carga
       document.getElementById("loader").style.display = "none";
-
-      // 2. Renderizar todas las gráficas e indicadores
+      
       renderizarDashboardDiario();
-      renderizarAnalisisHistoricoYSemanal(fechasUnicas);
+      renderizarGraficosHistoricos(fechasUnicas);
     }
 
     function renderizarDashboardDiario() {
-      const fechaSeleccionada = document.getElementById("select-fecha").value;
+      const fechaSel = document.getElementById("select-fecha").value;
+      const datosDia = datasetCompleto.filter(x => x.fechaDia === fechaSel);
       
-      // Filtrar el set de datos ya limpio de duplicados para el día específico
-      const datosDelDia = rawDataset.filter(item => item.fechaDia === fechaSeleccionada);
-      
-      let totalMovilidades = datosDelDia.length;
-      let totalCapacidad = 0;
-      let totalPasajeros = 0;
-      let totalLibres = 0;
-      
+      let movilidades = datosDia.length;
+      let capacidad = 0;
+      let pasajeros = 0;
+      let libres = 0;
       let tablaHtml = "";
       
-      datosDelDia.forEach(item => {
-        totalCapacidad += item.capacidad;
-        totalPasajeros += item.pasajeros;
-        totalLibres += item.libres;
+      datosDia.forEach(x => {
+        capacidad += x.capacidad;
+        pasajeros += x.pasajeros;
+        libres += x.libres;
         
-        let pctEficiencia = item.capacidad > 0 ? Math.round((item.pasajeros / item.capacidad) * 100) : 0;
-        let colorBadge = pctEficiencia > 85 ? 'bg-success' : (pctEficiencia > 50 ? 'bg-warning text-dark' : 'bg-danger');
-
-        tablaHtml += `
-          <tr>
-            <td><strong class="text-secondary">${item.placa}</strong></td>
-            <td><small>${item.conductor}</small></td>
-            <td><span class="badge bg-light text-dark border">${item.ruta}</span></td>
-            <td><small class="text-muted">${item.tipo}</small></td>
-            <td class="text-center fw-bold">${item.capacidad}</td>
-            <td class="text-center text-success fw-bold">${item.pasajeros}</td>
-            <td class="text-center text-orange fw-bold" style="color:var(--frusan-orange);">${item.libres}</td>
-            <td class="text-center"><span class="badge ${colorBadge}">${pctEficiencia}%</span></td>
-          </tr>
-        `;
+        let porcentaje = x.capacidad > 0 ? Math.round((x.pasajeros / x.capacidad) * 100) : 0;
+        let badgeColor = porcentaje > 80 ? 'bg-success' : (porcentaje > 50 ? 'bg-warning text-dark' : 'bg-danger');
+        
+        tablaHtml += `<tr>
+          <td><strong>${x.placa}</strong></td>
+          <td><small>${x.conductor}</small></td>
+          <td><span class="badge bg-light text-dark border">${x.ruta}</span></td>
+          <td><small>${x.tipo}</small></td>
+          <td class="text-center">${x.capacidad}</td>
+          <td class="text-center text-success fw-bold">${x.pasajeros}</td>
+          <td class="text-center text-danger">${x.libres}</td>
+          <td class="text-center"><span class="badge ${badgeColor}">${porcentaje}%</span></td>
+        </tr>`;
       });
       
-      // Insertar en la Tabla
-      document.getElementById("tabla-diaria-body").innerHTML = tablaHtml || "<tr><td colspan='8' class='text-center'>No hay registros para este día.</td></tr>";
+      document.getElementById("tabla-diaria-body").innerHTML = tablaHtml || "<tr><td colspan='8' class='text-center'>Sin datos</td></tr>";
       
-      // Calcular porcentajes globales del día
-      let pctPasajerosGlobal = totalCapacidad > 0 ? Math.round((totalPasajeros / totalCapacidad) * 100) : 0;
-      let pctLibresGlobal = totalCapacidad > 0 ? Math.round((totalLibres / totalCapacidad) * 100) : 0;
+      let pctPas = capacidad > 0 ? Math.round((pasajeros / capacidad) * 100) : 0;
+      let pctLib = capacidad > 0 ? Math.round((libres / capacidad) * 100) : 0;
       
-      // Asignar a Elementos KPI
-      document.getElementById("kpi-movilidades").innerText = totalMovilidades;
-      document.getElementById("kpi-capacidad").innerText = totalCapacidad;
-      document.getElementById("kpi-pasajeros").innerText = totalPasajeros;
-      document.getElementById("pct-pasajeros").innerText = `${pctPasajerosGlobal}% de la capacidad`;
-      document.getElementById("kpi-libres").innerText = totalLibres;
-      document.getElementById("pct-libres").innerText = `${pctLibresGlobal}% de asientos desaprovechados`;
-      
-      // --- RE-RENDERIZAR GRÁFICO DONUT DIARIO ---
-      if (chartDonutInstance) chartDonutInstance.destroy();
-      
-      const ctxDonut = document.getElementById('chartDonutDiario').getContext('2m');
-      chartDonutInstance = new Chart(ctxDonut, {
+      document.getElementById("kpi-movilidades").innerText = movilidades;
+      document.getElementById("kpi-capacidad").innerText = capacidad;
+      document.getElementById("kpi-pasajeros").innerText = pasajeros;
+      document.getElementById("pct-pasajeros").innerText = `${pctPas}% de capacidad ocupada`;
+      document.getElementById("kpi-libres").innerText = libres;
+      document.getElementById("pct-libres").innerText = `${pctLib}% de asientos vacíos`;
+
+      // Gráfico de Dona del día
+      if(chartDonut) chartDonut.destroy();
+      const ctx = document.getElementById("chartDonutDiario").getContext("2d");
+      chartDonut = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Pasajeros (%)', 'Libres (%)'],
+          labels: ['Pasajeros %', 'Libres %'],
           datasets: [{
-            data: [totalPasajeros, totalLibres],
-            backgroundColor: ['#388E3C', '#EF6C00'],
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
-      });
-    }
-
-    function renderizarAnalisisHistoricoYSemanal(fechasOrdenadas) {
-      // Clonar y ordenar cronológicamente ascendente (pasado a presente) para la línea de tiempo
-      const fechasCronologicas = [...fechasOrdenadas].reverse();
-      
-      let historialPasajeros = [];
-      let historialLibres = [];
-      
-      fechasCronologicas.forEach(f => {
-        let registrosDia = rawDataset.filter(item => item.fechaDia === f);
-        let pas = registrosDia.reduce((sum, item) => sum + item.pasajeros, 0);
-        let lib = registrosDia.reduce((sum, item) => sum + item.libres, 0);
-        historialPasajeros.push(pas);
-        historialLibres.push(lib);
-      });
-      
-      // --- GRÁFICO TENDENCIA DE LÍNEAS COMPARATIVAS ---
-      if (chartLineaInstance) chartLineaInstance.destroy();
-      const ctxLinea = document.getElementById('chartLineaTendencia').getContext('2d');
-      chartLineaInstance = new Chart(ctxLinea, {
-        type: 'line',
-        data: {
-          labels: fechasCronologicas,
-          datasets: [
-            {
-              label: 'Pasajeros por Día',
-              data: historialPasajeros,
-              borderColor: '#388E3C',
-              backgroundColor: 'rgba(56, 142, 60, 0.1)',
-              fill: true,
-              tension: 0.2
-            },
-            {
-              label: 'Asientos Libres (Pérdidas)',
-              data: historialLibres,
-              borderColor: '#EF6C00',
-              backgroundColor: 'rgba(239, 108, 0, 0.1)',
-              fill: true,
-              tension: 0.2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'top' }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
-      });
-      
-      // --- AGRUPACIÓN DE REPORTES SEMANALES ---
-      let resumenSemanas = {}; // Estructura: { "24": { pasajeros: X, libres: Y, movilidades: {} } }
-      
-      rawDataset.forEach(item => {
-        let sem = item.semana || "Sin Sem";
-        if (!resumenSemanas[sem]) {
-          resumenSemanas[sem] = { pasajeros: 0, libres: 0 };
-        }
-        resumenSemanas[sem].pasajeros += item.pasajeros;
-        resumenSemanas[sem].libres += item.libres;
-      });
-      
-      const listaSemanas = Object.keys(resumenSemanas).sort();
-      const datosSemPasajeros = listaSemanas.map(s => resumenSemanas[s].pasajeros);
-      const datosSemLibres = listaSemanas.map(s => resumenSemanas[s].libres);
-      
-      // Gráfico Semanal Pasajeros
-      if (chartSemPasajerosInstance) chartSemPasajerosInstance.destroy();
-      const ctxSemPas = document.getElementById('chartSemanalPasajeros').getContext('2d');
-      chartSemPasajerosInstance = new Chart(ctxSemPas, {
-        type: 'bar',
-        data: {
-          labels: listaSemanas.map(s => "Semana " + s),
-          datasets: [{
-            label: 'Total Pasajeros',
-            data: datosSemPasajeros,
-            backgroundColor: '#1E4620'
+            data: [pasajeros, libres],
+            backgroundColor: ['#388E3C', '#EF6C00']
           }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
+    }
+
+    function renderizarGraficosHistoricos(fechasDesc) {
+      const fechasAsc = [...fechasDesc].reverse();
+      let histPas = [];
+      let histLib = [];
       
-      // Gráfico Semanal Libres
-      if (chartSemLibresInstance) chartSemLibresInstance.destroy();
-      const ctxSemLib = document.getElementById('chartSemanalLibres').getContext('2d');
-      chartSemLibresInstance = new Chart(ctxSemLib, {
+      fechasAsc.forEach(f => {
+        let filtrados = datasetCompleto.filter(x => x.fechaDia === f);
+        histPas.push(filtrados.reduce((a, b) => a + b.pasajeros, 0));
+        histLib.push(filtrados.reduce((a, b) => a + b.libres, 0));
+      });
+
+      // Gráfico de Líneas (Comparativa diaria)
+      if(chartLinea) chartLinea.destroy();
+      const ctxL = document.getElementById("chartLineaTendencia").getContext("2d");
+      chartLinea = new Chart(ctxL, {
+        type: 'line',
+        data: {
+          labels: fechasAsc,
+          datasets: [
+            { label: 'Pasajeros', data: histPas, borderColor: '#388E3C', tension: 0.1 },
+            { label: 'Asientos Libres', data: histLib, borderColor: '#EF6C00', tension: 0.1 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Procesamiento Semanal
+      let semanas = {};
+      datasetCompleto.forEach(x => {
+        let s = x.semana;
+        if(!semanas[s]) semanas[s] = { pas: 0, lib: 0 };
+        semanas[s].pas += x.pasajeros;
+        semanas[s].lib += x.libres;
+      });
+
+      const arrSemanas = Object.keys(semanas).sort();
+      const dataSemPas = arrSemanas.map(s => semanas[s].pas);
+      const dataSemLib = arrSemanas.map(s => semanas[s].lib);
+
+      // Gráfico semanal de Pasajeros
+      if(chartSemPas) chartSemPas.destroy();
+      const ctxSP = document.getElementById("chartSemanalPasajeros").getContext("2d");
+      chartSemPas = new Chart(ctxSP, {
         type: 'bar',
         data: {
-          labels: listaSemanas.map(s => "Semana " + s),
-          datasets: [{
-            label: 'Total Asientos Libres',
-            data: datosSemLibres,
-            backgroundColor: '#EF6C00'
-          }]
+          labels: arrSemanas.map(s => "Semana " + s),
+          datasets: [{ label: 'Pasajeros', data: dataSemPas, backgroundColor: '#1E4620' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Gráfico semanal de Libres
+      if(chartSemLib) chartSemLib.destroy();
+      const ctxSL = document.getElementById("chartSemanalLibres").getContext("2d");
+      chartSemLib = new Chart(ctxSL, {
+        type: 'bar',
+        data: {
+          labels: arrSemanas.map(s => "Semana " + s),
+          datasets: [{ label: 'Asientos Libres', data: dataSemLib, backgroundColor: '#EF6C00' }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
