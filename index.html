@@ -3,758 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Movilidades - Agrícola Huarmey (Frusan)</title>
+    <title>Control de Unidades - Fundo Frusan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
+        /* Personalización de colores corporativos basados en Frusan */
         :root {
-            --primary: #0A3663; /* Azul Corporativo Frusan */
-            --secondary: #4CAF50; /* Verde Agrícola */
-            --warning: #FF9800;
-            --danger: #E53935;
-            --bg-body: #F4F6F9;
-            --bg-card: #FFFFFF;
-            --text-main: #333333;
-            --text-muted: #666666;
-            --border: #E0E0E0;
+            --frusan-green: #0A5C36;
+            --frusan-light-green: #14824A;
+            --frusan-accent: #E67E22;
+            --frusan-dark: #1E293B;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Membrete / Encabezado */
-        header {
-            background: linear-gradient(135deg, var(--primary) 0%, #104b85 100%);
-            color: white;
-            padding: 15px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .header-logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Logo de contingencia con CSS si la imagen local no carga inicialmente */
-        .logo-placeholder {
-            width: 50px;
-            height: 50px;
-            background-color: white;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .logo-placeholder img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .header-title h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-
-        .header-title p {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-
-        /* Contenedor Principal */
-        main {
-            flex: 1;
-            padding: 20px;
-            max-width: 1600px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        /* Panel de Filtros e Indicador de Estado */
-        .control-panel {
-            background-color: var(--bg-card);
-            padding: 15px 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--primary);
-        }
-
-        .filter-group select, .filter-group input {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            outline: none;
-            font-size: 0.9rem;
-            background-color: #FAFAFA;
-        }
-
-        .btn-sync {
-            background-color: var(--secondary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .btn-sync:hover {
-            background-color: #3e8e41;
-        }
-
-        /* Tarjetas de KPIs Diarios */
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .kpi-card {
-            background-color: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-left: 5px solid var(--primary);
-        }
-
-        .kpi-card.secondary { border-left-color: var(--secondary); }
-        .kpi-card.warning { border-left-color: var(--warning); }
-        .kpi-card.danger { border-left-color: var(--danger); }
-
-        .kpi-data h3 {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .kpi-data .value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .kpi-data .percentage {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .kpi-icon {
-            background-color: #F0F4F8;
-            paddding: 12px;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-        }
-        .kpi-card.secondary .kpi-icon { color: var(--secondary); background-color: #E8F5E9; }
-        .kpi-card.warning .kpi-icon { color: var(--warning); background-color: #FFF3E0; }
-        .kpi-card.danger .kpi-icon { color: var(--danger); background-color: #FFEBEE; }
-
-        /* Sección de Gráficos (Grid Adaptable) */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        @media (max-width: 1024px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .chart-card {
-            background-color: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            min-height: 350px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chart-card h2 {
-            font-size: 1.1rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Sección Tabla de Datos Sanitizados */
-        .table-card {
-            background-color: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-        }
-
-        .table-card h2 {
-            font-size: 1.1rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            max-height: 300px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background-color: #F8F9FA;
-            color: var(--primary);
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        tr:hover {
-            background-color: #F5F7FA;
-        }
-
-        /* Estado de Carga / Alertas */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--border);
-            border-top: 5px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Adaptabilidad para Teléfonos */
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                text-align: center;
-                gap: 10px;
-            }
-            .control-panel {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filter-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
+        .bg-frusan { background-color: var(--frusan-green); }
+        .bg-frusan-gradient { background: linear-gradient(135deg, var(--frusan-green) 0%, #05331E 100%); }
+        .text-frusan { color: var(--frusan-green); }
+        .border-frusan { border-color: var(--frusan-green); }
+        .focus-frusan:focus { border-color: var(--frusan-light-green); ring-color: var(--frusan-light-green); }
+        
+        /* Ajuste de scrollbar estético */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--frusan-green); border-radius: 4px; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p style="font-weight: 600; color: var(--primary);">Procesando y Sincronizando BDXX_HUARMEY...</p>
-    </div>
-
-    <header>
-        <div class="header-logo-area">
-            <div class="logo-placeholder">
-                <img src="ICO FRUSAN.png" alt="Frusan Logo" onerror="this.style.display='none';">
-                <i data-lucide="sprout" style="color: var(--secondary); width: 30px; height: 30px;"></i>
+    <header class="bg-frusan-gradient text-white shadow-md sticky top-0 z-50 px-4 py-3 decoding-container">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="bg-white p-1.5 rounded-lg shadow-inner flex items-center justify-center">
+                    <div class="w-10 h-10 flex items-center justify-center font-bold text-xl text-frusan border-2 border-frusan rounded">
+                        F
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight uppercase">Agrícola Huarmey</h1>
+                    <p class="text-xs text-green-200 font-medium">Control de Movilidades • Fundo Frusan</p>
+                </div>
             </div>
-            <div class="header-title">
-                <h1>Agrícola Huarmey</h1>
-                <p>Fundo FRUSAN • Panel de Control Operativo de Movilidades</p>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs">
+                <span id="connection-status" class="bg-yellow-500 text-white px-2 py-1 rounded-full flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3 h-3 animate-spin"></i> Cargando base de datos...
+                </span>
+                <input type="date" id="filter-date" class="bg-white/10 border border-white/20 text-white rounded px-2 py-1 focus:outline-none focus:border-white text-sm" />
             </div>
-        </div>
-        <div>
-            <i data-lucide="bus" style="width: 35px; height: 35px; opacity: 0.9;"></i>
         </div>
     </header>
 
-    <main>
-        <section class="control-panel">
-            <div class="filter-group">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
-                    <label for="fechaFiltro"><i data-lucide="calendar" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Fecha de Reporte:</label>
-                    <input type="date" id="fechaFiltro">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unidades Activas</p>
+                    <h3 id="kpi-units" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
                 </div>
+                <div class="p-3 bg-green-50 text-frusan rounded-lg"><i data-lucide="bus"></i></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
-                    <label for="semanaFiltro"><i data-lucide="layers" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Ver Semana:</label>
-                    <select id="semanaFiltro">
-                        </select>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pasajeros</p>
+                    <h3 id="kpi-passengers" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
                 </div>
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="users"></i></div>
             </div>
-            <button class="btn-sync" onclick="fetchSheetData()">
-                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Actualizar Hojas
-            </button>
-        </section>
-
-        <section class="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-data">
-                    <h3>Movilidades Activas</h3>
-                    <div class="value" id="kpiMovilidades">0</div>
-                    <div class="percentage">Ingresadas hoy</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Asientos Libres</p>
+                    <h3 id="kpi-free" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
                 </div>
-                <div class="kpi-icon"><i data-lucide="truck"></i></div>
+                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg"><i data-lucide="user-minus"></i></div>
             </div>
-            <div class="kpi-card secondary">
-                <div class="kpi-data">
-                    <h3>Capacidad Total</h3>
-                    <div class="value" id="kpiCapacidad">0</div>
-                    <div class="percentage">Asientos disponibles</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">% Eficiencia de Carga</p>
+                    <h3 id="kpi-efficiency" class="text-2xl font-bold text-slate-800 mt-1">0%</h3>
                 </div>
-                <div class="kpi-icon"><i data-lucide="users"></i></div>
-            </div>
-            <div class="kpi-card warning">
-                <div class="kpi-data">
-                    <h3>Total Pasajeros</h3>
-                    <div class="value" id="kpiPasajeros">0</div>
-                    <div class="percentage" id="pctPasajeros">0% de ocupación</div>
-                </div>
-                <div class="kpi-icon"><i data-lucide="user-check"></i></div>
-            </div>
-            <div class="kpi-card danger">
-                <div class="kpi-data">
-                    <h3>Asientos Libres</h3>
-                    <div class="value" id="kpiLibres">0</div>
-                    <div class="percentage" id="pctLibres">0% de ineficiencia</div>
-                </div>
-                <div class="kpi-icon"><i data-lucide="user-x"></i></div>
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="percent"></i></div>
             </div>
         </section>
 
-        <section class="charts-grid">
-            <div class="chart-card">
-                <h2><i data-lucide="bar-chart-3"></i> Reporte Diario: Pasajeros vs Libres por Movilidad</h2>
-                <div class="chart-wrapper">
-                    <canvas id="chartDiario"></canvas>
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-100 gap-2 mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="calendar" class="text-frusan"></i> Reporte de Movilidad Diario
+                        </h2>
+                        <p class="text-xs text-slate-400">Detalle de porcentaje de ocupación por vehículo</p>
+                    </div>
+                    <span id="current-selected-date" class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">--/--/----</span>
                 </div>
-            </div>
 
-            <div class="chart-card">
-                <h2><i data-lucide="trending-up"></i> Comparativo Diario: Identificación de Fechas con Bajo Ingreso</h2>
-                <div class="chart-wrapper">
-                    <canvas id="chartComparativo"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card" style="grid-column: span 2;">
-                <h2><i data-lucide="calendar-days"></i> Reporte Semanal Acumulado por Movilidad (Placa)</h2>
-                <div class="chart-wrapper">
-                    <canvas id="chartSemanal"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <section class="table-card">
-            <h2><i data-lucide="database"></i> Vista de Datos Limpios (Registros Únicos de Auditoría)</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
-                * Aplicando regla de negocio: Si existen múltiples registros del mismo conductor en el mismo día, se muestra únicamente el último ingresado.
-            </p>
-            <div class="table-responsive">
-                <table id="tablaRegistros">
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora Inicial</th>
-                            <th>Placa</th>
-                            <th>Conductor</th>
-                            <th>Ruta</th>
-                            <th>Capacidad</th>
-                            <th>Pasajeros</th>
-                            <th>Libres</th>
-                            <th>Observaciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 uppercase text-xxs font-bold tracking-wider border-b border-slate-200">
+                                <th class="p-3">Placa / Conductor</th>
+                                <th class="p-3">Ruta</th>
+                                <th class="p-3 text-center">Capacidad</th>
+                                <th class="p-3 text-center">Pasajeros</th>
+                                <th class="p-3 text-center">Libres</th>
+                                <th class="p-3 text-right">% Ocupación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-table-body" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-slate-400">Selecciona o carga una fecha para visualizar datos.</td>
+                            </tr>
                         </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col">
+                <div class="pb-3 border-b border-slate-100 mb-4">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="text-frusan"></i> Reporte por Semana
+                    </h2>
+                    <p class="text-xs text-slate-400">Consolidado general de pasajeros vs asientos libres</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Seleccionar Semana:</label>
+                    <select id="filter-week" class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg p-2 text-sm focus:outline-none focus:frusan-green"></select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-blue-50/50 p-3 rounded-lg text-center">
+                        <span class="text-xs text-blue-600 font-medium">Total Pasajeros</span>
+                        <h4 id="week-total-passengers" class="text-xl font-bold text-slate-800 mt-1">0</h4>
+                    </div>
+                    <div class="bg-orange-50/50 p-3 rounded-lg text-center">
+                        <span class="text-xs text-orange-600 font-medium">Total Libres</span>
+                        <h4 id="week-total-free" class="text-xl font-bold text-slate-800 mt-1">0</h4>
+                    </div>
+                </div>
+
+                <div class="relative flex-1 min-h-[200px] flex items-center justify-center">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+
         </section>
     </main>
 
+    <footer class="bg-slate-900 text-slate-400 text-xs py-4 px-4 border-t border-slate-800 text-center">
+        <p>© 2026 Agrícola Huarmey - Sede Olmos (Fundo Frusan). Desarrollado para optimización de operaciones.</p>
+    </footer>
+
     <script>
-        // URL DE TU GOOGLE SHEET EXPORTADO COMO CSV
-        // REEMPLAZAR ESTE LINK POR EL TUYO:
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT17X33Y5p99L4W7B8gK8tD69BqHh88WvN8j9U_REMPLAZA_ESTO/pub?output=csv";
+        // CONFIGURACIÓN DE LA BASE DE DATOS DE GOOGLE SHEETS (ENLACE CSV PUBLICADO)
+        const SPREADSHEET_CSV_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE_SHEETS_PUBLICADO_COMO_CSV";
 
-        // Datos en memoria global
         let rawData = [];
-        let cleanedData = [];
+        let chartInstance = null;
 
-        // Instancias de Gráficos globales
-        let chartDiarioInstance = null;
-        let chartComparativoInstance = null;
-        let chartSemanalInstance = null;
-
-        // Inicializador de Lucide Icons
-        window.addEventListener('DOMContentLoaded', () => {
+        // Inicializar Iconos de Lucide
+        document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            // Cargar datos de respaldo mockeados basados en tu estructura adjunta por si el link no está configurado aún
-            loadMockData(); 
+            initChart();
+            fetchDataFromSheets();
         });
 
-        // 1. CARGA DE DATOS DESDE GOOGLE SHEETS (O FALLBACK)
-        async function fetchSheetData() {
-            showLoading(true);
+        // Consumo Asíncrono de la base de datos de Google Sheets
+        async function fetchDataFromSheets() {
+            const statusEl = document.getElementById('connection-status');
             try {
-                const response = await fetch(GOOGLE_SHEET_CSV_URL);
-                if (!response.ok) throw new Error("No se pudo conectar a la URL del CSV.");
-                const text = await response.text();
-                parseCSV(text);
-            } catch (error) {
-                alert("Usando base de datos interna local cargada de la hoja 'registros' (Verifica tu enlace de Google Sheets para tiempo real).");
-                loadMockData();
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // Parseador básico de CSV respetando saltos de línea y comillas de tu estructura
-        function parseCSV(text) {
-            const lines = text.split(/\r?\n/);
-            if(lines.length < 2) return;
-            
-            // Mapeo básico de columnas según tu estructura
-            // fecha,placa,conductor,tipo,ruta,cultivo,capacidad,pasajeros,libres,observaciones,FECHA,SEM,MES
-            let results = [];
-            for (let i = 1; i < lines.length; i++) {
-                if(!lines[i]) continue;
-                // Manejo simple de comillas para observaciones con saltos de línea
-                let row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if(row.length >= 9) {
-                    results.push({
-                        fecha_hora: row[0].replace(/"/g, '').trim(),
-                        placa: row[1] ? row[1].trim() : '',
-                        conductor: row[2] ? row[2].trim() : '',
-                        tipo: row[3] ? row[3].trim() : '',
-                        ruta: row[4] ? row[4].trim() : '',
-                        cultivo: row[5] ? row[5].trim() : '',
-                        capacidad: parseInt(row[6]) || 0,
-                        pasajeros: parseInt(row[7]) || 0,
-                        libres: parseInt(row[8]) || 0,
-                        observaciones: row[9] ? row[9].replace(/"/g, '').trim() : '',
-                        fecha_corta: row[10] ? row[10].trim() : '',
-                        semana: row[11] ? row[11].trim() : '',
-                        mes: row[12] ? row[12].trim() : ''
-                    });
+                // Si aún no configuras tu url real, simulará con la data estructurada de tu excel adjunto
+                let responseText = "";
+                if(SPREADSHEET_CSV_URL.includes("AQUÍ_PEGA_TU_URL")) {
+                    console.warn("Utilizando datos locales de simulación basados en estructura de tu archivo.");
+                    responseText = generateMockData(); 
+                } else {
+                    const response = await fetch(SPREADSHEET_CSV_URL);
+                    responseText = await response.text();
                 }
-            }
-            rawData = results;
-            processAndRender();
-        }
 
-        // Datos de ejemplo basados exactamente en el fragmento de tu CSV provisto
-        function loadMockData() {
-            rawData = [
-                { fecha_hora: "20/4/2026, 11:27:23 a.m.", placa: "M1A-963", conductor: "SANCHEZ MORE JUAN", tipo: "COMBI", ruta: "ANCOL CHICO - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 13, libres: 2, observaciones: "Falto por salud", fecha_corta: "2026-04-20", semana: "17", mes: "Ene" },
-                { fecha_hora: "20/4/2026, 11:27:32 a.m.", placa: "A9Z-969", conductor: "ARROYO TIMANA NEPTALI", tipo: "MINI BUS", ruta: "INSCULAS - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 32, pasajeros: 23, libres: 9, observaciones: "Faltaron sin comunicar", fecha_corta: "2026-04-20", semana: "17", mes: "Ene" },
-                { fecha_hora: "03/3/2026, 06:15:00 a.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 10, libres: 5, observaciones: "Registro antiguo 1", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
-                { fecha_hora: "03/3/2026, 08:30:00 a.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 12, libres: 3, observaciones: "Registro antiguo 2", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
-                { fecha_hora: "03/3/2026, 05:45:32 p.m.", placa: "V5E-954", conductor: "JOSE CHAVEZ JULCA", tipo: "COMBI", ruta: "LA GRANJA", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 15, libres: 0, observaciones: "¡Último registro conservado!", fecha_corta: "2026-03-03", semana: "10", mes: "Ene" },
-                { fecha_hora: "9/6/2026, 6:10:39 a.m.", placa: "M1A-963", conductor: "SANCHEZ MORE JUAN", tipo: "COMBI", ruta: "ANCOL CHICO - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 13, libres: 2, observaciones: "Viaje conforme", fecha_corta: "2026-06-09", semana: "24", mes: "Ene" },
-                { fecha_hora: "9/6/2026, 6:26:37 a.m.", placa: "V5E-954", conductor: "ZAPATA DAMIAN FELIPE", tipo: "COMBI", ruta: "LA GRANJA - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 15, libres: 0, observaciones: "Conforme", fecha_corta: "2026-06-09", semana: "24", mes: "Ene" },
-                { fecha_hora: "10/6/2026, 9:57:35 a.m.", placa: "M3T-671", conductor: "ALAMO PISCOYA JORGE LUIS", tipo: "COMBI", ruta: "LOS BANCES - SEDE OLMOS", cultivo: "SERVICIOS GENERALES", capacidad: 15, pasajeros: 14, libres: 1, observaciones: "Todo conforme", fecha_corta: "2026-06-10", semana: "24", mes: "Ene" }
-            ];
-            processAndRender();
-        }
-
-        // 2. SANITIZACIÓN: REGLA DE NEGOCIO PARA DEJAR SOLO EL ÚLTIMO REGISTRO
-        function processAndRender() {
-            // Ordenamos por fecha_hora ascendentemente para asegurar que el último sobreescriba a los anteriores
-            let sorted = [...rawData].sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
-            
-            let mapUnicos = new Map();
-            sorted.forEach(row => {
-                // Generamos clave única compuesta por: Conductor + Fecha Corta
-                let key = `${row.conductor.toUpperCase()}_${row.fecha_corta}`;
-                mapUnicos.set(key, row); // Al usar un Map, el último registro reemplaza al anterior automáticamente.
-            });
-
-            cleanedData = Array.from(mapUnicos.values());
-
-            // Rellenar select de Semanas disponibles de forma dinámica
-            let semanas = [...new Set(cleanedData.map(item => item.semana))].sort((a,b)=>a-b);
-            let selectSemana = document.getElementById("semanaFiltro");
-            selectSemana.innerHTML = "";
-            semanas.forEach(sem => {
-                let opt = document.createElement("option");
-                opt.value = sem;
-                opt.textContent = `Semana ${sem}`;
-                selectSemana.appendChild(opt);
-            });
-
-            // Seleccionar por defecto la fecha más alta que tengamos en datos para visualización inicial
-            let fechasOrdenadas = [...new Set(cleanedData.map(item => item.fecha_corta))].sort();
-            if(fechasOrdenadas.length > 0) {
-                let ultimaFecha = fechasOrdenadas[fechasOrdenadas.length - 1];
-                document.getElementById("fechaFiltro").value = ultimaFecha;
+                rawData = parseCSV(responseText);
                 
-                // Encontrar a qué semana pertenece esa fecha para sincronizar el combo box semanal
-                let registroCorrespondiente = cleanedData.find(item => item.fecha_corta === ultimaFecha);
-                if(registroCorrespondiente) selectSemana.value = registroCorrespondiente.semana;
+                statusEl.className = "bg-green-600 text-white px-2 py-1 rounded-full flex items-center gap-1";
+                statusEl.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3"></i> Sincronizado`;
+                lucide.createIcons();
+
+                setupFilters();
+                renderDashboard();
+
+            } catch (error) {
+                console.error("Error al conectar con Google Sheets: ", error);
+                statusEl.className = "bg-red-600 text-white px-2 py-1 rounded-full flex items-center gap-1";
+                statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> Error de Conexión`;
+                lucide.createIcons();
+            }
+        }
+
+        // Parseador Estricto de CSV considerando saltos de línea dentro de comillas (Observaciones)
+        function parseCSV(text) {
+            let lines = [];
+            let row = [""];
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                let next = text[i+1];
+                if (c === '"') {
+                    if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; }
+                    else { inQuotes = !inQuotes; }
+                } else if (c === ',' && !inQuotes) {
+                    row.push('');
+                } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    lines.push(row);
+                    row = [''];
+                } else {
+                    row[row.length - 1] += c;
+                }
+            }
+            if (row.length > 1 || row[0] !== '') lines.push(row);
+            
+            // Mapear cabeceras con filas de datos de tu excel
+            const headers = lines[0].map(h => h.trim().toUpperCase());
+            return lines.slice(1).map(line => {
+                let obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = line[index] ? line[index].trim() : '';
+                });
+                return obj;
+            }).filter(item => item.FECHA); // Filtrar filas vacías
+        }
+
+        // Configurar los selectores dinámicos basados en los datos reales de la BD
+        function setupFilters() {
+            const dateInput = document.getElementById('filter-date');
+            const weekSelect = document.getElementById('filter-week');
+
+            // Obtener la fecha más reciente de la data para ponerla por defecto
+            const uniqueDates = [...new Set(rawData.map(item => item.FECHA))].sort().reverse();
+            if(uniqueDates.length > 0) {
+                dateInput.value = uniqueDates[0];
             }
 
-            // Configurar los listeners para actualización inmediata al cambiar filtros
-            document.getElementById("fechaFiltro").addEventListener("change", renderDashboard);
-            document.getElementById("semanaFiltro").addEventListener("change", renderDashboard);
+            // Obtener semanas únicas
+            const uniqueWeeks = [...new Set(rawData.map(item => item.SEM))].sort((a,b) => parseInt(a)-parseInt(b));
+            weekSelect.innerHTML = uniqueWeeks.map(w => `<option value="${w}">Semana ${w}</option>`).join('');
 
-            renderDashboard();
+            // Escuchar eventos de cambio
+            dateInput.addEventListener('change', renderDashboard);
+            weekSelect.addEventListener('change', updateWeeklyReport);
         }
 
-        // 3. RENDERIZADO PRINCIPAL DE LA APLICACIÓN
+        // Renderizado Dinámico de KPI y Reportes
         function renderDashboard() {
-            let fechaSel = document.getElementById("fechaFiltro").value;
-            let semanaSel = document.getElementById("semanaFiltro").value;
+            const selectedDate = document.getElementById('filter-date').value;
+            document.getElementById('current-selected-date').innerText = formatDateDisplay(selectedDate);
 
-            // Filtrado de datos para sección Diaria
-            let datosDiarios = cleanedData.filter(item => item.fecha_corta === fechaSel);
-
-            // 3.1 CÁLCULO DE KPIS DIARIOS
-            let totalMovilidades = datosDiarios.length;
-            let totalCapacidad = datosDiarios.reduce((sum, item) => sum + item.capacidad, 0);
-            let totalPasajeros = datosDiarios.reduce((sum, item) => sum + item.pasajeros, 0);
-            let totalLibres = datosDiarios.reduce((sum, item) => sum + item.libres, 0);
-
-            // Manejo de porcentajes preventivo por división sobre cero
-            let pctPas = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100).toFixed(1) : 0;
-            let pctLib = totalCapacidad > 0 ? ((totalLibres / totalCapacidad) * 100).toFixed(1) : 0;
-
-            document.getElementById("kpiMovilidades").textContent = totalMovilidades;
-            document.getElementById("kpiCapacidad").textContent = totalCapacidad;
-            document.getElementById("kpiPasajeros").textContent = totalPasajeros;
-            document.getElementById("kpiLibres").textContent = totalLibres;
-            document.getElementById("pctPasajeros").textContent = `${pctPas}% de ocupación total`;
-            document.getElementById("pctLibres").textContent = `${pctLib}% asientos vacíos`;
-
-            // 3.2 ACTUALIZACIÓN DE TABLA DE VISTA GENERAL
-            let tbody = document.querySelector("#tablaRegistros tbody");
-            tbody.innerHTML = "";
-            cleanedData.forEach(item => {
-                let tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${item.fecha_hora}</td>
-                    <td><strong>${item.placa}</strong></td>
-                    <td>${item.conductor}</td>
-                    <td>${item.ruta}</td>
-                    <td>${item.capacidad}</td>
-                    <td style="color:var(--primary); font-weight:bold;">${item.pasajeros}</td>
-                    <td style="color:${item.libres > 3 ? 'var(--danger)' : 'var(--text-main)'}">${item.libres}</td>
-                    <td><small>${item.observaciones || '-'}</small></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // 3.3 CONSTRUCCIÓN DE GRÁFICOS
-            renderChartDiario(datosDiarios);
-            renderChartComparativo();
-            renderChartSemanal(semanaSel);
-        }
-
-        // --- SECCIÓN DE MOTORES GRÁFICOS INTERACTIVOS (CHART.JS) ---
-
-        // Gráfico 1: Barras apiladas Diarias por Conductor
-        function renderChartDiario(datosDiarios) {
-            let ctx = document.getElementById('chartDiario').getContext('2d');
+            // Filtrar data del día seleccionado
+            const dailyData = rawData.filter(item => item.FECHA === selectedDate);
+            const tbody = document.getElementById('daily-table-body');
             
-            if (chartDiarioInstance) chartDiarioInstance.destroy();
+            let totalCapacity = 0;
+            let totalPassengers = 0;
+            let totalFree = 0;
 
-            let labels = datosDiarios.map(item => item.conductor.split(' ')[0] + " (" + item.placa + ")");
-            let pasajerosData = datosDiarios.map(item => item.pasajeros);
-            let libresData = datosDiarios.map(item => item.libres);
+            if(dailyData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No hay registros de transportes para la fecha seleccionada.</td></tr>`;
+            } else {
+                tbody.innerHTML = dailyData.map(row => {
+                    const cap = parseInt(row.CAPACIDAD) || 0;
+                    const pas = parseInt(row.PASAJEROS) || 0;
+                    const lib = parseInt(row.LIBRES) || 0;
+                    
+                    totalCapacity += cap;
+                    totalPassengers += pas;
+                    totalFree += lib;
 
-            chartDiarioInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Pasajeros', data: pasajerosData, backgroundColor: '#0A3663' },
-                        { label: 'Espacios Libres', data: libresData, backgroundColor: '#FF9800' }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { x: { stacked: true }, y: { stacked: true } },
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
+                    const percent = cap > 0 ? Math.round((pas / cap) * 100) : 0;
+                    
+                    // Color dinámico según la optimización de espacio
+                    let progressColor = 'bg-frusan';
+                    if (percent > 95) progressColor = 'bg-red-600'; // Al límite o sobrecarga
+                    else if (percent < 50) progressColor = 'bg-yellow-500'; // Subutilizado
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-3">
+                                <div class="font-bold text-slate-700">${row.PLACA}</div>
+                                <div class="text-xs text-slate-400 truncate max-w-[150px]">${row.CONDUCTOR}</div>
+                            </td>
+                            <td class="p-3 text-xs text-slate-500 font-medium">${row.RUTA}</td>
+                            <td class="p-3 text-center font-semibold">${cap}</td>
+                            <td class="p-3 text-center text-blue-600 font-semibold">${pas}</td>
+                            <td class="p-3 text-center text-orange-600 font-semibold">${lib}</td>
+                            <td class="p-3">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="text-xs font-bold text-slate-700">${percent}%</span>
+                                    <div class="w-16 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
+                                        <div class="${progressColor} h-full" style="width: ${percent}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Actualizar KPIs Diarios
+            document.getElementById('kpi-units').innerText = dailyData.length;
+            document.getElementById('kpi-passengers').innerText = totalPassengers;
+            document.getElementById('kpi-free').innerText = totalFree;
+            document.getElementById('kpi-efficiency').innerText = totalCapacity > 0 ? `${Math.round((totalPassengers / totalCapacity) * 100)}%` : '0%';
+
+            // Intentar emparejar la semana de la fecha actual seleccionada para actualizar el reporte semanal de manera intuitiva
+            if(dailyData.length > 0) {
+                const correspondingWeek = dailyData[0].SEM;
+                document.getElementById('filter-week').value = correspondingWeek;
+            }
+            updateWeeklyReport();
         }
 
-        // Gráfico 2: Tendencia para identificación de bajas ventas / transportes ineficientes
-        function renderChartComparativo() {
-            let ctx = document.getElementById('chartComparativo').getContext('2d');
-            if (chartComparativoInstance) chartComparativoInstance.destroy();
+        // Actualizar sección acumulativa semanal y gráfico
+        function updateWeeklyReport() {
+            const selectedWeek = document.getElementById('filter-week').value;
+            const weekData = rawData.filter(item => item.SEM === selectedWeek);
 
-            // Agrupamos totales por fechas cronológicas
-            let fechasMap = {};
-            cleanedData.forEach(item => {
-                if(!fechasMap[item.fecha_corta]) {
-                    fechasMap[item.fecha_corta] = { pasajeros: 0, libres: 0 };
-                }
-                fechasMap[item.fecha_corta].pasajeros += item.pasajeros;
-                fechasMap[item.fecha_corta].libres += item.libres;
+            let weekPassengers = 0;
+            let weekFree = 0;
+
+            weekData.forEach(row => {
+                weekPassengers += parseInt(row.PASAJEROS) || 0;
+                weekFree += parseInt(row.LIBRES) || 0;
             });
 
-            let labels = Object.keys(fechasMap).sort();
-            let pasajerosData = labels.map(f => fechasMap[f].pasajeros);
-            let libresData = labels.map(f => fechasMap[f].libres);
+            document.getElementById('week-total-passengers').innerText = weekPassengers.toLocaleString();
+            document.getElementById('week-total-free').innerText = weekFree.toLocaleString();
 
-            chartComparativoInstance = new Chart(ctx, {
-                type: 'line',
+            // Actualizar Gráfico de Chart.js sin parpadeo
+            if(chartInstance) {
+                chartInstance.data.datasets[0].data = [weekPassengers, weekFree];
+                chartInstance.update();
+            }
+        }
+
+        // Inicializador de Gráfico Circular
+        function initChart() {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Total Pasajeros', data: pasajerosData, borderColor: '#4CAF50', tension: 0.2, fill: false },
-                        { label: 'Total Asientos Libres', data: libresData, borderColor: '#E53935', tension: 0.2, fill: false }
-                    ]
+                    labels: ['Pasajeros Movilizados', 'Asientos Libres'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#0A5C36', '#E67E22'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        tooltip: {
-                            callbacks: {
-                                footer: (tooltipItems) => {
-                                    let index = tooltipItems[0].dataIndex;
-                                    let lib = libresData[index];
-                                    return lib > 10 ? '⚠️ Alerta: Bajo ingreso de personal detectado' : '✅ Rendimiento Óptimo';
-                                }
-                            }
-                        }
-                    }
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    },
+                    cutout: '70%'
                 }
             });
         }
 
-        // Gráfico 3: Consolidado Semanal por Placas de Movilidad
-        function renderChartSemanal(semanaSel) {
-            let ctx = document.getElementById('chartSemanal').getContext('2d');
-            if (chartSemanalInstance) chartSemanalInstance.destroy();
-
-            let datosSemanales = cleanedData.filter(item => item.semana === semanaSel);
-
-            // Agrupamos por número de placa de la unidad de transporte
-            let placaMap = {};
-            datosSemanales.forEach(item => {
-                if(!placaMap[item.placa]) {
-                    placaMap[item.placa] = { pasajeros: 0, libres: 0 };
-                }
-                placaMap[item.placa].pasajeros += item.pasajeros;
-                placaMap[item.placa].libres += item.libres;
-            });
-
-            let labels = Object.keys(placaMap);
-            let pasajerosData = labels.map(p => placaMap[p].pasajeros);
-            let libresData = labels.map(p => placaMap[p].libres);
-
-            chartSemanalInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Pasajeros Acumulados', data: pasajerosData, backgroundColor: '#0A3663' },
-                        { label: 'Libres Acumulados', data: libresData, backgroundColor: '#E53935' }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
+        // Formateador visual estético para fecha
+        function formatDateDisplay(dateStr) {
+            if(!dateStr) return '--/--/----';
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
-        function showLoading(show) {
-            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+        // Generador de Respaldo: Datos de simulación idénticos a la estructura de tu archivo CSV
+        function generateMockData() {
+            return `fecha,placa,conductor,tipo,ruta,cultivo,capacidad,pasajeros,libres,observaciones,FECHA,SEM,MES
+20/4/2026 11:27,M1A-963,SANCHEZ MORE JUAN,COMBI,ANCOL CHICO - SEDE OLMOS,SERVICIOS GENERALES,15,13,2,Salud,2026-06-09,24,Ene
+20/4/2026 11:27,A9Z-969,ARROYO TIMANA NEPTALI,MINI BUS,INSCULAS - SEDE OLMOS,SERVICIOS GENERALES,32,23,9,Faltaron,2026-06-09,24,Ene
+20/4/2026 11:27,M3T-671,ALAMO PISCOYA JORGE LUIS,COMBI,LOS BANCES - SEDE OLMOS,SERVICIOS GENERALES,15,12,3,,2026-06-09,24,Ene
+20/4/2026 11:27,V5E-954,ZAPATA DAMIAN FELIPE,COMBI,LA GRANJA - SEDE OLMOS,SERVICIOS GENERALES,15,15,0,Todo Conforme,2026-06-10,24,Ene
+20/4/2026 11:27,M1A-963,SANCHEZ MORE JUAN,COMBI,ANCOL CHICO - SEDE OLMOS,SERVICIOS GENERALES,15,10,5,,2026-06-10,24,Ene`;
         }
     </script>
 </body>
