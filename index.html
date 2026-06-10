@@ -77,26 +77,56 @@
             letter-spacing: 1px;
         }
 
+        /* ESTATUS DE CONECTIVIDAD AVANZADO */
         .api-status {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-size: 0.9rem;
             background-color: #ECEFF1;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-weight: 600;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .api-status.connected {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+            border-color: #A5D6A7;
+        }
+
+        .api-status.error {
+            background-color: #FFEBEE;
+            color: #C62828;
+            border-color: #EF9A9A;
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             background-color: #FFA000;
             border-radius: 50%;
             display: inline-block;
+            animation: pulse 1.5s infinite;
         }
 
-        .status-dot.online { background-color: #4CAF50; }
+        .api-status.connected .status-dot {
+            background-color: #4CAF50;
+            animation: none;
+        }
+
+        .api-status.error .status-dot {
+            background-color: #F44336;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
 
         main {
             max-width: 1200px;
@@ -254,7 +284,7 @@
         .badge-down { background-color: #FFEBEE; color: #D32F2F; }
         .badge-neutral { background-color: #ECEFF1; color: #546E7A; }
 
-        /* Clases de Semaforización personalizadas de ocupación */
+        /* Semáforos de Ocupación */
         .pct-verde {
             background-color: #E8F5E9;
             color: #2E7D32;
@@ -286,9 +316,9 @@
                     <p>Fundo Frusan • Control de Movilidad</p>
                 </div>
             </div>
-            <div class="api-status">
-                <span id="status-dot" class="status-dot"></span>
-                <span id="status-text">Cargando base de datos...</span>
+            <div id="connection-status-box" class="api-status">
+                <span class="status-dot"></span>
+                <span id="status-text">Estableciendo enlace...</span>
             </div>
         </div>
     </header>
@@ -300,7 +330,6 @@
             <button class="tab-btn" onclick="switchTab('tab-semanal')">📅 Resumen Semanal</button>
         </div>
 
-        <!-- TAB 1: REPORTE DIARIO -->
         <div id="tab-diario" class="tab-content active">
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -344,7 +373,6 @@
             </div>
         </div>
 
-        <!-- TAB 2: COMPARATIVO AVANZADO POR PLACA -->
         <div id="tab-comparativo" class="tab-content">
             <div class="card-panel">
                 <h2>Comparativo Dinámico por Placa (Diario o Semanal)</h2>
@@ -395,7 +423,6 @@
             </div>
         </div>
 
-        <!-- TAB 3: RESUMEN SEMANAL -->
         <div id="tab-semanal" class="tab-content">
             <div class="card-panel">
                 <h2>Consolidado General de Semanas Operativas</h2>
@@ -418,14 +445,12 @@
     </main>
 
     <script>
+        // Enlace oficial de tu Web App de Google Apps Script
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0gtWMlKI47TLagrxTso6CRIYmqsZlta6V59lt0oPrlHTnubdpjeoxVro7IVsM0Vpo/exec";
         let rawDatabase = [];
 
+        // Base de datos de respaldo
         const fallbackData = [
-            {"fecha":"2026-06-05T06:08:04.000Z","placa":"A9Z-969","conductor":"MUÑOZ SILVA MANUEL","tipo":"MINI BUS","ruta":"INSCULAS - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":32,"pasajeros":26,"libres":6,"observaciones":""},
-            {"fecha":"2026-06-06T05:29:30.000Z","placa":"M3T-671","conductor":"ALAMO PISCOYA JORGE LUIS","tipo":"COMBI","ruta":"LOS BANCES - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":11,"libres":4,"observaciones":""},
-            {"fecha":"2026-06-06T06:01:34.000Z","placa":"A9Z-969","conductor":"MUÑOZ SILVA MANUEL","tipo":"MINI BUS","ruta":"INSCULAS - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":32,"pasajeros":25,"libres":7,"observaciones":""},
-            {"fecha":"2026-06-06T06:17:28.000Z","placa":"M1A-963","conductor":"SANCHEZ MORE JUAN","tipo":"COMBI","ruta":"ANCOL CHICO - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":11,"libres":4,"observaciones":""},
             {"fecha":"2026-06-08T04:44:14.000Z","placa":"W4M-851","conductor":"TORRES CHINCHAY NELVER","tipo":"COMBI","ruta":"LA PILCA - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":12,"libres":3,"observaciones":""},
             {"fecha":"2026-06-08T04:47:04.000Z","placa":"V5E-954","conductor":"ZAPATA DAMIAN FELIPE","tipo":"COMBI","ruta":"LA GRANJA - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":12,"libres":3,"observaciones":""},
             {"fecha":"2026-06-08T06:25:04.000Z","placa":"A9Z-969","conductor":"MUÑOZ SILVA MANUEL","tipo":"MINI BUS","ruta":"INSCULAS - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":32,"pasajeros":27,"libres":5,"observaciones":""},
@@ -433,8 +458,7 @@
             {"fecha":"2026-06-08T06:46:30.000Z","placa":"M3T-671","conductor":"ALAMO PISCOYA JORGE LUIS","tipo":"COMBI","ruta":"LOS BANCES - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":11,"libres":4,"observaciones":""},
             {"fecha":"2026-06-09T04:47:31.000Z","placa":"W4M-851","conductor":"TORRES CHINCHAY NELVER","tipo":"COMBI","ruta":"LA PILCA - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":13,"libres":2,"observaciones":""},
             {"fecha":"2026-06-09T05:53:54.000Z","placa":"A9Z-969","conductor":"MUÑOZ SILVA MANUEL","tipo":"MINI BUS","ruta":"INSCULAS - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":32,"pasajeros":28,"libres":4,"observaciones":""},
-            {"fecha":"2026-06-09T06:10:39.000Z","placa":"M1A-963","conductor":"SANCHEZ MORE JUAN","tipo":"COMBI","ruta":"ANCOL CHICO - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":13,"libres":2,"observaciones":""},
-            {"fecha":"2026-06-10T05:29:20.000Z","placa":"W4M-851","conductor":"TORRES CHINCHAY NELVER","tipo":"COMBI","ruta":"LA PILCA - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":15,"libres":0,"observaciones":""}
+            {"fecha":"2026-06-09T06:10:39.000Z","placa":"M1A-963","conductor":"SANCHEZ MORE JUAN","tipo":"COMBI","ruta":"ANCOL CHICO - SEDE OLMOS","cultivo":"SERVICIOS GENERALES","capacidad":15,"pasajeros":13,"libres":2,"observaciones":""}
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -473,29 +497,33 @@
             return Math.ceil(( ( (d - startOfYear) / 86400000) + 1)/7);
         }
 
-        // FUNCIÓN CLAVE: Devuelve la clase CSS de color según tus rangos exactos
         function getClaseSemaforo(porcentaje) {
             if (porcentaje >= 90) return 'pct-verde';
             if (porcentaje >= 75) return 'pct-naranja';
             return 'pct-rojo';
         }
 
+        // CONTROL EXPLICITO DE ENLACE Y REPORTE DE ESTATUS
         function fetchData() {
-            const dot = document.getElementById('status-dot');
+            const box = document.getElementById('connection-status-box');
             const text = document.getElementById('status-text');
             
             fetch(WEB_APP_URL + "?action=read")
-                .then(res => res.json())
+                .then(res => {
+                    if(!res.ok) throw new Error("HTTP Error");
+                    return res.json();
+                })
                 .then(data => {
                     rawDatabase = data;
-                    dot.className = 'status-dot online';
-                    text.innerText = "Conectado a Google Sheets";
+                    box.className = 'api-status connected';
+                    text.innerText = "Conectado a Google Sheets ✔";
                     renderDailyDashboard();
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.warn("Utilizando persistencia local de respaldo:", err);
                     rawDatabase = fallbackData;
-                    dot.className = 'status-dot online';
-                    text.innerText = "Modo Conectado (Respaldo Integrado)";
+                    box.className = 'api-status error';
+                    text.innerText = "Modo Local (Sin conexión Sheets)";
                     renderDailyDashboard();
                 });
         }
