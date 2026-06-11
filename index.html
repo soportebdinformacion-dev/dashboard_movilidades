@@ -303,32 +303,47 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // 1. REEMPLAZA ESTA URL CON TU ENLACE ACTUALIZADO DE GOOGLE APPS SCRIPT:
-      const URL_BASE = "https://script.google.com/macros/s/AKfycbyHJxdxByGyCPrIgeHGVfiaGw7KLM0Xr1ui042V0Yf4c2XY2jvk33NK3MdfjVJDdFmF/exec";
+      // URL Directa y limpia de tu Google Apps Script
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxGqyq_Rt1T6d3_8cuAkluJQ9A9mRRdbPU9f_Ff2OvQkDsZ91W5qP-vwWlNZSNLbg/exec";
       
-      // Crear un nombre de función temporal único para la respuesta de Google
-      const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-      
-      // Definimos qué hacer cuando Google responda
-      window[callbackName] = function(response) {
-        document.getElementById('loader').style.display = 'none';
-        
-        if(response && response.success) {
-          ALL_DATA = response.rows;
-          populateFilterOptions();
-          applyFilters();
-          
-          if (statusBadge) {
-            statusBadge.className = "badge bg-success ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+      fetch(URL_GOOGLE_SCRIPT)
+        .then(response => {
+          if (!response.ok) throw new Error("Error en la respuesta del servidor");
+          return response.json();
+        })
+        .then(response => {
+          document.getElementById('loader').style.display = 'none';
+          if(response.success) {
+            ALL_DATA = response.rows;
+            populateFilterOptions();
+            
+            // Forzar que el filtro de fecha diario inicie vacío para ver toda la data junta al cargar
+            document.getElementById('filterFecha').value = ""; 
+            
+            applyFilters();
+            
+            if (statusBadge) {
+              statusBadge.className = "badge bg-success ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+            }
+          } else {
+            if (statusBadge) {
+              statusBadge.className = "badge bg-danger ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
+            }
+            alert("Error en base de datos: " + response.error);
           }
-        } else {
+        })
+        .catch(err => {
+          document.getElementById('loader').style.display = 'none';
           if (statusBadge) {
             statusBadge.className = "badge bg-danger ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
+            statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
           }
-          alert("Error en formato de datos recibidos.");
-        }
+          alert("Error de conexión. Asegúrate de que la App Script esté publicada para 'Cualquier persona'.");
+          console.error(err);
+        });
+    }
         
         // Limpieza del elemento creado para no saturar la memoria
         delete window[callbackName];
@@ -498,7 +513,7 @@
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Volvemos a dar el formato visual amigable DD/MM/YYYY a partir de la fecha procesada
+        // Formateamos visualmente la fecha limpia (DD/MM/YYYY) para la tabla
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
