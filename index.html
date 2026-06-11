@@ -304,7 +304,7 @@
       }
       
       // ENLACE TOTALMENTE RESTRUCTURADO Y COMPLETO (SIN PUNTOS SUSPENSIVOS)
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbygU3p6pQ4eOsfGEzmdJaK1umvFtgnnHfVmv7sS8oZy355zU27V3oe3gsQO7fR-jtMA/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbza6nXrM7GoFQ6GKHy3UyGBxp0QXBTe-6AGcYVOHcR4DTm907ezEvcCanG6nKiQnv2S/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -368,12 +368,18 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca').value;
-      const valFecha = document.getElementById('filterFecha').value;
+      const valFecha = document.getElementById('filterFecha').value; // Formato nativo YYYY-MM-DD
       const valSemana = document.getElementById('filterSemana').value;
 
       let filtered = ALL_DATA.filter(row => {
         let matchPlaca = !valPlaca || row.placa === valPlaca;
-        let matchFecha = !valFecha || row.fecha === valFecha;
+        
+        // Corrección estricta de filtrado por fecha
+        let matchFecha = true;
+        if (valFecha) {
+          matchFecha = row.fecha === valFecha;
+        }
+        
         let matchSemana = !valSemana || String(row.semana) === String(valSemana);
         return matchPlaca && matchFecha && matchSemana;
       });
@@ -382,7 +388,6 @@
       renderCharts(filtered);
       renderTable(filtered);
     }
-
     function renderKPIs(data) {
       let totalVehiculos = data.length;
       let totalCapacidad = 0;
@@ -477,14 +482,25 @@
         return;
       }
 
+      const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
+        // Formateador dinámico para obtener el nombre del día (Ej: JUE, 11/06/2026)
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
-          let partes = row.fecha.split("-");
-          fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+          let partes = row.fecha.split("-"); // [YYYY, MM, DD]
+          let año = parseInt(partes[0], 10);
+          let mes = parseInt(partes[1], 10) - 1;
+          let dia = parseInt(partes[2], 10);
+          
+          // Creamos el objeto fecha local para extraer el día correcto de la semana
+          let fechaObjeto = new Date(año, mes, dia);
+          let nombreDia = diasSemana[fechaObjeto.getDay()];
+          
+          fechaFormateada = `${nombreDia}, ${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${año}`;
         }
 
         tbody.innerHTML += `
