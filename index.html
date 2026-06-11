@@ -263,7 +263,7 @@
           <table class="table table-hover align-middle">
             <thead class="table-dark" style="background-color: var(--dark-grey);">
               <tr>
-                <th>Fecha</th>
+                <th>Fecha (Col. K)</th>
                 <th>Semana</th>
                 <th>Placa</th>
                 <th>Conductor</th>
@@ -272,7 +272,6 @@
                 <th>Pasajeros</th>
                 <th>Libres</th>
                 <th>% Uso</th>
-                <th>Observaciones</th>
               </tr>
             </thead>
             <tbody id="tablaCuerpo">
@@ -304,7 +303,7 @@
       statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando Base de Datos...';
       
       // REEMPLAZA ESTA URL CON TU LINK GENERADO EN EL PASO 2:
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzmVpWcFAJxw9HuPIf83CW8mVYB8LJRwk1dI3lFSECi6EXndXoI3FJklzlbYKNTx_yJ/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw-2lNwOcBfaHnlubz2zoEN7Xdhu_uPdLAsTHpXbEdCH5wbbvDqt0e9H8vmPdCSFkuc/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -477,9 +476,36 @@
       tbody.innerHTML = "";
 
       if(data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay datos que coincidan con los filtros seleccionados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">No hay datos que coincidan con los filtros seleccionados.</td></tr>`;
         return;
       }
+
+      data.forEach(row => {
+        let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
+        let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
+
+        // Volvemos a dar el formato visual amigable DD/MM/YYYY a partir de la fecha procesada
+        let fechaFormateada = row.fecha;
+        if(row.fecha && row.fecha.includes("-")) {
+          let partes = row.fecha.split("-");
+          fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><i class="fa-regular fa-calendar-days text-secondary me-1"></i> <strong>${fechaFormateada}</strong></td>
+            <td><span class="badge bg-light text-dark border">Sem ${row.semana}</span></td>
+            <td><strong class="text-primary">${row.placa}</strong></td>
+            <td class="small">${row.conductor}</td>
+            <td class="small text-truncate" style="max-width: 220px;">${row.ruta}</td>
+            <td class="text-center font-weight-bold">${row.capacidad}</td>
+            <td class="text-center text-success font-weight-bold">${row.pasajeros}</td>
+            <td class="text-center text-danger font-weight-bold">${row.libres}</td>
+            <td><span class="badge ${badgeColor}">${pctUso}%</span></td>
+          </tr>
+        `;
+      });
+    }
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
