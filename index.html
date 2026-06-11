@@ -284,17 +284,20 @@
   </div>
 
   <script>
+    <script>
+    // VARIABLE GLOBAL PARA ALMACENAR LOS DATOS DE GOOGLE SHEETS
     let ALL_DATA = [];
+    
+    // Instancias globales de los gráficos para poder destruirlos/actualizarlos
     let chartDiarioInstance = null;
     let chartSemanalInstance = null;
 
-    // Ejecución inicial al cargar la página
+    // Al cargar la página, conectamos directamente con la base de datos
     document.addEventListener("DOMContentLoaded", function() {
       fetchData();
     });
 
-    // REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN DENTRO DE TU ARCHIVO HTML DE GITHUB:
-   function fetchData() {
+    function fetchData() {
       document.getElementById('loader').style.display = 'flex';
       const statusBadge = document.getElementById('dbStatus');
       
@@ -303,8 +306,8 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // ENLACE TOTALMENTE RESTRUCTURADO Y COMPLETO (SIN PUNTOS SUSPENSIVOS)
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbza6nXrM7GoFQ6GKHy3UyGBxp0QXBTe-6AGcYVOHcR4DTm907ezEvcCanG6nKiQnv2S/exec";
+      // Enlace directo y completo sin recortes
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxH29DDFbGf2yepkbrlG1Tb7JC22vYQPQ_g9KfNW3uu95Yeqny4lQHyLg7JYxAi9eo2/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -317,8 +320,10 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             
-            // Forzar que el filtro de fecha inicie vacío para ver toda la data al cargar
-            document.getElementById('filterFecha').value = ""; 
+            // Forzar que el filtro inicie limpio para desplegar la información al cargar
+            if(document.getElementById('fecha')) {
+              document.getElementById('fecha').value = ""; 
+            }
             
             applyFilters();
             
@@ -354,32 +359,30 @@
       });
 
       const selectPlaca = document.getElementById('filterPlaca');
-      selectPlaca.innerHTML = '<option value="">-- Todas las Placas --</option>';
-      [...placasSet].sort().forEach(p => {
-        selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
-      });
+      if(selectPlaca) {
+        selectPlaca.innerHTML = '<option value="">-- Todas las Placas --</option>';
+        [...placasSet].sort().forEach(p => {
+          selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+      }
 
       const selectSemana = document.getElementById('filterSemana');
-      selectSemana.innerHTML = '<option value="">-- Todas las Semanas --</option>';
-      [...semanasSet].sort((a,b)=>a-b).forEach(s => {
-        selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
-      });
+      if(selectSemana) {
+        selectSemana.innerHTML = '<option value="">-- Todas las Semanas --</option>';
+        [...semanasSet].sort((a,b)=>a-b).forEach(s => {
+          selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
+        });
+      }
     }
 
     function applyFilters() {
-      const valPlaca = document.getElementById('filterPlaca').value;
-      const valFecha = document.getElementById('filterFecha').value; // Formato nativo YYYY-MM-DD
-      const valSemana = document.getElementById('filterSemana').value;
+      const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
+      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // CORREGIDO: Apunta al ID 'fecha' real de tu HTML
+      const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
         let matchPlaca = !valPlaca || row.placa === valPlaca;
-        
-        // Corrección estricta de filtrado por fecha
-        let matchFecha = true;
-        if (valFecha) {
-          matchFecha = row.fecha === valFecha;
-        }
-        
+        let matchFecha = !valFecha || row.fecha === valFecha;
         let matchSemana = !valSemana || String(row.semana) === String(valSemana);
         return matchPlaca && matchFecha && matchSemana;
       });
@@ -388,6 +391,7 @@
       renderCharts(filtered);
       renderTable(filtered);
     }
+
     function renderKPIs(data) {
       let totalVehiculos = data.length;
       let totalCapacidad = 0;
@@ -400,16 +404,16 @@
         totalLibres += row.libres;
       });
 
-      document.getElementById('kpiVehiculos').innerText = totalVehiculos;
-      document.getElementById('kpiCapacidad').innerText = totalCapacidad;
-      document.getElementById('kpiPasajeros').innerText = totalPasajeros;
-      document.getElementById('kpiLibres').innerText = totalLibres;
+      if(document.getElementById('kpiVehiculos')) document.getElementById('kpiVehiculos').innerText = totalVehiculos;
+      if(document.getElementById('kpiCapacidad')) document.getElementById('kpiCapacidad').innerText = totalCapacidad;
+      if(document.getElementById('kpiPasajeros')) document.getElementById('kpiPasajeros').innerText = totalPasajeros;
+      if(document.getElementById('kpiLibres')) document.getElementById('kpiLibres').innerText = totalLibres;
 
       let pctP = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100).toFixed(1) : 0;
       let pctL = totalCapacidad > 0 ? ((totalLibres / totalCapacidad) * 100).toFixed(1) : 0;
 
-      document.getElementById('pctPasajeros').innerText = pctP + '%';
-      document.getElementById('pctLibres').innerText = pctL + '%';
+      if(document.getElementById('pctPasajeros')) document.getElementById('pctPasajeros').innerText = pctP + '%';
+      if(document.getElementById('pctLibres')) document.getElementById('pctLibres').innerText = pctL + '%';
     }
 
     function renderCharts(data) {
@@ -427,18 +431,21 @@
       let libresDiarios = fechasSorted.map(f => resumenDiario[f].libres);
 
       if (chartDiarioInstance) chartDiarioInstance.destroy();
-      const ctxDiario = document.getElementById('chartDiario').getContext('2d');
-      chartDiarioInstance = new Chart(ctxDiario, {
-        type: 'line',
-        data: {
-          labels: fechasSorted,
-          datasets: [
-            { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
-            { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+      const canvasDiario = document.getElementById('chartDiario');
+      if(canvasDiario) {
+        const ctxDiario = canvasDiario.getContext('2d');
+        chartDiarioInstance = new Chart(ctxDiario, {
+          type: 'line',
+          data: {
+            labels: fechasSorted,
+            datasets: [
+              { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
+              { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
 
       let resumenVehiculo = {};
       data.forEach(row => {
@@ -454,27 +461,34 @@
       let libresVehiculo = placasLabels.map(p => resumenVehiculo[p].libres);
 
       if (chartSemanalInstance) chartSemanalInstance.destroy();
-      const ctxSemanal = document.getElementById('chartSemanal').getContext('2d');
-      chartSemanalInstance = new Chart(ctxSemanal, {
-        type: 'bar',
-        data: {
-          labels: placasLabels,
-          datasets: [
-            { label: 'Pasajeros', data: pasajerosVehiculo, backgroundColor: '#3B8216' },
-            { label: 'Libres', data: libresVehiculo, backgroundColor: '#4A4A4A' }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { x: { stacked: true }, y: { stacked: true } }
-        }
-      });
+      const canvasSemanal = document.getElementById('chartSemanal');
+      if(canvasSemanal) {
+        const ctxSemanal = canvasSemanal.getContext('2d');
+        chartSemanalInstance = new Chart(ctxSemanal, {
+          type: 'bar',
+          data: {
+            labels: placasLabels,
+            datasets: [
+              { label: 'Pasajeros', data: pasajerosVehiculo, backgroundColor: '#3B8216' },
+              { label: 'Libres', data: libresVehiculo, backgroundColor: '#4A4A4A' }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+          }
+        });
+      }
     }
 
     function renderTable(data) {
       const tbody = document.getElementById('tablaCuerpo');
-      document.getElementById('lblContadorFilas').innerText = `${data.length} Filas mostradas`;
+      if(!tbody) return;
+      
+      if(document.getElementById('lblContadorFilas')) {
+        document.getElementById('lblContadorFilas').innerText = `${data.length} Filas mostradas`;
+      }
       tbody.innerHTML = "";
 
       if(data.length === 0) {
@@ -482,25 +496,25 @@
         return;
       }
 
+      // Nombres de días abreviados en español y mayúsculas
       const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Formateador dinámico para obtener el nombre del día (Ej: JUE, 11/06/2026)
+        // Formateador dinámico para obtener el día exacto de la columna K (Ej: JUE, 11/06/2026)
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-"); // [YYYY, MM, DD]
-          let año = parseInt(partes[0], 10);
+          let anio = parseInt(partes[0], 10);
           let mes = parseInt(partes[1], 10) - 1;
           let dia = parseInt(partes[2], 10);
           
-          // Creamos el objeto fecha local para extraer el día correcto de la semana
-          let fechaObjeto = new Date(año, mes, dia);
+          let fechaObjeto = new Date(anio, mes, dia);
           let nombreDia = diasSemana[fechaObjeto.getDay()];
           
-          fechaFormateada = `${nombreDia}, ${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${año}`;
+          fechaFormateada = `${nombreDia}, ${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${anio}`;
         }
 
         tbody.innerHTML += `
