@@ -305,8 +305,7 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // ENLACE DIRECTO DE TU GOOGLE APPS SCRIPT (Sincronizado con tu versión JSON actual)
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx4zj6tajw8T37G9xCyhOoR6jcEmESzZVdGIsvQxAvCHpqoy6wtm_-YOJ1jsV72Tuw9/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbz0gtWMlKI47TLagrxTso6CRIYmqsZlta6V59lt0oPrlHTnubdpjeoxVro7IVsM0Vpo/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -319,7 +318,6 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             
-            // Forzar que el filtro inicie limpio para desplegar la información al cargar
             if(document.getElementById('fecha')) {
               document.getElementById('fecha').value = ""; 
             }
@@ -376,7 +374,7 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // CORREGIDO: Apunta al ID 'fecha' real de tu HTML
+      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // Filtrado por ID 'fecha' corregido
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
@@ -495,14 +493,14 @@
         return;
       }
 
-      // Nombres de días abreviados en español y mayúsculas
+      // LISTA ESTÁTICA EN ESPAÑOL Y MAYÚSCULAS PARA EVITAR IDIOMA DEL NAVEGADOR
       const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Formato exacto requerido: JUE, 11/06/2026
+        // Formato forzado en Español: JUE, 11/06/2026
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
@@ -510,6 +508,7 @@
           let mes = parseInt(partes[1], 10) - 1;
           let dia = parseInt(partes[2], 10);
           
+          // Uso de parámetros locales para que no reste horas ni cambie de día
           let fechaObjeto = new Date(anio, mes, dia);
           let nombreDia = diasSemana[fechaObjeto.getDay()];
           
