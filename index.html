@@ -294,16 +294,17 @@
     });
 
     // REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN DENTRO DE TU ARCHIVO HTML DE GITHUB:
-    function fetchData() {
+   function fetchData() {
       document.getElementById('loader').style.display = 'flex';
       const statusBadge = document.getElementById('dbStatus');
       
-      // Actualizar estado a "Consultando"
-      statusBadge.className = "badge bg-warning text-dark ms-2";
-      statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando Base de Datos...';
+      if (statusBadge) {
+        statusBadge.className = "badge bg-warning text-dark ms-2";
+        statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando Base de Datos...';
+      }
       
-      // REEMPLAZA ESTA URL CON TU LINK GENERADO EN EL PASO 2:
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw-2lNwOcBfaHnlubz2zoEN7Xdhu_uPdLAsTHpXbEdCH5wbbvDqt0e9H8vmPdCSFkuc/exec";
+      // COLOCA AQUÍ TU LINK REAL COMPLETO COPIADO DE GOOGLE APPS SCRIPT:
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw_u31019tpcY-CCuvRV6TaAZLBhBmrwkOAVXbCtFNA1a5m3mwuz_VpazPKX927Des3/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -317,27 +318,29 @@
             populateFilterOptions();
             applyFilters();
             
-            // Estado de Éxito Conectado
-            statusBadge.className = "badge bg-success ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+            if (statusBadge) {
+              statusBadge.className = "badge bg-success ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+            }
           } else {
-            // Estado de Error en Estructura
-            statusBadge.className = "badge bg-danger ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Estructura';
+            if (statusBadge) {
+              statusBadge.className = "badge bg-danger ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Estructura';
+            }
             alert("Error en base de datos: " + response.error);
           }
         })
         .catch(err => {
           document.getElementById('loader').style.display = 'none';
-          
-          // Estado de Error por falta de Conexión o Permisos
-          statusBadge.className = "badge bg-danger ms-2 text-white";
-          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
-          
+          if (statusBadge) {
+            statusBadge.className = "badge bg-danger ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
+          }
           alert("Error de conexión. Asegúrate de que la URL de Apps Script tiene acceso para 'Cualquier persona'.");
           console.error(err);
         });
-    }    
+    }
+    
     // Llena los selectores de los filtros dinámicamente con los valores únicos de la BD
     function populateFilterOptions() {
       const placasSet = new Set();
