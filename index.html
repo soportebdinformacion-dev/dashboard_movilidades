@@ -291,7 +291,7 @@
     let chartDiarioInstance = null;
     let chartSemanalInstance = null;
 
-    // Al cargar la página, conectamos directamente con la base de datos mediante JSONP
+    // Al cargar la página, conectamos directamente con la base de datos
     document.addEventListener("DOMContentLoaded", function() {
       fetchData();
     });
@@ -305,60 +305,47 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // URL BASE DE TU GOOGLE APPS SCRIPT
-      const URL_BASE = "https://script.google.com/macros/s/AKfycbxgUZV1TEJIClBuTlfz6uBbkRzsRkw-7ueJkCVTY2O3vsHjNTQVWZWkFXGmCm7hyNHc/exec";
+      // ENLACE DIRECTO DE TU GOOGLE APPS SCRIPT (Sincronizado con tu versión JSON actual)
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx4zj6tajw8T37G9xCyhOoR6jcEmESzZVdGIsvQxAvCHpqoy6wtm_-YOJ1jsV72Tuw9/exec";
       
-      // Creamos un nombre de función temporal único para la respuesta JSONP de Google
-      const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-      
-      // Definimos qué hace la aplicación cuando Google Sheets responde
-      window[callbackName] = function(response) {
-        document.getElementById('loader').style.display = 'none';
-        
-        if(response && response.success) {
-          ALL_DATA = response.rows;
-          populateFilterOptions();
-          
-          // Forzar que el filtro inicie limpio al cargar la página
-          if(document.getElementById('fecha')) {
-            document.getElementById('fecha').value = ""; 
+      fetch(URL_GOOGLE_SCRIPT)
+        .then(response => {
+          if (!response.ok) throw new Error("Error en la respuesta del servidor");
+          return response.json();
+        })
+        .then(response => {
+          document.getElementById('loader').style.display = 'none';
+          if(response.success) {
+            ALL_DATA = response.rows;
+            populateFilterOptions();
+            
+            // Forzar que el filtro inicie limpio para desplegar la información al cargar
+            if(document.getElementById('fecha')) {
+              document.getElementById('fecha').value = ""; 
+            }
+            
+            applyFilters();
+            
+            if (statusBadge) {
+              statusBadge.className = "badge bg-success ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+            }
+          } else {
+            if (statusBadge) {
+              statusBadge.className = "badge bg-danger ms-2 text-white";
+              statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
+            }
+            alert("Error en base de datos: " + response.error);
           }
-          
-          applyFilters();
-          
-          if (statusBadge) {
-            statusBadge.className = "badge bg-success ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
-          }
-        } else {
+        })
+        .catch(err => {
+          document.getElementById('loader').style.display = 'none';
           if (statusBadge) {
             statusBadge.className = "badge bg-danger ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
+            statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
           }
-          alert("Error en formato de datos recibidos.");
-        }
-        
-        // Limpieza de memoria
-        delete window[callbackName];
-        const scriptEl = document.getElementById(callbackName);
-        if(scriptEl) scriptEl.remove();
-      };
-      
-      // Inyección del Script dinámico para saltar bloqueos de red (JSONP obligado por tu servidor)
-      const script = document.createElement('script');
-      script.src = URL_BASE + (URL_BASE.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-      script.id = callbackName;
-      
-      script.onerror = function() {
-        document.getElementById('loader').style.display = 'none';
-        if (statusBadge) {
-          statusBadge.className = "badge bg-danger ms-2 text-white";
-          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
-        }
-        alert("No se pudo establecer conexión con Google Sheets. Verifica que tu App Script esté publicada.");
-      };
-      
-      document.body.appendChild(script);
+          console.error(err);
+        });
     }
 
     function populateFilterOptions() {
@@ -389,12 +376,12 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // Vinculado al id="fecha" real de tu input
+      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // CORREGIDO: Apunta al ID 'fecha' real de tu HTML
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
         let matchPlaca = !valPlaca || row.placa === valPlaca;
-        let matchFecha = !valFecha || row.fecha === valFecha; // Compara con el formato YYYY-MM-DD estándar
+        let matchFecha = !valFecha || row.fecha === valFecha;
         let matchSemana = !valSemana || String(row.semana) === String(valSemana);
         return matchPlaca && matchFecha && matchSemana;
       });
