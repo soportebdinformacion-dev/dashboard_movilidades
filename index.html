@@ -303,8 +303,8 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // URL Directa y limpia de tu Google Apps Script
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxGqyq_Rt1T6d3_8cuAkluJQ9A9mRRdbPU9f_Ff2OvQkDsZ91W5qP-vwWlNZSNLbg/exec";
+      // ENLACE TOTALMENTE RESTRUCTURADO Y COMPLETO (SIN PUNTOS SUSPENSIVOS)
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbygU3p6pQ4eOsfGEzmdJaK1umvFtgnnHfVmv7sS8oZy355zU27V3oe3gsQO7fR-jtMA/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -317,7 +317,7 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             
-            // Forzar que el filtro de fecha diario inicie vacío para ver toda la data junta al cargar
+            // Forzar que el filtro de fecha inicie vacío para ver toda la data al cargar
             document.getElementById('filterFecha').value = ""; 
             
             applyFilters();
@@ -340,34 +340,10 @@
             statusBadge.className = "badge bg-danger ms-2 text-white";
             statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
           }
-          alert("Error de conexión. Asegúrate de que la App Script esté publicada para 'Cualquier persona'.");
           console.error(err);
         });
     }
-        
-        // Limpieza del elemento creado para no saturar la memoria
-        delete window[callbackName];
-        document.getElementById(callbackName).remove();
-      };
-      
-      // 2. Ejecutar la consulta inyectando el script de manera inmune a bloqueos
-      const script = document.createElement('script');
-      script.src = URL_BASE + (URL_BASE.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-      script.id = callbackName;
-      
-      // Si pasa algo malo con la red general, capturar el error
-      script.onerror = function() {
-        document.getElementById('loader').style.display = 'none';
-        if (statusBadge) {
-          statusBadge.className = "badge bg-danger ms-2 text-white";
-          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
-        }
-        alert("No se pudo establecer conexión con Google Sheets. Verifica los permisos de la implementación.");
-      };
-      
-      document.body.appendChild(script);
-    }    
-    // Llena los selectores de los filtros dinámicamente con los valores únicos de la BD
+
     function populateFilterOptions() {
       const placasSet = new Set();
       const semanasSet = new Set();
@@ -377,14 +353,12 @@
         if(row.semana) semanasSet.add(row.semana);
       });
 
-      // Llenar Placas
       const selectPlaca = document.getElementById('filterPlaca');
       selectPlaca.innerHTML = '<option value="">-- Todas las Placas --</option>';
       [...placasSet].sort().forEach(p => {
         selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
       });
 
-      // Llenar Semanas
       const selectSemana = document.getElementById('filterSemana');
       selectSemana.innerHTML = '<option value="">-- Todas las Semanas --</option>';
       [...semanasSet].sort((a,b)=>a-b).forEach(s => {
@@ -392,7 +366,6 @@
       });
     }
 
-    // Aplica los filtros en cascada sobre los datos en memoria
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca').value;
       const valFecha = document.getElementById('filterFecha').value;
@@ -410,7 +383,6 @@
       renderTable(filtered);
     }
 
-    // Procesa y renderiza las tarjetas numéricas superiores
     function renderKPIs(data) {
       let totalVehiculos = data.length;
       let totalCapacidad = 0;
@@ -435,9 +407,7 @@
       document.getElementById('pctLibres').innerText = pctL + '%';
     }
 
-    // Generación de los Reportes Visuales con Chart.js
     function renderCharts(data) {
-      // --- PROCESAMIENTO REPORTE DIARIO ---
       let resumenDiario = {};
       data.forEach(row => {
         if(!resumenDiario[row.fecha]) {
@@ -459,13 +429,12 @@
           labels: fechasSorted,
           datasets: [
             { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
-            { label: 'Asientos Libres (Vacíos)', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
+            { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
           ]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // --- PROCESAMIENTO REPORTE SEMANAL POR VEHÍCULO ---
       let resumenVehiculo = {};
       data.forEach(row => {
         if(!resumenVehiculo[row.placa]) {
@@ -498,7 +467,6 @@
       });
     }
 
-    // Renderiza la tabla limpia de resultados
     function renderTable(data) {
       const tbody = document.getElementById('tablaCuerpo');
       document.getElementById('lblContadorFilas').innerText = `${data.length} Filas mostradas`;
@@ -513,7 +481,6 @@
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Formateamos visualmente la fecha limpia (DD/MM/YYYY) para la tabla
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
@@ -531,27 +498,6 @@
             <td class="text-center text-success font-weight-bold">${row.pasajeros}</td>
             <td class="text-center text-danger font-weight-bold">${row.libres}</td>
             <td><span class="badge ${badgeColor}">${pctUso}%</span></td>
-          </tr>
-        `;
-      });
-    }
-
-      data.forEach(row => {
-        let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
-        let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
-
-        tbody.innerHTML += `
-          <tr>
-            <td><i class="fa-regular fa-calendar-days text-secondary me-1"></i> ${row.fecha}</td>
-            <td><span class="badge bg-light text-dark border">Sem ${row.semana}</span></td>
-            <td><strong class="text-primary">${row.placa}</strong></td>
-            <td class="small">${row.conductor}</td>
-            <td class="small text-truncate" style="max-width: 180px;">${row.ruta}</td>
-            <td class="text-center font-weight-bold">${row.capacidad}</td>
-            <td class="text-center text-success font-weight-bold">${row.pasajeros}</td>
-            <td class="text-center text-danger font-weight-bold">${row.libres}</td>
-            <td><span class="badge ${badgeColor}">${pctUso}%</span></td>
-            <td class="small text-muted italic" style="max-width: 150px; overflow:hidden; text-overflow:ellipsis;">${row.observaciones || '-'}</td>
           </tr>
         `;
       });
