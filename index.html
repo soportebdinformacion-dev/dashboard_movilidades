@@ -289,15 +289,20 @@
       fetchData();
     });
 
-    // REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN EN TU ARCHIVO DE GITHUB:
+    // REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN DENTRO DE TU ARCHIVO HTML DE GITHUB:
     function fetchData() {
       document.getElementById('loader').style.display = 'flex';
       
-      // Coloca aquí la URL de la aplicación web de Google Apps Script que copiaste en el Paso 1:
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx803rG0N1Hs8UynXZFynrKDtYdGGE4MzNKfNmMJKsEHDSgYDCpFUJeMsRwC1SMyQB5/exec";
+      // PEGA AQUÍ LA URL QUE COPIASTE EN EL PASO 2 (Mantén las comillas):
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwfhE7BeUW_0ol0VvpMJ43RyxCnvCfLyKUHPmkE3AmnNYoe94gyCWuQKX5OG9RBKZLu/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Respuesta de red incorrecta");
+          }
+          return response.json();
+        })
         .then(response => {
           document.getElementById('loader').style.display = 'none';
           if(response.success) {
@@ -305,15 +310,16 @@
             populateFilterOptions();
             applyFilters();
           } else {
-            alert("Error al extraer datos desde el Sheet: " + response.error);
+            alert("Error en la estructura de datos: " + response.error);
           }
         })
         .catch(err => {
           document.getElementById('loader').style.display = 'none';
-          alert("Error de conexión con la base de datos. Verifica los permisos de la URL externa.");
-          console.error(err);
+          alert("Error de conexión. Asegúrate de haber guardado como 'Nueva Versión' y configurado el acceso a 'Cualquier persona' en Google.");
+          console.error("Detalle del error:", err);
         });
     }
+    
     // Llena los selectores de los filtros dinámicamente con los valores únicos de la BD
     function populateFilterOptions() {
       const placasSet = new Set();
