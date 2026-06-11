@@ -284,7 +284,6 @@
   </div>
 
   <script>
-    <script>
     // VARIABLE GLOBAL PARA ALMACENAR LOS DATOS DE GOOGLE SHEETS
     let ALL_DATA = [];
     
@@ -307,7 +306,7 @@
       }
       
       // Enlace directo y completo sin recortes
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxH29DDFbGf2yepkbrlG1Tb7JC22vYQPQ_g9KfNW3uu95Yeqny4lQHyLg7JYxAi9eo2/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbz0gtWMlKI47TLagrxTso6CRIYmqsZlta6V59lt0oPrlHTnubdpjeoxVro7IVsM0Vpo/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -377,7 +376,7 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // CORREGIDO: Apunta al ID 'fecha' real de tu HTML
+      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // Vinculado a id="fecha" real
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
@@ -496,17 +495,16 @@
         return;
       }
 
-      // Nombres de días abreviados en español y mayúsculas
       const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Formateador dinámico para obtener el día exacto de la columna K (Ej: JUE, 11/06/2026)
+        // Formato exacto requerido: JUE, 11/06/2026
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
-          let partes = row.fecha.split("-"); // [YYYY, MM, DD]
+          let partes = row.fecha.split("-");
           let anio = parseInt(partes[0], 10);
           let mes = parseInt(partes[1], 10) - 1;
           let dia = parseInt(partes[2], 10);
