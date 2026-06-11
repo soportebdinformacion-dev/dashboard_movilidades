@@ -137,7 +137,12 @@
         </svg>
         <div class="brand-text">
           <h1>Agrícola Huarmey</h1>
-          <p><i class="fa-solid fa-location-dot"></i> Fundo Frusan - Reporte de Movilidades</p>
+          <p>
+          <i class="fa-solid fa-location-dot"></i> Fundo Frusan - Reporte de Movilidades
+          <span id="dbStatus" class="badge bg-warning text-dark ms-2" style="font-size: 11px;">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
+          </span>
+          </p>
         </div>
       </div>
       <button class="btn btn-outline-success btn-sm" onclick="fetchData()"><i class="fa-solid fa-arrow-rotate-right"></i> Actualizar</button>
@@ -292,15 +297,18 @@
     // REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN DENTRO DE TU ARCHIVO HTML DE GITHUB:
     function fetchData() {
       document.getElementById('loader').style.display = 'flex';
+      const statusBadge = document.getElementById('dbStatus');
       
-      // PEGA AQUÍ LA URL QUE COPIASTE EN EL PASO 2 (Mantén las comillas):
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwfhE7BeUW_0ol0VvpMJ43RyxCnvCfLyKUHPmkE3AmnNYoe94gyCWuQKX5OG9RBKZLu/exec";
+      // Actualizar estado a "Consultando"
+      statusBadge.className = "badge bg-warning text-dark ms-2";
+      statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando Base de Datos...';
+      
+      // REEMPLAZA ESTA URL CON TU LINK GENERADO EN EL PASO 2:
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzmVpWcFAJxw9HuPIf83CW8mVYB8LJRwk1dI3lFSECi6EXndXoI3FJklzlbYKNTx_yJ/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
-          if (!response.ok) {
-            throw new Error("Respuesta de red incorrecta");
-          }
+          if (!response.ok) throw new Error("Error de red");
           return response.json();
         })
         .then(response => {
@@ -309,17 +317,28 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             applyFilters();
+            
+            // Estado de Éxito Conectado
+            statusBadge.className = "badge bg-success ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
           } else {
-            alert("Error en la estructura de datos: " + response.error);
+            // Estado de Error en Estructura
+            statusBadge.className = "badge bg-danger ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Estructura';
+            alert("Error en base de datos: " + response.error);
           }
         })
         .catch(err => {
           document.getElementById('loader').style.display = 'none';
-          alert("Error de conexión. Asegúrate de haber guardado como 'Nueva Versión' y configurado el acceso a 'Cualquier persona' en Google.");
-          console.error("Detalle del error:", err);
+          
+          // Estado de Error por falta de Conexión o Permisos
+          statusBadge.className = "badge bg-danger ms-2 text-white";
+          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
+          
+          alert("Error de conexión. Asegúrate de que la URL de Apps Script tiene acceso para 'Cualquier persona'.");
+          console.error(err);
         });
-    }
-    
+    }    
     // Llena los selectores de los filtros dinámicamente con los valores únicos de la BD
     function populateFilterOptions() {
       const placasSet = new Set();
