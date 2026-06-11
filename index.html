@@ -305,12 +305,12 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      const URL_BASE = "https://script.google.com/macros/s/AKfycbxsXziinn0_68PTW_qQzIJXCx2-BnvYWWtYbbrKHsZ5Nf5d6UG6OHYKfKG8OYqBcfc_/exec";
+      const URL_BASE = "https://script.google.com/macros/s/AKfycbxTZUcn8yiEtjbEAGfmPbvGR4sI-t24S5sCNaPBk41feV23Gh31eAzbcA4yFi7-oh1t/exec";
       
-      // Generamos un nombre único para el callback requerido por tu dashboard.js (Evita el bloqueo CORS)
+      // Generamos un nombre de función temporal único para recibir los datos (Elimina el error de CORS)
       const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
       
-      // Definimos la función global que recibirá los datos de manera segura
+      // Definimos la función en el objeto window que Google Sheets ejecutará al responder
       window[callbackName] = function(response) {
         document.getElementById('loader').style.display = 'none';
         
@@ -336,13 +336,13 @@
           alert("Error en el formato de datos recibido.");
         }
         
-        // Limpieza de etiquetas temporales de red
+        // Limpieza de memoria y etiquetas HTML creadas para la consulta
         delete window[callbackName];
         const scriptEl = document.getElementById(callbackName);
         if(scriptEl) scriptEl.remove();
       };
       
-      // Inyección obligatoria del script JSONP para saltar el error CORS de tu servidor
+      // Creamos e inyectamos la etiqueta <script> para saltar el bloqueo de CORS de manera segura
       const script = document.createElement('script');
       script.src = URL_BASE + (URL_BASE.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
       script.id = callbackName;
@@ -386,7 +386,7 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // Vinculado correctamente al id="fecha"
+      const valFecha = document.getElementById('fecha') ? document.getElementById('fecha').value : ""; // Filtrado por id="fecha" correcto
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
@@ -505,14 +505,14 @@
         return;
       }
 
-      // Arreglo estático en ESPAÑOL absoluto para eludir traducciones del navegador
+      // Matriz de días estática e inalterable en español
       const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Conversión limpia para el formato: JUE, 11/06/2026
+        // Formato exacto obligado en español: JUE, 11/06/2026
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
