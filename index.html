@@ -300,47 +300,58 @@
       
       if (statusBadge) {
         statusBadge.className = "badge bg-warning text-dark ms-2";
-        statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando Base de Datos...';
+        statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // COLOCA AQUÍ TU LINK REAL COMPLETO COPIADO DE GOOGLE APPS SCRIPT:
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw_u31019tpcY-CCuvRV6TaAZLBhBmrwkOAVXbCtFNA1a5m3mwuz_VpazPKX927Des3/exec";
+      // 1. REEMPLAZA ESTA URL CON TU ENLACE ACTUALIZADO DE GOOGLE APPS SCRIPT:
+      const URL_BASE = "https://script.google.com/macros/s/AKfycbyHJxdxByGyCPrIgeHGVfiaGw7KLM0Xr1ui042V0Yf4c2XY2jvk33NK3MdfjVJDdFmF/exec";
       
-      fetch(URL_GOOGLE_SCRIPT)
-        .then(response => {
-          if (!response.ok) throw new Error("Error de red");
-          return response.json();
-        })
-        .then(response => {
-          document.getElementById('loader').style.display = 'none';
-          if(response.success) {
-            ALL_DATA = response.rows;
-            populateFilterOptions();
-            applyFilters();
-            
-            if (statusBadge) {
-              statusBadge.className = "badge bg-success ms-2 text-white";
-              statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
-            }
-          } else {
-            if (statusBadge) {
-              statusBadge.className = "badge bg-danger ms-2 text-white";
-              statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Estructura';
-            }
-            alert("Error en base de datos: " + response.error);
+      // Crear un nombre de función temporal único para la respuesta de Google
+      const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+      
+      // Definimos qué hacer cuando Google responda
+      window[callbackName] = function(response) {
+        document.getElementById('loader').style.display = 'none';
+        
+        if(response && response.success) {
+          ALL_DATA = response.rows;
+          populateFilterOptions();
+          applyFilters();
+          
+          if (statusBadge) {
+            statusBadge.className = "badge bg-success ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
           }
-        })
-        .catch(err => {
-          document.getElementById('loader').style.display = 'none';
+        } else {
           if (statusBadge) {
             statusBadge.className = "badge bg-danger ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
+            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
           }
-          alert("Error de conexión. Asegúrate de que la URL de Apps Script tiene acceso para 'Cualquier persona'.");
-          console.error(err);
-        });
-    }
-    
+          alert("Error en formato de datos recibidos.");
+        }
+        
+        // Limpieza del elemento creado para no saturar la memoria
+        delete window[callbackName];
+        document.getElementById(callbackName).remove();
+      };
+      
+      // 2. Ejecutar la consulta inyectando el script de manera inmune a bloqueos
+      const script = document.createElement('script');
+      script.src = URL_BASE + (URL_BASE.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+      script.id = callbackName;
+      
+      // Si pasa algo malo con la red general, capturar el error
+      script.onerror = function() {
+        document.getElementById('loader').style.display = 'none';
+        if (statusBadge) {
+          statusBadge.className = "badge bg-danger ms-2 text-white";
+          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
+        }
+        alert("No se pudo establecer conexión con Google Sheets. Verifica los permisos de la implementación.");
+      };
+      
+      document.body.appendChild(script);
+    }    
     // Llena los selectores de los filtros dinámicamente con los valores únicos de la BD
     function populateFilterOptions() {
       const placasSet = new Set();
