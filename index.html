@@ -58,8 +58,7 @@
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
         <div class="col-6 col-md-3"><label class="small text-muted">Fecha Diario</label><input type="date" id="fDiario" class="form-control form-control-sm" onchange="procesarFiltros()"></div>
-        <div class="col-6 col-md-3"><label class="small text-muted">Filtro Columna K</label><input type="date" id="fColK" class="form-control form-control-sm" onchange="procesarFiltros()"></div>
-        <div class="col-6 col-md-3"><label class="small text-muted">Semana (SEM)</label><select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
+        <div class="col-6 col-md-3"><label class="small text-muted">Filtro Columna K (FECHA)</label><select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas las fechas K</option></select></div>        <div class="col-6 col-md-3"><label class="small text-muted">Semana (SEM)</label><select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
         <div class="col-6 col-md-3"><label class="small text-muted">Placa</label><select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
       </div>
     </div>
@@ -147,36 +146,48 @@
     }
 
     function construirCombosFiltros() {
-      let sems = new Set(), placs = new Set();
-      datasetOriginal.forEach(r => {
-        if(r.semana) sems.add(r.semana);
-        if(r.placa) placs.add(r.placa);
-      });
-      let cSem = document.getElementById('fSemana');
-      cSem.innerHTML = '<option value="">Todas</option>';
-      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+  let sems = new Set(), placs = new Set(), fechasK = new Set();
+  
+  datasetOriginal.forEach(r => {
+    if(r.semana) sems.add(r.semana);
+    if(r.placa) placs.add(r.placa);
+    if(r.columnaK) fechasK.add(r.columnaK); // Captura las fechas de la columna K
+  });
 
-      let cPlac = document.getElementById('fPlaca');
-      cPlac.innerHTML = '<option value="">Todas</option>';
-      Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
-    }
+  // 1. Llenar combo de Semanas
+  let cSem = document.getElementById('fSemana');
+  cSem.innerHTML = '<option value="">Todas</option>';
+  Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+
+  // 2. Llenar combo de Placas
+  let cPlac = document.getElementById('fPlaca');
+  cPlac.innerHTML = '<option value="">Todas</option>';
+  Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
+
+  // 3. Llenar combo de Columna K (FECHA) ordenado de más reciente a más antiguo
+  let cColK = document.getElementById('fColK');
+  cColK.innerHTML = '<option value="">Todas las fechas K</option>';
+  Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
+    cColK.innerHTML += `<option value="${f}">${f}</option>`;
+  });
+}
 
     function procesarFiltros() {
-      let fDiario = document.getElementById('fDiario').value;
-      let fColK = document.getElementById('fColK').value;
-      let fSem = document.getElementById('fSemana').value;
-      let fPlac = document.getElementById('fPlaca').value;
+  let fDiario = document.getElementById('fDiario').value;
+  let fColK = document.getElementById('fColK').value; // Ahora lee el valor seleccionado del Select
+  let fSem = document.getElementById('fSemana').value;
+  let fPlac = document.getElementById('fPlaca').value;
 
-      let filtrados = datasetOriginal.filter(item => {
-        if(fDiario && item.fechaAgrupada !== fDiario) return false;
-        if(fColK && item.columnaK !== fColK) return false;
-        if(fSem && item.semana.toString() !== fSem.toString()) return false;
-        if(fPlac && item.placa !== fPlac) return false;
-        return true;
-      });
+  let filtrados = datasetOriginal.filter(item => {
+    if(fDiario && item.fechaAgrupada !== fDiario) return false;
+    if(fColK && item.columnaK !== fColK) return false; // Filtra con precisión quirúrgica string vs string
+    if(fSem && item.semana.toString() !== fSem.toString()) return false;
+    if(fPlac && item.placa !== fPlac) return false;
+    return true;
+  });
 
-      renderizarContenidos(filtrados);
-    }
+  renderizarContenidos(filtrados);
+}
 
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
