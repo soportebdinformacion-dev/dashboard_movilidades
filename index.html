@@ -34,7 +34,7 @@
 
   <div id="loader" class="loader-container">
     <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 fw-bold text-success">Consultando base de datos remota...</h5>
+    <h5 class="mt-3 fw-bold text-success">Consultando base de datos de movilidades...</h5>
   </div>
 
   <nav class="navbar navbar-frusan shadow-sm mb-4">
@@ -59,18 +59,18 @@
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
         <div class="col-12 col-md-4">
-          <label class="small text-muted">Filtro Columna K (FECHA)</label>
+          <label class="small text-muted">Filtro (FECHA)</label>
           <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
-            <option value="">Todas las fechas K</option>
+            <option value="">Todas las fechas</option>
           </select>
         </div>
         <div class="col-6 col-md-4">
           <label class="small text-muted">Semana (SEM)</label>
-          <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+          <select id="fSemana" class="form-select form-select-sm" onchange="actualizarDesplegablesPorCasada()"><option value="">Todas</option></select>
         </div>
         <div class="col-6 col-md-4">
           <label class="small text-muted">Placa</label>
-          <select id="fPlaca" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+          <select id="fPlaca" class="form-select form-select-sm" onchange="actualizarDesplegablesPorCasada()"><option value="">Todas</option></select>
         </div>
       </div>
     </div>
@@ -101,7 +101,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbz0gtWMlKI47TLagrxTso6CRIYmqsZlta6V59lt0oPrlHTnubdpjeoxVro7IVsM0Vpo/exec";
+    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyTekVTkDxafpECbKQ1exBLDZNjMhKdsE2zhN50En7YIZhwz1G_GSRO7zfFOURgph_Q/exec";
 
     let datasetOriginal = [];
     let chartD = null, chartS = null;
@@ -133,7 +133,7 @@
           datasetOriginal = data;
           
           badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> BDXX_HUARMEY Conectada';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Base datos movilidades Conectado';
           
           construirCombosFiltros();
           procesarFiltros();
@@ -153,26 +153,29 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
-    // FUNCIÓN DE TRADUCCIÓN INMUNE AL INGLÉS (Transforma cadenas estilo "Fri Jun 12..." o ISO a dd/mm/aaaa)
-    function convertirAFechaLatina(fechaRaw) {
-      if (!fechaRaw) return "";
-      let texto = fechaRaw.toString().trim();
+    // Traduce cualquier formato de fecha corrupto o inglés al formato dd/mm/aaaa estándar
+    function convertirAFechaLatina(fechaString) {
+      if (!fechaString) return "";
+      let texto = fechaString.toString().trim();
       
+      // Si ya viene formateado correctamente con barras diagonales, lo dejamos pasar
       if (texto.includes("/") && !texto.includes("-")) {
         return texto;
       }
-      
-      // Control de cadenas de texto de fechas en inglés generadas por Apps Script
+
+      // Si viene de una fecha nativa en formato corto en inglés (ej: "Fri Jun 12 2026" o "Fri Jun 12")
       if (isNaN(texto.charAt(0)) && (texto.includes(" ") || texto.includes(","))) {
         let d = new Date(texto);
+        // Si falló el parseo básico debido a la cadena de texto de Apps Script
         if (isNaN(d.getTime())) {
           const mesesEng = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
-          let partes = texto.replace(/,/g, "").split(/\s+/);
-          if (partes.length >= 3) {
-            let mStr = partes[1].toLowerCase().substring(0,3);
-            let dia = parseInt(partes[2], 10);
-            let anio = partes[3] ? parseInt(partes[3], 10) : new Date().getFullYear();
-            if (mesesEng[mStr] !== undefined) {
+          let partesLimpias = texto.replace(/,/g, "").split(/\s+/);
+          // Si es estilo "Fri Jun 12 2026" -> partesLimpias[1] = mes, partesLimpias[2] = día, partesLimpias[3] = año
+          if(partesLimpias.length >= 3) {
+            let mStr = partesLimpias[1].toLowerCase().substring(0,3);
+            let dia = parseInt(partesLimpias[2], 10);
+            let anio = partesLimpias[3] ? parseInt(partesLimpias[3], 10) : 2026;
+            if(mesesEng[mStr] !== undefined) {
               d = new Date(anio, mesesEng[mStr], dia);
             }
           }
@@ -185,6 +188,7 @@
         }
       }
 
+      // Si viene en formato ISO estándar (yyyy-mm-dd)
       if (texto.includes("-")) {
         let soloFecha = texto.split(" ")[0].split("T")[0];
         let partes = soloFecha.split("-");
@@ -198,6 +202,7 @@
       return texto;
     }
 
+    // Construye la lista de opciones iniciales completas
     function construirCombosFiltros() {
       let sems = new Set(), placs = new Set();
       
@@ -214,64 +219,70 @@
       cPlac.innerHTML = '<option value="">Todas</option>';
       Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
 
-      // Cargar las fechas inicialmente
-      renderizarComboFechasDinamico();
+      // Inicializar el combo de fechas de manera limpia
+      filtrarYMostrarComboFechas();
     }
 
-    // NUEVO: Función encargada de actualizar VISUALMENTE el filtro de fechas según Semana y Placa
-    function renderizarComboFechasDinamico() {
+    // NUEVO REQUERIMIENTO: Filtra las fechas disponibles dinámicamente según la semana o placa elegida
+    function filtrarYMostrarComboFechas() {
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
       let cColK = document.getElementById('fColK');
       
-      let valorGuardado = cColK.value;
-      let fechasFiltradas = new Set();
+      // Guardamos la fecha que el usuario tenía seleccionada actualmente para no borrarla al recargar
+      let valorSeleccionadoPrevio = cColK.value;
 
-      datasetOriginal.forEach(r => {
-        if (fSem && r.semana.toString() !== fSem.toString()) return;
-        if (fPlac && r.placa !== fPlac) return;
+      let fechasKFiltradas = new Set();
+
+      datasetOriginal.forEach(item => {
+        if (fSem && item.semana.toString() !== fSem.toString()) return;
+        if (fPlac && item.placa !== fPlac) return;
         
-        if (r.columnaK) {
-          fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
+        if (item.columnaK || item.fechaAgrupada) {
+          let latina = convertirAFechaLatina(item.columnaK || item.fechaAgrupada);
+          if (latina) fechasKFiltradas.add(latina);
         }
       });
 
-      cColK.innerHTML = '<option value="">Todas las fechas K</option>';
+      cColK.innerHTML = '<option value="">Todas las fechas</option>';
       
-      Array.from(fechasFiltradas).sort((a, b) => {
+      // Ordenamos las fechas de manera cronológica inversa (más reciente primero)
+      Array.from(fechasKFiltradas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
       }).forEach(f => {
         cColK.innerHTML += `<option value="${f}">${f}</option>`;
       });
 
-      if (fechasFiltradas.has(valorGuardado)) {
-        cColK.value = valorGuardado;
+      // Restaurar selección previa si aún existe dentro de las opciones permitidas
+      if (fechasKFiltradas.has(valorSeleccionadoPrevio)) {
+        cColK.value = valorSeleccionadoPrevio;
       }
     }
 
-    // NUEVO: Interconecta el cambio de Placa/Semana con la actualización del select de Fecha
-    function actualizarFiltrosCascada() {
-      renderComboFechasDinamico();
+    // Ejecuta el rediseño dinámico en cascada cuando se altera Semana o Placa
+    function actualizarDesplegablesPorCasada() {
+      filtrarYMostrarComboFechas();
       procesarFiltros();
     }
 
     function procesarFiltros() {
-      let fColK = document.getElementById('fColK').value;
+      let fColK = document.getElementById('fColK').value; 
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
 
       let filtrados = datasetOriginal.filter(item => {
-        let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
+        let itemFechaKLatina = convertirAFechaLatina(item.columnaK || item.fechaAgrupada);
 
-        if(fColK && itemFechaKVisual !== fColK) return false;
-        if(fSem && item.semana.toString() !== fSem.toString()) return false;
-        if(fPlac && item.placa !== fPlac) return false;
+        if (fColK && itemFechaKLatina !== fColK) return false;
+        if (fSem && item.semana.toString() !== fSem.toString()) return false;
+        if (fPlac && item.placa !== fPlac) return false;
+        
         return true;
       });
 
       renderizarContenidos(filtrados);
-    }
+    }    
 
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
@@ -279,14 +290,14 @@
       tbody.innerHTML = '';
 
       datos.forEach(f => {
+        let fechaTabla = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
+
         c += f.capacidad; p += f.pasajeros; l += f.libres;
         let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
         
         let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
         if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
         else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
-
-        let fechaTabla = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
 
         tbody.innerHTML += `
           <tr class="${estFila}">
@@ -317,9 +328,9 @@
     function armarGraficos(datos) {
       let rDias = {};
       datos.forEach(x => {
-        let fechaFormateada = convertirAFechaLatina(x.fechaAgrupada || x.columnaK);
-        if(!rDias[fechaFormateada]) rDias[fechaFormateada] = {p:0, l:0};
-        rDias[fechaFormateada].p += x.pasajeros; rDias[fechaFormateada].l += x.libres;
+        let fechaClave = convertirAFechaLatina(x.fechaAgrupada || x.columnaK);
+        if(!rDias[fechaClave]) rDias[fechaClave] = {p:0, l:0};
+        rDias[fechaClave].p += x.pasajeros; rDias[fechaClave].l += x.libres;
       });
       
       let lDiasVisuales = Object.keys(rDias).sort((a,b) => {
@@ -331,7 +342,7 @@
       chartD = new Chart(document.getElementById('canvasDiario'), {
         type: 'line',
         data: { 
-          labels: lDiasVisuales,
+          labels: lDiasVisuales, 
           datasets: [
             { label: 'Pasajeros', data: lDiasVisuales.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
             { label: 'Libres', data: lDiasVisuales.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
