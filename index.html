@@ -153,7 +153,7 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
-    // FUNCIÓN DE TRADUCCIÓN CORREGIDA PARA SEGUROS EN ENERO/JUNIO CON AÑO CORRECTO (2026)
+    // CORRECCIÓN QUIRÚRGICA: Evita el desfasaje del año 2001 provocado por el formato largo GMT/UTC de Apps Script
     function convertirAFechaLatina(fechaRaw) {
       if (!fechaRaw) return "";
       let texto = fechaRaw.toString().trim();
@@ -163,18 +163,18 @@
       }
       
       if (isNaN(texto.charAt(0)) && (texto.includes(" ") || texto.includes(","))) {
-        let d = new Date(texto);
+        // Limpiamos referencias molestas de huso horario que confunden al motor JS (ej: GMT-0500)
+        let textoLimpio = texto.split("GMT")[0].trim();
+        let d = new Date(textoLimpio);
         
-        // Si el parse nativo falla o asigna un año incorrecto (como 2001)
-        if (isNaN(d.getTime()) || d.getFullYear() < 2010) {
+        if (isNaN(d.getTime()) || d.getFullYear() < 2020) {
           const mesesEng = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
           let partes = texto.replace(/,/g, "").split(/\s+/);
           if (partes.length >= 3) {
             let mStr = partes[1].toLowerCase().substring(0,3);
             let dia = parseInt(partes[2], 10);
+            let anio = 2026; 
             
-            // Intenta buscar un número de 4 dígitos en la cadena para el año, si no usa 2026
-            let anio = 2026;
             for (let i = 0; i < partes.length; i++) {
               if (partes[i].length === 4 && !isNaN(partes[i])) {
                 anio = parseInt(partes[i], 10);
@@ -190,7 +190,7 @@
         if (!isNaN(d.getTime())) {
           let dd = String(d.getDate()).padStart(2, '0');
           let mm = String(d.getMonth() + 1).padStart(2, '0');
-          let yyyy = d.getFullYear() < 2010 ? 2026 : d.getFullYear(); // Forzar salvaguarda 2026
+          let yyyy = d.getFullYear() < 2020 ? 2026 : d.getFullYear(); 
           return `${dd}/${mm}/${yyyy}`;
         }
       }
@@ -258,6 +258,7 @@
       }
     }
 
+    // CORRECCIÓN QUIRÚRGICA: Se corrige el nombre de la función invocada para que coincida exactamente con "renderizarComboFechasDinamico"
     function actualizarFiltrosCascada() {
       renderizarComboFechasDinamico();
       procesarFiltros();
