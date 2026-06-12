@@ -3,404 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Movilidades - Agrícola Huarmey</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/style.css" rel="stylesheet">
+  <title>Dashboard Agrícola Huarmey - URL Externa</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f4f7f6;
-      color: #333;
-    }
-    /* Colores Corporativos Frusan */
-    .bg-frusan-primary { background-color: #1b4d3e !important; } /* Verde Oscuro */
-    .bg-frusan-accent { background-color: #7ba236 !important; }  /* Verde Claro */
-    .text-frusan { color: #1b4d3e; }
-    
-    .navbar-brand img {
-      max-height: 50px;
-      border-radius: 4px;
-    }
-    .card-kpi {
-      border: none;
-      border-radius: 15px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .card-kpi:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    }
-    .icon-shape {
-      width: 48px;
-      height: 48px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-    /* Semáforo de Eficiencia Requerido */
-    .status-alta { background-color: #2ec4b6 !important; color: white; }    /* >= 90% Verde Esmeralda */
-    .status-media { background-color: #ff9f1c !important; color: white; }   /* >= 80% Naranja */
-    .status-baja { background-color: #e71d36 !important; color: white; }    /* <= 79.99% Rojo */
-
-    .badge-status {
-      padding: 6px 12px;
-      border-radius: 30px;
-      font-weight: 600;
-      font-size: 0.85em;
-    }
-    .chart-container {
-      position: relative;
-      margin: auto;
-      height: 300px;
-      width: 100%;
-    }
-    .loader {
-      position: fixed;
-      left: 0; top: 0; width: 100%; height: 100%;
-      z-index: 9999;
-      background: rgba(255,255,255,0.9) url('https://i.gifer.com/ZZ5H.gif') no-repeat center center;
-      background-size: 60px;
-    }
+    body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
+    .navbar-frusan { background-color: #1b4d3e; color: white; }
+    .btn-frusan { background-color: #7ba236; color: white; border: none; }
+    .btn-frusan:hover { background-color: #64852b; color: white; }
+    .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
+    .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
+    .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
+    .badge-verde { background-color: #198754; color: white; }
+    .badge-naranja { background-color: #fd7e14; color: white; }
+    .badge-rojo { background-color: #dc3545; color: white; }
+    .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
   </style>
 </head>
 <body>
 
-  <div id="loading" class="loader"></div>
+  <div id="loader" class="loader-container">
+    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="mt-3 fw-bold text-success">Consumiendo Endpoint Externo de BDXX_HUARMEY...</h5>
+  </div>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-frusan-primary sticky-top shadow">
-    <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center" href="#">
-        <div class="bg-white p-1 me-2 rounded d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
-          <i class="fa-solid fa-leaf text-success fa-lg"></i>
-        </div>
-        <div>
-          <span class="fw-bold d-block lh-1">Agrícola Huarmey</span>
-          <small class="fs-7 text-white-50">Fundo Frusan • Reportes de Movilidad</small>
-        </div>
-      </a>
-      <button class="btn btn-outline-light btn-sm ms-auto" onclick="cargarDatosBase()">
-        <i class="fa-solid fa-sync fa-spin-hover"></i> Actualizar
+  <nav class="navbar navbar-frusan shadow-sm mb-4">
+    <div class="container-fluid px-4">
+      <span class="navbar-brand fw-bold mb-0 text-white d-flex align-items-center">
+        <i class="fa-solid fa-leaf text-warning me-2"></i> Agrícola Huarmey - Fundo Frusan (API)
+      </span>
+      <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
+        <i class="fa-solid fa-arrows-rotate"></i> Actualizar via API
       </button>
     </div>
   </nav>
 
-  <div class="container-fluid my-4 px-4">
-    
-    <div class="card card-kpi p-3 mb-4 bg-white">
-      <div class="row g-3 align-items-center">
-        <div class="col-md-12">
-          <h6 class="fw-bold text-frusan mb-0"><i class="fa-solid fa-filter me-2"></i>Filtros de Control Dinámico</h6>
-        </div>
-        <div class="col-6 col-sm-4 col-md-3">
-          <label class="form-label small fw-semibold">Fecha Registro</label>
-          <input type="date" id="filtroFecha" class="form-control form-control-sm" onchange="aplicarFiltros()">
-        </div>
-        <div class="col-6 col-sm-4 col-md-3">
-          <label class="form-label small fw-semibold">Filtro Columna K (FECHA)</label>
-          <input type="date" id="filtroColumnaK" class="form-control form-control-sm" onchange="aplicarFiltros()">
-        </div>
-        <div class="col-6 col-sm-4 col-md-3">
-          <label class="form-label small fw-semibold">Semana (SEM)</label>
-          <select id="filtroSemana" class="form-select form-select-sm" onchange="aplicarFiltros()">
-            <option value="">Todas las Semanas</option>
-          </select>
-        </div>
-        <div class="col-6 col-sm-4 col-md-3">
-          <label class="form-label small fw-semibold">Placa Vehículo</label>
-          <select id="filtroPlaca" class="form-select form-select-sm" onchange="aplicarFiltros()">
-            <option value="">Todas las Placas</option>
-          </select>
-        </div>
+  <div class="container-fluid px-4">
+    <div class="card p-3 mb-4 kpi-card bg-white">
+      <div class="row g-2">
+        <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+        <div class="col-6 col-md-3"><label class="small text-muted">Fecha Diario</label><input type="date" id="fDiario" class="form-control form-control-sm" onchange="procesarFiltros()"></div>
+        <div class="col-6 col-md-3"><label class="small text-muted">Filtro Columna K</label><input type="date" id="fColK" class="form-control form-control-sm" onchange="procesarFiltros()"></div>
+        <div class="col-6 col-md-3"><label class="small text-muted">Semana (SEM)</label><select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
+        <div class="col-6 col-md-3"><label class="small text-muted">Placa</label><select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
       </div>
     </div>
 
     <div class="row g-3 mb-4">
-      <div class="col-6 col-lg-3">
-        <div class="card card-kpi bg-frusan-primary text-white h-100">
-          <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-              <p class="text-uppercase small mb-1 opacity-75">Total Unidades</p>
-              <h3 class="fw-bold mb-0" id="kpiUnidades">0</h3>
-            </div>
-            <div class="icon-shape"><i class="fa-solid fa-bus"></i></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-kpi bg-frusan-accent text-white h-100">
-          <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-              <p class="text-uppercase small mb-1 opacity-75">Capacidad Total</p>
-              <h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3>
-            </div>
-            <div class="icon-shape"><i class="fa-solid fa-users-rectangle"></i></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-kpi bg-info text-white h-100">
-          <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-              <p class="text-uppercase small mb-1 opacity-75">Pasajeros Ingresados</p>
-              <h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3>
-              <small class="fw-bold shadow-sm rounded px-1 bg-white text-info fs-7" id="porcentajePasajeros">0%</small>
-            </div>
-            <div class="icon-shape"><i class="fa-solid fa-user-check"></i></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-kpi bg-secondary text-white h-100">
-          <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-              <p class="text-uppercase small mb-1 opacity-75">Asientos Libres</p>
-              <h3 class="fw-bold mb-0" id="kpiLibres">0</h3>
-              <small class="fw-bold shadow-sm rounded px-1 bg-white text-secondary fs-7" id="porcentajeLibres">0%</small>
-            </div>
-            <div class="icon-shape"><i class="fa-solid fa-chair"></i></div>
-          </div>
-        </div>
-      </div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
     </div>
 
-    <div class="row g-4 mb-4">
-      <div class="col-12 col-md-6">
-        <div class="card card-kpi p-3 bg-white h-100">
-          <h6 class="fw-bold text-frusan mb-3"><i class="fa-solid fa-chart-line me-2"></i>Comparativa Diaria: Pasajeros vs Libres</h6>
-          <div class="chart-container">
-            <canvas id="chartDiario"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-6">
-        <div class="card card-kpi p-3 bg-white h-100">
-          <h6 class="fw-bold text-frusan mb-3"><i class="fa-solid fa-chart-bar me-2"></i>Reporte Semanal Acumulado (SEM)</h6>
-          <div class="chart-container">
-            <canvas id="chartSemanal"></canvas>
-          </div>
-        </div>
-      </div>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
+      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
-    <div class="card card-kpi bg-white p-3 shadow-sm">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h6 class="fw-bold text-frusan mb-0"><i class="fa-solid fa-list-check me-2"></i>Monitoreo de Movilidades y Nivel de Ocupación</h6>
-        <div class="d-flex gap-2 fs-7">
-          <span class="badge status-alta">≥ 90% Óptimo</span>
-          <span class="badge status-media">≥ 80% Regular</span>
-          <span class="badge status-baja">≤ 79.9% Crítico</span>
-        </div>
-      </div>
+    <div class="card kpi-card p-3 bg-white mb-4">
       <div class="table-responsive">
-        <table class="table table-hover align-middle table-sm" style="font-size: 0.9em;">
+        <table class="table table-sm table-hover align-middle" style="font-size:0.9em;">
           <thead class="table-light">
-            <tr>
-              <th>Fecha Reg.</th>
-              <th>Placa</th>
-              <th>Conductor (Último Reg.)</th>
-              <th>Ruta / Cultivo</th>
-              <th class="text-center">Capacidad</th>
-              <th class="text-center">Pasajeros</th>
-              <th class="text-center">Libres</th>
-              <th class="text-center">Ocupación (%)</th>
-            </tr>
+            <tr><th>Fecha</th><th>Placa</th><th>Conductor</th><th>Ruta / Cultivo</th><th class="text-center">Cap.</th><th class="text-center">Pasajeros</th><th class="text-center">Libres</th><th class="text-center">Eficiencia</th></tr>
           </thead>
-          <tbody id="tablaCuerpo">
-            </tbody>
+          <tbody id="tablaCuerpo"></tbody>
         </table>
       </div>
     </div>
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <script>
-    // Variables de alcance global
-    let baseDatosOriginal = [];
-    let chartDiarioInstancia = null;
-    let chartSemanalInstancia = null;
+    // ------------------------------------------------------------------------
+    // RUTA EXTERNA: COLOCA AQUÍ LA URL MACRO DE EJECUCIÓN DE TU GOOGLE SCRIPT
+    // ------------------------------------------------------------------------
+    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycby73_DFT5GkoDyF4QFjBW6L39WRGkFMSg9xBDwkz2O4V1yR3xksy6IPx11YPL3fP8ju/exec";
 
-    document.addEventListener("DOMContentLoaded", function() {
-      cargarDatosBase();
+    let datasetOriginal = [];
+    let chartD = null, chartS = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      obtenerDatosAPIExterno();
     });
 
-    function cargarDatosBase() {
-      document.getElementById('loading').style.display = 'block';
+    function obtenerDatosAPIExterno() {
+      document.getElementById('loader').style.display = 'flex';
       
-      // Llamada al Backend del Google Apps Script
-      google.script.run
-        .withSuccessHandler(function(data) {
-          baseDatosOriginal = data;
-          construirSelectoresFiltros();
-          aplicarFiltros();
-          document.getElementById('loading').style.display = 'none';
+      // Llamada externa asíncrona estándar usando Fetch API
+      fetch(URL_API_EXTERNA)
+        .then(response => response.json())
+        .then(data => {
+          if(data.error) {
+            alert("Error del Servidor: " + data.message);
+          } else {
+            datasetOriginal = data;
+            construirCombosFiltros();
+            procesarFiltros();
+          }
+          document.getElementById('loader').style.display = 'none';
         })
-        .withFailureHandler(function(err) {
-          alert("Error conectando con BDXX_HUARMEY: " + err.message);
-          document.getElementById('loading').style.display = 'none';
-        })
-        .obtenerDatosMovilidad();
+        .catch(err => {
+          alert("Error de Conexión Externa: Asegúrate de haber publicado el script como 'Cualquiera'.");
+          document.getElementById('loader').style.display = 'none';
+        });
     }
 
-    function construirSelectoresFiltros() {
-      let semanas = new Set();
-      let placas = new Set();
-      
-      baseDatosOriginal.forEach(reg => {
-        if(reg.semana) semanas.add(reg.semana);
-        if(reg.placa) placas.add(reg.placa);
+    function construirCombosFiltros() {
+      let sems = new Set(), placs = new Set();
+      datasetOriginal.forEach(r => {
+        if(r.semana) sems.add(r.semana);
+        if(r.placa) placs.add(r.placa);
       });
+      let cSem = document.getElementById('fSemana');
+      cSem.innerHTML = '<option value="">Todas</option>';
+      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
-      // Rellenar selector de Semanas
-      let selectSemana = document.getElementById('filtroSemana');
-      selectSemana.innerHTML = '<option value="">Todas las Semanas</option>';
-      Array.from(semanas).sort().forEach(s => {
-        selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
-      });
-
-      // Rellenar selector de Placas
-      let selectPlaca = document.getElementById('filtroPlaca');
-      selectPlaca.innerHTML = '<option value="">Todas las Placas</option>';
-      Array.from(placas).sort().forEach(p => {
-        selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
-      });
+      let cPlac = document.getElementById('fPlaca');
+      cPlac.innerHTML = '<option value="">Todas</option>';
+      Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
     }
 
-    function aplicarFiltros() {
-      let fFecha = document.getElementById('filtroFecha').value;
-      let fColK = document.getElementById('filtroColumnaK').value;
-      let fSemana = document.getElementById('filtroSemana').value;
-      let fPlaca = document.getElementById('filtroPlaca').value;
+    function procesarFiltros() {
+      let fDiario = document.getElementById('fDiario').value;
+      let fColK = document.getElementById('fColK').value;
+      let fSem = document.getElementById('fSemana').value;
+      let fPlac = document.getElementById('fPlaca').value;
 
-      // Filtrado Dinámico de la matriz
-      let datosFiltrados = baseDatosOriginal.filter(reg => {
-        if (fFecha && reg.fechaAgrupada !== fFecha) return false;
-        if (fColK && reg.columnaK !== fColK) return false;
-        if (fSemana && reg.semana.toString() !== fSemana.toString()) return false;
-        if (fPlaca && reg.placa !== fPlaca) return false;
+      let filtrados = datasetOriginal.filter(item => {
+        if(fDiario && item.fechaAgrupada !== fDiario) return false;
+        if(fColK && item.columnaK !== fColK) return false;
+        if(fSem && item.semana.toString() !== fSem.toString()) return false;
+        if(fPlac && item.placa !== fPlac) return false;
         return true;
       });
 
-      renderizarKPIsYTabla(datosFiltrados);
-      procesarGraficos(datosFiltrados);
+      renderizarContenidos(filtrados);
     }
 
-    function renderizarKPIsYTabla(datos) {
-      let totalUnidades = datos.length;
-      let capacidadTotal = 0;
-      let totalPasajeros = 0;
-      let totalLibres = 0;
-
+    function renderizarContenidos(datos) {
+      let u = datos.length, c = 0, p = 0, l = 0;
       let tbody = document.getElementById('tablaCuerpo');
       tbody.innerHTML = '';
 
-      if (totalUnidades === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Ningún registro coincide con los filtros aplicados.</td></tr>';
-      }
-
-      datos.forEach(reg => {
-        capacidadTotal += reg.capacidad;
-        totalPasajeros += reg.pasajeros;
-        totalLibres += reg.libres;
-
-        // Calcular porcentaje de ocupación individual
-        let porcOcupacion = reg.capacidad > 0 ? ((reg.pasajeros / reg.capacidad) * 100).toFixed(1) : 0;
+      datos.forEach(f => {
+        c += f.capacidad; p += f.pasajeros; l += f.libres;
+        let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
         
-        // Criterio de color del semáforo solicitado
-        let claseSemaf = 'status-baja';
-        if (porcOcupacion >= 90) claseSemaf = 'status-alta';
-        else if (porcOcupacion >= 80) claseSemaf = 'status-media';
+        let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
+        if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
+        else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
 
         tbody.innerHTML += `
-          <tr>
-            <td>${reg.fechaAgrupada}</td>
-            <td class="fw-bold text-frusan">${reg.placa}</td>
-            <td><i class="fa-solid fa-user-tie text-muted me-1"></i> ${reg.conductor}</td>
-            <td><small class="d-block text-secondary">${reg.ruta}</small><span class="badge bg-light text-dark">${reg.cultivo}</span></td>
-            <td class="text-center fw-bold">${reg.capacidad}</td>
-            <td class="text-center text-success fw-bold">${reg.pasajeros}</td>
-            <td class="text-center text-danger fw-bold">${reg.libres}</td>
-            <td class="text-center"><span class="badge ${claseSemaf} badge-status">${porcOcupacion}%</span></td>
-          </tr>
-        `;
+          <tr class="${estFila}">
+            <td>${f.fechaAgrupada}</td><td class="fw-bold">${f.placa}</td>
+            <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
+            <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
+            <td class="text-center">${f.capacidad}</td><td class="text-center fw-bold text-success">${f.pasajeros}</td>
+            <td class="text-center fw-bold text-danger">${f.libres}</td>
+            <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
+          </tr>`;
       });
 
-      // Actualizar valores de tarjetas KPI globales
-      document.getElementById('kpiUnidades').innerText = totalUnidades;
-      document.getElementById('kpiCapacidad').innerText = capacidadTotal;
-      document.getElementById('kpiPasajeros').innerText = totalPasajeros;
-      document.getElementById('kpiLibres').innerText = totalLibres;
+      document.getElementById('kpiUnidades').innerText = u;
+      document.getElementById('kpiCapacidad').innerText = c;
+      document.getElementById('kpiPasajeros').innerText = p;
+      document.getElementById('kpiLibres').innerText = l;
 
-      let porcGlobalPasajeros = capacidadTotal > 0 ? ((totalPasajeros / capacidadTotal) * 100).toFixed(1) : 0;
-      let porcGlobalLibres = capacidadTotal > 0 ? ((totalLibres / capacidadTotal) * 100).toFixed(1) : 0;
+      let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
+      let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
+      document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
+      document.getElementById('pctLibres').innerText = pL + "% Libre";
 
-      document.getElementById('porcentajePasajeros').innerText = `${porcGlobalPasajeros}% Ocupado`;
-      document.getElementById('porcentajeLibres').innerText = `${porcGlobalLibres}% Libre`;
+      armarGraficos(datos);
     }
 
-    function procesarGraficos(datos) {
-      // --- GRÁFICO 1: COMPARATIVA DIARIA (Identificar bajas capacidades) ---
-      let resumenDiario = {};
-      datos.forEach(r => {
-        let f = r.fechaAgrupada;
-        if (!resumenDiario[f]) resumenDiario[f] = { pasajeros: 0, libres: 0 };
-        resumenDiario[f].pasajeros += r.pasajeros;
-        resumenDiario[f].libres += r.libres;
+    function armarGraficos(datos) {
+      let rDias = {};
+      datos.forEach(x => {
+        if(!rDias[x.fechaAgrupada]) rDias[x.fechaAgrupada] = {p:0, l:0};
+        rDias[x.fechaAgrupada].p += x.pasajeros; rDias[x.fechaAgrupada].l += x.libres;
       });
+      let lDias = Object.keys(rDias).sort();
 
-      let fechasLabels = Object.keys(resumenDiario).sort();
-      let pasajerosDiarios = fechasLabels.map(f => resumenDiario[f].pasajeros);
-      let libresDiarios = fechasLabels.map(f => resumenDiario[f].libres);
-
-      if (chartDiarioInstancia) chartDiarioInstancia.destroy();
-      
-      let ctxDiario = document.getElementById('chartDiario').getContext('2d');
-      chartDiarioInstancia = new Chart(ctxDiario, {
+      if(chartD) chartD.destroy();
+      chartD = new Chart(document.getElementById('canvasDiario'), {
         type: 'line',
-        data: {
-          labels: fechasLabels,
-          datasets: [
-            { label: 'Pasajeros', data: pasajerosDiarios, borderColor: '#7ba236', backgroundColor: 'rgba(123,162,54,0.1)', fill: true, tension: 0.2 },
-            { label: 'Asientos Libres', data: libresDiarios, borderColor: '#e71d36', backgroundColor: 'rgba(231,29,54,0.1)', fill: true, tension: 0.2 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        data: { labels: lDias, datasets: [
+          { label: 'Pasajeros', data: lDias.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
+          { label: 'Libres', data: lDias.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // --- GRÁFICO 2: REPORTE SEMANAL ACUMULADO ---
-      let resumenSemanal = {};
-      datos.forEach(r => {
-        let s = "Sem " + r.semana;
-        if (!resumenSemanal[s]) resumenSemanal[s] = { pasajeros: 0, libres: 0 };
-        resumenSemanal[s].pasajeros += r.pasajeros;
-        resumenSemanal[s].libres += r.libres;
+      let rSem = {};
+      datos.forEach(x => {
+        let k = "Sem " + x.semana;
+        if(!rSem[k]) rSem[k] = {p:0, l:0};
+        rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
       });
+      let lSem = Object.keys(rSem).sort();
 
-      let semanasLabels = Object.keys(resumenSemanal).sort();
-      let pasajerosSemanales = semanasLabels.map(s => resumenSemanal[s].pasajeros);
-      let libresSemanales = semanasLabels.map(s => resumenSemanal[s].libres);
-
-      if (chartSemanalInstancia) chartSemanalInstancia.destroy();
-
-      let ctxSemanal = document.getElementById('chartSemanal').getContext('2d');
-      chartSemanalInstancia = new Chart(ctxSemanal, {
+      if(chartS) chartS.destroy();
+      chartS = new Chart(document.getElementById('canvasSemanal'), {
         type: 'bar',
-        data: {
-          labels: semanasLabels,
-          datasets: [
-            { label: 'Pasajeros', data: pasajerosSemanales, backgroundColor: '#1b4d3e' },
-            { label: 'Asientos Libres', data: libresSemanales, backgroundColor: '#ff9f1c' }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+        data: { labels: lSem, datasets: [
+          { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
+          { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, scales: { x:{stacked:true}, y:{stacked:true} } }
       });
     }
   </script>
