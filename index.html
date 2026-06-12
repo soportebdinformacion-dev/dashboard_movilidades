@@ -305,10 +305,8 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      // URL de tu Google Apps Script que devuelve JSON estándar
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbz1lyA9BpNyJpj_bN_yTqTsYMLHQxvAmG7j_MDzpmh_eUPtyNg6RLcHrwUa4JbP5fQg/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwqTiCZJ9FdpKV8d2qdXmINFKborEpiq7HUWYwpDs0IqS0GK1Tvs-y66qa9dhwE_b3K/exec";
       
-      // Petición nativa directa para sincronizar con tu dashboard.js sin bloqueos
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
           if (!response.ok) throw new Error("Error en la respuesta del servidor");
@@ -345,7 +343,7 @@
             statusBadge.className = "badge bg-danger ms-2 text-white";
             statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
           }
-          console.error("Error de conexión:", err);
+          console.error(err);
         });
     }
 
@@ -377,7 +375,7 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; // CORREGIDO: Ahora apunta al ID 'filterFecha' real de tu HTML
+      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; // CORREGIDO: id="filterFecha" coincide con tu HTML
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
@@ -496,14 +494,14 @@
         return;
       }
 
-      // CORREGIDO: Mapeo exacto de días en español de 4 letras para cumplir con el formato "JUEV"
+      // CORREGIDO: Arreglo estático con formato de 4 letras requerido (JUEV, MART, etc.)
       const diasSemana = ["DOMI", "LUNE", "MART", "MIÉR", "JUEV", "VIER", "SÁBA"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // CORREGIDO: Formato exacto requerido: JUEV, 11/06/2026 sin importar el idioma local de la PC
+        // CORREGIDO: Formato de presentación final "JUEV, 11/06/2026" estable sin importar el idioma de la PC
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
@@ -532,6 +530,5 @@
         `;
       });
     }
-  </script>
-</body>
+  </script></body>
 </html>
