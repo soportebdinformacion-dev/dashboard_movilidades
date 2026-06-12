@@ -240,14 +240,6 @@ function procesarFiltros() {
   let u = datos.length, c = 0, p = 0, l = 0;
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
-// Asegúrate de que la fecha agrupada se transforme antes de insertarse en la tabla:
-let fechaTabla = f.fechaAgrupada;
-if (f.fechaAgrupada && f.fechaAgrupada.includes("-")) {
-  let partes = f.fechaAgrupada.split("-");
-  if (partes.length === 3) {
-    fechaTabla = `${partes[2]}/${partes[1]}/${partes[0]}`;
-  }
-}
 
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
