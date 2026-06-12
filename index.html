@@ -171,7 +171,7 @@ function convertirAFechaLatina(fechaString) {
 }
 
 // =========================================================================
-// REEMPLAZA ÚNICAMENTE ESTAS DOS FUNCIONES EN TU SCRIPT (SIN TOCAR LO DEMÁS)
+// REEMPLAZA ÚNICAMENTE ESTAS DOS FUNCIONES EN TU SCRIPT
 // =========================================================================
 
 function construirCombosFiltros() {
@@ -183,62 +183,53 @@ function construirCombosFiltros() {
     if(r.columnaK) fechasK.add(r.columnaK);
   });
 
-  // 1. Llenar combo de Semanas (Se mantiene intacto)
+  // 1. Combo de Semanas (Intacto)
   let cSem = document.getElementById('fSemana');
   cSem.innerHTML = '<option value="">Todas</option>';
   Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
-  // 2. Llenar combo de Placas (Se mantiene intacto)
+  // 2. Combo de Placas (Intacto)
   let cPlac = document.getElementById('fPlaca');
   cPlac.innerHTML = '<option value="">Todas</option>';
   Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
 
-  // 3. Llenar combo de Columna K convertido totalmente a formato Español (DD/MM/YYYY)
+  // 3. Combo de Columna K: VALUE en formato nativo ordenable, TEXTO en formato español
   let cColK = document.getElementById('fColK');
   cColK.innerHTML = '<option value="">Todas las fechas</option>';
   
-  // Ordenamos cronológicamente de más reciente a más antigua
+  // Ordenamos usando las fechas nativas (YYYY-MM-DD) de más reciente a más antigua
   Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
     let fechaVisual = f;
-    if (f.includes("-")) {
+    // Transformamos SOLO el texto visual a DD/MM/YYYY
+    if (f && f.includes("-")) {
       let partes = f.split("-");
       if (partes.length === 3) {
         fechaVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
       }
     }
-    // Guardamos y mostramos siempre en formato DD/MM/YYYY
-    cColK.innerHTML += `<option value="${fechaVisual}">${fechaVisual}</option>`;
+    // value mantiene el formato ISO (del motor) y el texto muestra el formato español
+    cColK.innerHTML += `<option value="${f}">${fechaVisual}</option>`;
   });
 }
 
 function procesarFiltros() {
-  // Captura el valor actual de los tres filtros de forma simultánea
+  // Captura los valores de los filtros en tiempo real
   let fColK = document.getElementById('fColK').value; 
   let fSem = document.getElementById('fSemana').value;
   let fPlac = document.getElementById('fPlaca').value;
 
   let filtrados = datasetOriginal.filter(item => {
-    // 1. Convertimos la fecha original del registro (YYYY-MM-DD) a Español (DD/MM/YYYY)
-    let itemFechaKVisual = item.columnaK;
-    if (item.columnaK && item.columnaK.includes("-")) {
-      let partes = item.columnaK.split("-");
-      if (partes.length === 3) {
-        itemFechaKVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
-    }
-
-    // 2. Lógica de asociación de filtros encadenados (No se ignoran entre sí)
-    if (fColK && itemFechaKVisual !== fColK) return false;
+    // Asociación estricta y encadenada de filtros:
+    if (fColK && item.columnaK !== fColK) return false;
     if (fSem && item.semana.toString() !== fSem.toString()) return false;
     if (fPlac && item.placa !== fPlac) return false;
     
     return true;
   });
 
-  // Re-renderiza la tabla y gráficos con los datos cruzados correctamente
+  // Renderiza la tabla y los gráficos con los datos correctamente asociados
   renderizarContenidos(filtrados);
-}
-    
+}    
     function renderizarContenidos(datos) {
   let u = datos.length, c = 0, p = 0, l = 0;
   let tbody = document.getElementById('tablaCuerpo');
