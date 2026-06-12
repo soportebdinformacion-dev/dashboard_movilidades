@@ -55,12 +55,24 @@
 
   <div class="container-fluid px-4">
     <div class="card p-3 mb-4 kpi-card bg-white">
-      <div class="row g-2">
-        <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-        <div class="col-6 col-md-3"><label class="small text-muted">Fecha Diario</label><input type="date" id="fDiario" class="form-control form-control-sm" onchange="procesarFiltros()"></div>
-        <div class="col-6 col-md-3"><label class="small text-muted">Filtro Columna K (FECHA)</label><select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas las fechas K</option></select></div>        <div class="col-6 col-md-3"><label class="small text-muted">Semana (SEM)</label><select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
-        <div class="col-6 col-md-3"><label class="small text-muted">Placa</label><select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select></div>
-      </div>
+  <div class="row g-2">
+    <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+    <div class="col-12 col-md-4">
+      <label class="small text-muted">Filtro Columna K (FECHA)</label>
+      <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
+        <option value="">Todas las fechas K</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-4">
+      <label class="small text-muted">Semana (SEM)</label>
+      <select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
+    </div>
+    <div class="col-6 col-md-4">
+      <label class="small text-muted">Placa</label>
+      <select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
+    </div>
+  </div>
+</div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -145,42 +157,49 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
-    function construirCombosFiltros() {
+    // Función auxiliar para transformar el texto yyyy-mm-dd a dd/mm/yyyy para la vista
+function convertirAFechaLatina(fechaString) {
+  if (!fechaString || fechaString.includes("/")) return fechaString;
+  let partes = fechaString.split("-");
+  if (partes.length === 3) {
+    return `${partes[2]}/${partes[1]}/${partes[0]}`; // Retorna dd/mm/yyyy
+  }
+  return fechaString;
+}
+
+function construirCombosFiltros() {
   let sems = new Set(), placs = new Set(), fechasK = new Set();
   
   datasetOriginal.forEach(r => {
     if(r.semana) sems.add(r.semana);
     if(r.placa) placs.add(r.placa);
-    if(r.columnaK) fechasK.add(r.columnaK); // Captura las fechas de la columna K
+    if(r.columnaK) fechasK.add(r.columnaK);
   });
 
-  // 1. Llenar combo de Semanas
   let cSem = document.getElementById('fSemana');
   cSem.innerHTML = '<option value="">Todas</option>';
   Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
-  // 2. Llenar combo de Placas
   let cPlac = document.getElementById('fPlaca');
   cPlac.innerHTML = '<option value="">Todas</option>';
   Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
 
-  // 3. Llenar combo de Columna K (FECHA) ordenado de más reciente a más antiguo
+  // Mostrar la lista de fechas K ordenadas y formateadas en español
   let cColK = document.getElementById('fColK');
   cColK.innerHTML = '<option value="">Todas las fechas K</option>';
   Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
-    cColK.innerHTML += `<option value="${f}">${f}</option>`;
+    let fechaVisual = convertirAFechaLatina(f);
+    cColK.innerHTML += `<option value="${f}">${fechaVisual}</option>`;
   });
 }
 
-    function procesarFiltros() {
-  let fDiario = document.getElementById('fDiario').value;
-  let fColK = document.getElementById('fColK').value; // Ahora lee el valor seleccionado del Select
+function procesarFiltros() {
+  let fColK = document.getElementById('fColK').value;
   let fSem = document.getElementById('fSemana').value;
   let fPlac = document.getElementById('fPlaca').value;
 
   let filtrados = datasetOriginal.filter(item => {
-    if(fDiario && item.fechaAgrupada !== fDiario) return false;
-    if(fColK && item.columnaK !== fColK) return false; // Filtra con precisión quirúrgica string vs string
+    if(fColK && item.columnaK !== fColK) return false; // Filtrado síncrono interno
     if(fSem && item.semana.toString() !== fSem.toString()) return false;
     if(fPlac && item.placa !== fPlac) return false;
     return true;
@@ -189,79 +208,90 @@
   renderizarContenidos(filtrados);
 }
 
-    function renderizarContenidos(datos) {
-      let u = datos.length, c = 0, p = 0, l = 0;
-      let tbody = document.getElementById('tablaCuerpo');
-      tbody.innerHTML = '';
+function renderizarContenidos(datos) {
+  let u = datos.length, c = 0, p = 0, l = 0;
+  let tbody = document.getElementById('tablaCuerpo');
+  tbody.innerHTML = '';
 
-      datos.forEach(f => {
-        c += f.capacidad; p += f.pasajeros; l += f.libres;
-        let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
-        
-        let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
-        if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
-        else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
+  datos.forEach(f => {
+    c += f.capacidad; p += f.pasajeros; l += f.libres;
+    let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
+    
+    let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
+    if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
+    else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
 
-        tbody.innerHTML += `
-          <tr class="${estFila}">
-            <td>${f.fechaAgrupada}</td><td class="fw-bold">${f.placa}</td>
-            <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
-            <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
-            <td class="text-center">${f.capacidad}</td><td class="text-center fw-bold text-success">${f.pasajeros}</td>
-            <td class="text-center fw-bold text-danger">${f.libres}</td>
-            <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
-          </tr>`;
-      });
+    // Muestra la fecha formateada en la tabla principal
+    let fechaTabla = convertirAFechaLatina(f.fechaAgrupada);
 
-      document.getElementById('kpiUnidades').innerText = u;
-      document.getElementById('kpiCapacidad').innerText = c;
-      document.getElementById('kpiPasajeros').innerText = p;
-      document.getElementById('kpiLibres').innerText = l;
+    tbody.innerHTML += `
+      <tr class="${estFila}">
+        <td>${fechaTabla}</td>
+        <td class="fw-bold">${f.placa}</td>
+        <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
+        <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
+        <td class="text-center">${f.capacidad}</td>
+        <td class="text-center fw-bold text-success">${f.pasajeros}</td>
+        <td class="text-center fw-bold text-danger">${f.libres}</td>
+        <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
+      </tr>`;
+  });
 
-      let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
-      let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
-      document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
-      document.getElementById('pctLibres').innerText = pL + "% Libre";
+  document.getElementById('kpiUnidades').innerText = u;
+  document.getElementById('kpiCapacidad').innerText = c;
+  document.getElementById('kpiPasajeros').innerText = p;
+  document.getElementById('kpiLibres').innerText = l;
 
-      armarGraficos(datos);
-    }
+  let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
+  let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
+  document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
+  document.getElementById('pctLibres').innerText = pL + "% Libre";
 
-    function armarGraficos(datos) {
-      let rDias = {};
-      datos.forEach(x => {
-        if(!rDias[x.fechaAgrupada]) rDias[x.fechaAgrupada] = {p:0, l:0};
-        rDias[x.fechaAgrupada].p += x.pasajeros; rDias[x.fechaAgrupada].l += x.libres;
-      });
-      let lDias = Object.keys(rDias).sort();
+  armarGraficos(datos);
+}
 
-      if(chartD) chartD.destroy();
-      chartD = new Chart(document.getElementById('canvasDiario'), {
-        type: 'line',
-        data: { labels: lDias, datasets: [
-          { label: 'Pasajeros', data: lDias.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
-          { label: 'Libres', data: lDias.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
-        ]},
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+function armarGraficos(datos) {
+  let rDias = {};
+  datos.forEach(x => {
+    if(!rDias[x.fechaAgrupada]) rDias[x.fechaAgrupada] = {p:0, l:0};
+    rDias[x.fechaAgrupada].p += x.pasajeros; rDias[x.fechaAgrupada].l += x.libres;
+  });
+  
+  // Convertir las etiquetas del gráfico de líneas a formato dd/mm/yyyy
+  let lDiasClaves = Object.keys(rDias).sort();
+  let lDiasVisuales = lDiasClaves.map(d => convertirAFechaLatina(d));
 
-      let rSem = {};
-      datos.forEach(x => {
-        let k = "Sem " + x.semana;
-        if(!rSem[k]) rSem[k] = {p:0, l:0};
-        rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
-      });
-      let lSem = Object.keys(rSem).sort();
+  if(chartD) chartD.destroy();
+  chartD = new Chart(document.getElementById('canvasDiario'), {
+    type: 'line',
+    data: { 
+      labels: lDiasVisuales, // Aplicado en español
+      datasets: [
+        { label: 'Pasajeros', data: lDiasClaves.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
+        { label: 'Libres', data: lDiasClaves.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
 
-      if(chartS) chartS.destroy();
-      chartS = new Chart(document.getElementById('canvasSemanal'), {
-        type: 'bar',
-        data: { labels: lSem, datasets: [
-          { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
-          { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
-        ]},
-        options: { responsive: true, maintainAspectRatio: false, scales: { x:{stacked:true}, y:{stacked:true} } }
-      });
-    }
-  </script>
+  let rSem = {};
+  datos.forEach(x => {
+    let k = "Sem " + x.semana;
+    if(!rSem[k]) rSem[k] = {p:0, l:0};
+    rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
+  });
+  let lSem = Object.keys(rSem).sort();
+
+  if(chartS) chartS.destroy();
+  chartS = new Chart(document.getElementById('canvasSemanal'), {
+    type: 'bar',
+    data: { labels: lSem, datasets: [
+      { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
+      { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: { x:{stacked:true}, y:{stacked:true} } }
+  });
+}
+</script>
 </body>
 </html>
