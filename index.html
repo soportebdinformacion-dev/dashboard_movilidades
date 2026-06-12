@@ -195,7 +195,7 @@ function construirCombosFiltros() {
 
   // 3. Llenar combo de Columna K convertido totalmente a formato Español (DD/MM/YYYY)
   let cColK = document.getElementById('fColK');
-  cColK.innerHTML = '<option value="">Todas las fechas K</option>';
+  cColK.innerHTML = '<option value="">Todas las fechas</option>';
   
   // Ordenamos cronológicamente de más reciente a más antigua
   Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
