@@ -287,11 +287,10 @@
     // VARIABLE GLOBAL PARA ALMACENAR LOS DATOS DE GOOGLE SHEETS
     let ALL_DATA = [];
     
-    // Instancias globales de los gráficos para poder destruirlos/actualizarlos
+    // Instancias globales de los gráficos
     let chartDiarioInstance = null;
     let chartSemanalInstance = null;
 
-    // Al cargar la página, conectamos directamente con la base de datos
     document.addEventListener("DOMContentLoaded", function() {
       fetchData();
     });
@@ -305,7 +304,7 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbygTj01BbGKT88KBT2mbIlYXSbvFYgUkkUPPGLTB3caMVi7GtGhxqStDD5JoA5mPv1J/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbysZA-cDrHtVt_coKpuXrtDg3-Q8Gn66HEQidLfrp-t8_V-9Mmp3ToFD7abup-VYNi6/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -318,7 +317,7 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             
-            // Forzar el input HTML a vacío al iniciar
+            // Forzar que inicie vacío para cargar todo al principio
             if(document.getElementById('filterFecha')) {
               document.getElementById('filterFecha').value = ""; 
             }
@@ -375,11 +374,12 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; // Vinculado correctamente con la columna K
+      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; 
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
         let matchPlaca = !valPlaca || row.placa === valPlaca;
+        // CORRECCIÓN CLAVE: Si valFecha está vacío, ignora el filtro y deja pasar el registro
         let matchFecha = !valFecha || row.fecha === valFecha;
         let matchSemana = !valSemana || String(row.semana) === String(valSemana);
         return matchPlaca && matchFecha && matchSemana;
@@ -425,6 +425,15 @@
       });
 
       let fechasSorted = Object.keys(resumenDiario).sort();
+      
+      // Mapeo dinámico para el eje X del gráfico para que muestre las fechas formateadas de forma legible
+      const diasSemanaCorto = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"];
+      let labelsGrafico = fechasSorted.map(f => {
+        let p = f.split("-");
+        let d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+        return `${diasSemanaCorto[d.getDay()]} ${p[2]}/${p[1]}`;
+      });
+
       let pasajerosDiarios = fechasSorted.map(f => resumenDiario[f].pasajeros);
       let libresDiarios = fechasSorted.map(f => resumenDiario[f].libres);
 
@@ -435,7 +444,7 @@
         chartDiarioInstance = new Chart(ctxDiario, {
           type: 'line',
           data: {
-            labels: fechasSorted,
+            labels: labelsGrafico,
             datasets: [
               { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
               { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
@@ -494,14 +503,12 @@
         return;
       }
 
-      // Estructura fija en mayúsculas de 4 letras para cumplir con el requerimiento
       const diasSemana = ["DOMI", "LUNE", "MART", "MIÉR", "JUEV", "VIER", "SÁBA"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // Formateado a: JUEV, 11/06/2026
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
