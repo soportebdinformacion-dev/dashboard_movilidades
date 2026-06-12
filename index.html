@@ -76,39 +76,41 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ------------------------------------------------------------------------
-    // RUTA EXTERNA: COLOCA AQUÍ LA URL MACRO DE EJECUCIÓN DE TU GOOGLE SCRIPT
-    // ------------------------------------------------------------------------
-    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycby73_DFT5GkoDyF4QFjBW6L39WRGkFMSg9xBDwkz2O4V1yR3xksy6IPx11YPL3fP8ju/exec";
+    
+  // REEMPLAZA CON TU NUEVA URL DE IMPLEMENTACIÓN DE GOOGLE (DEBE TERMINAR EN /exec)
+const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbzeD7g9NmG-0iMAwa6qxkUaT_XQroRYxlCWnTzQPC7Vzj1LBqvkIOjbbJI4XKcZRvsa/exec"; 
 
-    let datasetOriginal = [];
-    let chartD = null, chartS = null;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      obtenerDatosAPIExterno();
-    });
-
-    function obtenerDatosAPIExterno() {
-      document.getElementById('loader').style.display = 'flex';
-      
-      // Llamada externa asíncrona estándar usando Fetch API
-      fetch(URL_API_EXTERNA)
-        .then(response => response.json())
-        .then(data => {
-          if(data.error) {
-            alert("Error del Servidor: " + data.message);
-          } else {
-            datasetOriginal = data;
-            construirCombosFiltros();
-            procesarFiltros();
-          }
-          document.getElementById('loader').style.display = 'none';
-        })
-        .catch(err => {
-          alert("Error de Conexión Externa: Asegúrate de haber publicado el script como 'Cualquiera'.");
-          document.getElementById('loader').style.display = 'none';
-        });
+function obtenerDatosAPIExterno() {
+  document.getElementById('loader').style.display = 'flex';
+  
+  // Realizamos la consulta externa configurando el seguimiento de redirección
+  fetch(URL_API_EXTERNA, {
+    method: "GET",
+    mode: "cors", // Habilita la comunicación entre servidores distintos
+    redirect: "follow" // CRÍTICO: Obliga a seguir la redirección interna de Google
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Respuesta de red incorrecta. Código: " + response.status);
     }
+    return response.json();
+  })
+  .then(data => {
+    if (data.error) {
+      alert("Error en Base de Datos: " + data.message);
+    } else {
+      datasetOriginal = data;
+      construirCombosFiltros();
+      procesarFiltros();
+    }
+    document.getElementById('loader').style.display = 'none';
+  })
+  .catch(err => {
+    console.error("Detalle del error:", err);
+    alert("Error de Conexión Externa.\n\nPor favor, verifica que la implementación esté publicada correctamente para 'Cualquiera'.");
+    document.getElementById('loader').style.display = 'none';
+  });
+}
 
     function construirCombosFiltros() {
       let sems = new Set(), placs = new Set();
