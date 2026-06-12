@@ -242,6 +242,18 @@ function procesarFiltros() {
   tbody.innerHTML = '';
 
   datos.forEach(f => {
+    // -----------------------------------------------------------------
+    // ¡AQUÍ VA EL CÓDIGO! (Justo al iniciar el recorrido de la fila)
+    // -----------------------------------------------------------------
+    let fechaTabla = f.fechaAgrupada;
+    if (f.fechaAgrupada && f.fechaAgrupada.includes("-")) {
+      let partes = f.fechaAgrupada.split("-");
+      if (partes.length === 3) {
+        fechaTabla = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+    }
+    // -----------------------------------------------------------------
+
     c += f.capacidad; p += f.pasajeros; l += f.libres;
     let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
     
@@ -249,9 +261,7 @@ function procesarFiltros() {
     if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
     else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
 
-    // Muestra la fecha formateada en la tabla principal
-    let fechaTabla = convertirAFechaLatina(f.fechaAgrupada);
-
+    // Usamos la variable 'fechaTabla' corregida en la primera celda (<td>)
     tbody.innerHTML += `
       <tr class="${estFila}">
         <td>${fechaTabla}</td>
@@ -277,7 +287,6 @@ function procesarFiltros() {
 
   armarGraficos(datos);
 }
-
 function armarGraficos(datos) {
   let rDias = {};
   datos.forEach(x => {
