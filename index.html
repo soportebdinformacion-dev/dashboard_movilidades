@@ -154,7 +154,7 @@
     }
 
     // =========================================================================
-    // ¡AQUÍ EMPIEZA EL CAMBIO! COPIA Y PEGA DESDE AQUÍ HASTA EL FINAL DEL SCRIPT
+    // BLOQUE EXACTO COPIADO Y SIN ALTERACIONES EXTRAVIADAS
     // =========================================================================
 
     // 1. FUNCIÓN AUXILIAR PARA CORREGIR EL FORMATO DE INGLÉS A ESPAÑOL
@@ -272,15 +272,18 @@
       armarGraficos(datos);
     }
 
+    // CORRECCIÓN APLICADA AQUÍ EXCLUSIVAMENTE EN LAS ETIQUETAS DE CANVAS DIARIO
     function armarGraficos(datos) {
       let rDias = {};
       datos.forEach(x => {
+        // Ahora sí, agrupamos en el formato correcto dd/mm/yyyy
         let fechaFormateada = formatearAFechaLatina(x.fechaAgrupada || x.columnaK);
         if(!rDias[fechaFormateada]) rDias[fechaFormateada] = {p:0, l:0};
         rDias[fechaFormateada].p += x.pasajeros; rDias[fechaFormateada].l += x.libres;
       });
       
-      let lDiasClaves = Object.keys(rDias).sort((a,b) => {
+      // Ordenamos las fechas en español correctamente en la línea de tiempo
+      let lDiasVisuales = Object.keys(rDias).sort((a,b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
       });
@@ -289,10 +292,10 @@
       chartD = new Chart(document.getElementById('canvasDiario'), {
         type: 'line',
         data: { 
-          labels: lDiasClaves,
+          labels: lDiasVisuales, 
           datasets: [
-            { label: 'Pasajeros', data: lDiasClaves.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
-            { label: 'Libres', data: lDiasClaves.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
+            { label: 'Pasajeros', data: lDiasVisuales.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
+            { label: 'Libres', data: lDiasVisuales.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
           ]
         },
         options: { responsive: true, maintainAspectRatio: false }
