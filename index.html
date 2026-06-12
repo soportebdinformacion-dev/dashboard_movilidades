@@ -2,454 +2,405 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Movilidades - Frusan</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Movilidades - Agrícola Huarmey</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    .bg-frusan-verde { background-color: #1e5631; }
-    .text-frusan-verde { color: #1e5631; }
-    .border-frusan-verde { border-color: #1e5631; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    /* Colores Corporativos Frusan */
+    .bg-frusan-primary { background-color: #1b4d3e !important; } /* Verde Oscuro */
+    .bg-frusan-accent { background-color: #7ba236 !important; }  /* Verde Claro */
+    .text-frusan { color: #1b4d3e; }
+    
+    .navbar-brand img {
+      max-height: 50px;
+      border-radius: 4px;
+    }
+    .card-kpi {
+      border: none;
+      border-radius: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .card-kpi:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .icon-shape {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    /* Semáforo de Eficiencia Requerido */
+    .status-alta { background-color: #2ec4b6 !important; color: white; }    /* >= 90% Verde Esmeralda */
+    .status-media { background-color: #ff9f1c !important; color: white; }   /* >= 80% Naranja */
+    .status-baja { background-color: #e71d36 !important; color: white; }    /* <= 79.99% Rojo */
+
+    .badge-status {
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.85em;
+    }
+    .chart-container {
+      position: relative;
+      margin: auto;
+      height: 300px;
+      width: 100%;
+    }
+    .loader {
+      position: fixed;
+      left: 0; top: 0; width: 100%; height: 100%;
+      z-index: 9999;
+      background: rgba(255,255,255,0.9) url('https://i.gifer.com/ZZ5H.gif') no-repeat center center;
+      background-size: 60px;
+    }
   </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 min-h-screen">
+<body>
 
-  <header class="bg-frusan-verde text-white shadow-md px-4 py-4 md:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-    <div class="flex items-center gap-4">
-      <div class="bg-white p-2 rounded-lg shadow-inner flex items-center justify-center w-16 h-16">
-        <span class="text-xs font-bold text-emerald-800 tracking-tight text-center leading-none">AGRÍCOLA HUARMEY</span>
-      </div>
-      <div>
-        <h1 class="text-xl md:text-2xl font-bold tracking-wide">Agrícola Huarmey</h1>
-        <p class="text-xs md:text-sm text-emerald-200 font-medium">Fundo Frusan &bull; Control de Movilidades</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2 bg-emerald-900/40 px-4 py-2 rounded-full border border-emerald-700/30 text-xs md:text-sm">
-      <i data-lucide="calendar" class="w-4 h-4 text-emerald-300"></i>
-      <span id="txt-fecha-actual">Cargando reporte...</span>
-    </div>
-  </header>
+  <div id="loading" class="loader"></div>
 
-  <main class="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-frusan-primary sticky-top shadow">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <div class="bg-white p-1 me-2 rounded d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
+          <i class="fa-solid fa-leaf text-success fa-lg"></i>
+        </div>
+        <div>
+          <span class="fw-bold d-block lh-1">Agrícola Huarmey</span>
+          <small class="fs-7 text-white-50">Fundo Frusan • Reportes de Movilidad</small>
+        </div>
+      </a>
+      <button class="btn btn-outline-light btn-sm ms-auto" onclick="cargarDatosBase()">
+        <i class="fa-solid fa-sync fa-spin-hover"></i> Actualizar
+      </button>
+    </div>
+  </nav>
+
+  <div class="container-fluid my-4 px-4">
     
-    <div id="loader" class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
-      <div class="animate-spin rounded-full h-12 w-12 border-4 border-frusan-verde border-t-transparent mb-4"></div>
-      <p class="text-gray-500 font-medium animate-pulse">Sincronizando con base de datos BDXX_HUARMEY...</p>
+    <div class="card card-kpi p-3 mb-4 bg-white">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-12">
+          <h6 class="fw-bold text-frusan mb-0"><i class="fa-solid fa-filter me-2"></i>Filtros de Control Dinámico</h6>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3">
+          <label class="form-label small fw-semibold">Fecha Registro</label>
+          <input type="date" id="filtroFecha" class="form-control form-control-sm" onchange="aplicarFiltros()">
+        </div>
+        <div class="col-6 col-sm-4 col-md-3">
+          <label class="form-label small fw-semibold">Filtro Columna K (FECHA)</label>
+          <input type="date" id="filtroColumnaK" class="form-control form-control-sm" onchange="aplicarFiltros()">
+        </div>
+        <div class="col-6 col-sm-4 col-md-3">
+          <label class="form-label small fw-semibold">Semana (SEM)</label>
+          <select id="filtroSemana" class="form-select form-select-sm" onchange="aplicarFiltros()">
+            <option value="">Todas las Semanas</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3">
+          <label class="form-label small fw-semibold">Placa Vehículo</label>
+          <select id="filtroPlaca" class="form-select form-select-sm" onchange="aplicarFiltros()">
+            <option value="">Todas las Placas</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <section id="panel-dashboard" class="hidden space-y-6">
-      
-      <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-        <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-          <i data-lucide="sliders-horizontal" class="text-frusan-verde w-5 h-5"></i>
-          <h2 class="font-bold text-gray-700">Filtros de Búsqueda Interactiva</h2>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Filtrar por Placa</label>
-            <select id="filtro-placa" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 transition" onchange="procesarDashboard()">
-              <option value="">Todas las Placas</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Fecha Diaria (Col. K)</label>
-            <select id="filtro-fecha" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 transition" onchange="procesarDashboard()">
-              <option value="">Todas las Fechas</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Filtrar por Semana</label>
-            <select id="filtro-semana" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 transition" onchange="procesarDashboard()">
-              <option value="">Todas las Semanas</option>
-            </select>
-          </div>
-          <div class="flex items-end">
-            <button onclick="limpiarFiltros()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
-              <i data-lucide="refresh-cw" class="w-4 h-4"></i> Reestablecer Filtros
-            </button>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card card-kpi bg-frusan-primary text-white h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-uppercase small mb-1 opacity-75">Total Unidades</p>
+              <h3 class="fw-bold mb-0" id="kpiUnidades">0</h3>
+            </div>
+            <div class="icon-shape"><i class="fa-solid fa-bus"></i></div>
           </div>
         </div>
       </div>
-
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="bus" class="w-6 h-6"></i></div>
-          <div>
-            <p class="text-xs text-gray-400 font-medium uppercase">Movilidades</p>
-            <h3 id="kpi-movilidades" class="text-xl md:text-2xl font-bold text-gray-800">0</h3>
-          </div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="users" class="w-6 h-6"></i></div>
-          <div>
-            <p class="text-xs text-gray-400 font-medium uppercase">Capacidad Tot.</p>
-            <h3 id="kpi-capacidad" class="text-xl md:text-2xl font-bold text-gray-800">0</h3>
-          </div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="user-check" class="w-6 h-6"></i></div>
-          <div>
-            <p class="text-xs text-gray-400 font-medium uppercase">Pasajeros</p>
-            <h3 id="kpi-pasajeros" class="text-xl md:text-2xl font-bold text-gray-800">0</h3>
-          </div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="user-minus" class="w-6 h-6"></i></div>
-          <div>
-            <p class="text-xs text-gray-400 font-medium uppercase">Asientos Libres</p>
-            <h3 id="kpi-libres" class="text-xl md:text-2xl font-bold text-gray-800">0</h3>
+      <div class="col-6 col-lg-3">
+        <div class="card card-kpi bg-frusan-accent text-white h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-uppercase small mb-1 opacity-75">Capacidad Total</p>
+              <h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3>
+            </div>
+            <div class="icon-shape"><i class="fa-solid fa-users-rectangle"></i></div>
           </div>
         </div>
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between items-center text-center space-y-4">
-          <div class="w-full flex items-center gap-2 pb-2 border-b border-gray-100 text-left">
-            <i data-lucide="gauge" class="text-frusan-verde w-5 h-5"></i>
-            <h2 class="font-bold text-gray-700">Eficiencia de Ocupación</h2>
-          </div>
-          
-          <div id="semaforo-contenedor" class="w-32 h-32 md:w-40 md:w-40 rounded-full flex flex-col items-center justify-center border-8 transition-all duration-500 shadow-md">
-            <span id="txt-porcentaje-ocupacion" class="text-3xl md:text-4xl font-extrabold">0%</span>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Ocupado</span>
-          </div>
-
-          <div class="w-full text-xs space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div class="flex justify-between items-center">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Excelente</span>
-              <span class="font-bold text-emerald-600">&ge; 90%</span>
+      <div class="col-6 col-lg-3">
+        <div class="card card-kpi bg-info text-white h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-uppercase small mb-1 opacity-75">Pasajeros Ingresados</p>
+              <h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3>
+              <small class="fw-bold shadow-sm rounded px-1 bg-white text-info fs-7" id="porcentajePasajeros">0%</small>
             </div>
-            <div class="flex justify-between items-center">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Regular</span>
-              <span class="font-bold text-amber-600">&ge; 80%</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Alerta / Bajo</span>
-              <span class="font-bold text-rose-600">&le; 79.99%</span>
-            </div>
+            <div class="icon-shape"><i class="fa-solid fa-user-check"></i></div>
           </div>
         </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 space-y-2">
-          <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-              <i data-lucide="trending-up" class="text-frusan-verde w-5 h-5"></i>
-              <h2 class="font-bold text-gray-700">Pasajeros vs Libres por Fecha</h2>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-kpi bg-secondary text-white h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-uppercase small mb-1 opacity-75">Asientos Libres</p>
+              <h3 class="fw-bold mb-0" id="kpiLibres">0</h3>
+              <small class="fw-bold shadow-sm rounded px-1 bg-white text-secondary fs-7" id="porcentajeLibres">0%</small>
             </div>
-            <span class="text-xs text-gray-400 font-medium">Análisis de Ingreso Bajo</span>
+            <div class="icon-shape"><i class="fa-solid fa-chair"></i></div>
           </div>
-          <div class="relative h-64">
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="card card-kpi p-3 bg-white h-100">
+          <h6 class="fw-bold text-frusan mb-3"><i class="fa-solid fa-chart-line me-2"></i>Comparativa Diaria: Pasajeros vs Libres</h6>
+          <div class="chart-container">
             <canvas id="chartDiario"></canvas>
           </div>
         </div>
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-2">
-          <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-            <i data-lucide="calendar-range" class="text-frusan-verde w-5 h-5"></i>
-            <h2 class="font-bold text-gray-700">Resumen Semanal</h2>
-          </div>
-          <div class="relative h-64">
+      <div class="col-12 col-md-6">
+        <div class="card card-kpi p-3 bg-white h-100">
+          <h6 class="fw-bold text-frusan mb-3"><i class="fa-solid fa-chart-bar me-2"></i>Reporte Semanal Acumulado (SEM)</h6>
+          <div class="chart-container">
             <canvas id="chartSemanal"></canvas>
           </div>
         </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
-          <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-              <i data-lucide="table_2" class="text-frusan-verde w-5 h-5"></i>
-              <h2 class="font-bold text-gray-700">Reporte de Movilidad (Datos Limpios)</h2>
-            </div>
-            <span class="bg-emerald-50 text-frusan-verde px-2.5 py-1 rounded-full text-xs font-bold" id="badge-total-filas">0 Items</span>
-          </div>
-
-          <div class="overflow-x-auto rounded-xl border border-gray-100">
-            <table class="w-full text-left text-xs md:text-sm">
-              <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] font-bold border-b border-gray-100">
-                <tr>
-                  <th class="p-3">Fecha (K)</th>
-                  <th class="p-3">Placa / Conductor</th>
-                  <th class="p-3 text-center">Cap.</th>
-                  <th class="p-3 text-center">Pasajeros</th>
-                  <th class="p-3 text-center">Libres</th>
-                  <th class="p-3 text-right">Eficiencia</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-cuerpo" class="divide-y divide-gray-100 font-medium text-gray-600">
-                </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
+    </div>
 
-    </section>
-  </main>
+    <div class="card card-kpi bg-white p-3 shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h6 class="fw-bold text-frusan mb-0"><i class="fa-solid fa-list-check me-2"></i>Monitoreo de Movilidades y Nivel de Ocupación</h6>
+        <div class="d-flex gap-2 fs-7">
+          <span class="badge status-alta">≥ 90% Óptimo</span>
+          <span class="badge status-media">≥ 80% Regular</span>
+          <span class="badge status-baja">≤ 79.9% Crítico</span>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle table-sm" style="font-size: 0.9em;">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha Reg.</th>
+              <th>Placa</th>
+              <th>Conductor (Último Reg.)</th>
+              <th>Ruta / Cultivo</th>
+              <th class="text-center">Capacidad</th>
+              <th class="text-center">Pasajeros</th>
+              <th class="text-center">Libres</th>
+              <th class="text-center">Ocupación (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuerpo">
+            </tbody>
+        </table>
+      </div>
+    </div>
 
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <script>
-    // VARIABLE GLOBAL PARA ALMACENAR LOS DATOS DE GOOGLE SHEETS
-    let ALL_DATA = [];
-    
-    // Instancias globales de los gráficos
-    let chartDiarioInstance = null;
-    let chartSemanalInstance = null;
+    // Variables de alcance global
+    let baseDatosOriginal = [];
+    let chartDiarioInstancia = null;
+    let chartSemanalInstancia = null;
 
     document.addEventListener("DOMContentLoaded", function() {
-      fetchDataJSONP();
+      cargarDatosBase();
     });
 
-    // CONEXIÓN DEFINITIVA SIN BLOQUEOS DE NAVEGADOR
-    function fetchDataJSONP() {
-      document.getElementById('loader').style.display = 'flex';
-      const statusBadge = document.getElementById('dbStatus');
+    function cargarDatosBase() {
+      document.getElementById('loading').style.display = 'block';
       
-      if (statusBadge) {
-        statusBadge.className = "badge bg-warning text-dark ms-2";
-        statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando de forma segura...';
-      }
-      
-      // URL de tu script de Google
-      const URL_BASE = "https://script.google.com/macros/s/AKfycbyK9HIcULLZ84XwVUBTVDEyYwzLJMKJb506KVPRIo0mkkan2rAuuNVDAfpUzT9CHMU/exec";
-      
-      // Creamos una función global temporal para recibir el paquete de datos
-      const callbackName = "jsonp_callback_" + Date.now();
-      window[callbackName] = function(response) {
-        // Limpieza del script inyectado
-        document.body.removeChild(script);
-        delete window[callbackName];
-        
-        document.getElementById('loader').style.display = 'none';
-        
-        if(response && response.success) {
-          ALL_DATA = response.rows;
-          populateFilterOptions();
-          
-          // Aseguramos que empiece vacío para renderizar todo al inicio
-          if(document.getElementById('filterFecha')) {
-            document.getElementById('filterFecha').value = ""; 
-          }
-          
-          applyFilters();
-          
-          if (statusBadge) {
-            statusBadge.className = "badge bg-success ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
-          }
-        } else {
-          if (statusBadge) {
-            statusBadge.className = "badge bg-danger ms-2 text-white";
-            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
-          }
-          alert("Error en la estructura de la base de datos.");
-        }
-      };
-
-      // Inyección del tag script para saltar la seguridad CORS
-      const script = document.createElement('script');
-      script.src = `${URL_BASE}?callback=${callbackName}`;
-      script.onerror = function() {
-        document.getElementById('loader').style.display = 'none';
-        if (statusBadge) {
-          statusBadge.className = "badge bg-danger ms-2 text-white";
-          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Error de Red';
-        }
-        console.error("Fallo crítico en la inyección de red.");
-      };
-      document.body.appendChild(script);
+      // Llamada al Backend del Google Apps Script
+      google.script.run
+        .withSuccessHandler(function(data) {
+          baseDatosOriginal = data;
+          construirSelectoresFiltros();
+          aplicarFiltros();
+          document.getElementById('loading').style.display = 'none';
+        })
+        .withFailureHandler(function(err) {
+          alert("Error conectando con BDXX_HUARMEY: " + err.message);
+          document.getElementById('loading').style.display = 'none';
+        })
+        .obtenerDatosMovilidad();
     }
 
-    function populateFilterOptions() {
-      const placasSet = new Set();
-      const semanasSet = new Set();
+    function construirSelectoresFiltros() {
+      let semanas = new Set();
+      let placas = new Set();
       
-      ALL_DATA.forEach(row => {
-        if(row.placa) placasSet.add(row.placa);
-        if(row.semana) semanasSet.add(row.semana);
+      baseDatosOriginal.forEach(reg => {
+        if(reg.semana) semanas.add(reg.semana);
+        if(reg.placa) placas.add(reg.placa);
       });
 
-      const selectPlaca = document.getElementById('filterPlaca');
-      if(selectPlaca) {
-        selectPlaca.innerHTML = '<option value="">-- Todas las Placas --</option>';
-        [...placasSet].sort().forEach(p => {
-          selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
-        });
-      }
-
-      const selectSemana = document.getElementById('filterSemana');
-      if(selectSemana) {
-        selectSemana.innerHTML = '<option value="">-- Todas las Semanas --</option>';
-        [...semanasSet].sort((a,b)=>a-b).forEach(s => {
-          selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
-        });
-      }
-    }
-
-    function applyFilters() {
-      const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; 
-      const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
-
-      let filtered = ALL_DATA.filter(row => {
-        let matchPlaca = !valPlaca || row.placa === valPlaca;
-        let matchFecha = !valFecha || row.fecha === valFecha; 
-        let matchSemana = !valSemana || String(row.semana) === String(valSemana);
-        return matchPlaca && matchFecha && matchSemana;
+      // Rellenar selector de Semanas
+      let selectSemana = document.getElementById('filtroSemana');
+      selectSemana.innerHTML = '<option value="">Todas las Semanas</option>';
+      Array.from(semanas).sort().forEach(s => {
+        selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
       });
 
-      renderKPIs(filtered);
-      renderCharts(filtered);
-      renderTable(filtered);
+      // Rellenar selector de Placas
+      let selectPlaca = document.getElementById('filtroPlaca');
+      selectPlaca.innerHTML = '<option value="">Todas las Placas</option>';
+      Array.from(placas).sort().forEach(p => {
+        selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
+      });
     }
 
-    function renderKPIs(data) {
-      let totalVehiculos = data.length;
-      let totalCapacidad = 0;
+    function aplicarFiltros() {
+      let fFecha = document.getElementById('filtroFecha').value;
+      let fColK = document.getElementById('filtroColumnaK').value;
+      let fSemana = document.getElementById('filtroSemana').value;
+      let fPlaca = document.getElementById('filtroPlaca').value;
+
+      // Filtrado Dinámico de la matriz
+      let datosFiltrados = baseDatosOriginal.filter(reg => {
+        if (fFecha && reg.fechaAgrupada !== fFecha) return false;
+        if (fColK && reg.columnaK !== fColK) return false;
+        if (fSemana && reg.semana.toString() !== fSemana.toString()) return false;
+        if (fPlaca && reg.placa !== fPlaca) return false;
+        return true;
+      });
+
+      renderizarKPIsYTabla(datosFiltrados);
+      procesarGraficos(datosFiltrados);
+    }
+
+    function renderizarKPIsYTabla(datos) {
+      let totalUnidades = datos.length;
+      let capacidadTotal = 0;
       let totalPasajeros = 0;
       let totalLibres = 0;
 
-      data.forEach(row => {
-        totalCapacidad += row.capacidad;
-        totalPasajeros += row.pasajeros;
-        totalLibres += row.libres;
-      });
+      let tbody = document.getElementById('tablaCuerpo');
+      tbody.innerHTML = '';
 
-      if(document.getElementById('kpiVehiculos')) document.getElementById('kpiVehiculos').innerText = totalVehiculos;
-      if(document.getElementById('kpiCapacidad')) document.getElementById('kpiCapacidad').innerText = totalCapacidad;
-      if(document.getElementById('kpiPasajeros')) document.getElementById('kpiPasajeros').innerText = totalPasajeros;
-      if(document.getElementById('kpiLibres')) document.getElementById('kpiLibres').innerText = totalLibres;
-
-      let pctP = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100).toFixed(1) : 0;
-      let pctL = totalCapacidad > 0 ? ((totalLibres / totalCapacidad) * 100).toFixed(1) : 0;
-
-      if(document.getElementById('pctPasajeros')) document.getElementById('pctPasajeros').innerText = pctP + '%';
-      if(document.getElementById('pctLibres')) document.getElementById('pctLibres').innerText = pctL + '%';
-    }
-
-    function renderCharts(data) {
-      let resumenDiario = {};
-      data.forEach(row => {
-        if(!resumenDiario[row.fecha]) {
-          resumenDiario[row.fecha] = { pasajeros: 0, libres: 0 };
-        }
-        resumenDiario[row.fecha].pasajeros += row.pasajeros;
-        resumenDiario[row.fecha].libres += row.libres;
-      });
-
-      let fechasSorted = Object.keys(resumenDiario).sort();
-      
-      // Eje X del gráfico configurado por fechas del Sheets de forma ordenada
-      const diasSemanaCorto = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"];
-      let labelsGrafico = fechasSorted.map(f => {
-        let p = f.split("-");
-        let d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-        return `${diasSemanaCorto[d.getDay()]} ${p[2]}/${p[1]}`;
-      });
-
-      let pasajerosDiarios = fechasSorted.map(f => resumenDiario[f].pasajeros);
-      let libresDiarios = fechasSorted.map(f => resumenDiario[f].libres);
-
-      if (chartDiarioInstance) chartDiarioInstance.destroy();
-      const canvasDiario = document.getElementById('chartDiario');
-      if(canvasDiario) {
-        const ctxDiario = canvasDiario.getContext('2d');
-        chartDiarioInstance = new Chart(ctxDiario, {
-          type: 'line',
-          data: {
-            labels: labelsGrafico,
-            datasets: [
-              { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
-              { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
+      if (totalUnidades === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Ningún registro coincide con los filtros aplicados.</td></tr>';
       }
 
-      let resumenVehiculo = {};
-      data.forEach(row => {
-        if(!resumenVehiculo[row.placa]) {
-          resumenVehiculo[row.placa] = { pasajeros: 0, libres: 0 };
-        }
-        resumenVehiculo[row.placa].pasajeros += row.pasajeros;
-        resumenVehiculo[row.placa].libres += row.libres;
-      });
+      datos.forEach(reg => {
+        capacidadTotal += reg.capacidad;
+        totalPasajeros += reg.pasajeros;
+        totalLibres += reg.libres;
 
-      let placasLabels = Object.keys(resumenVehiculo);
-      let pasajerosVehiculo = placasLabels.map(p => resumenVehiculo[p].pasajeros);
-      let libresVehiculo = placasLabels.map(p => resumenVehiculo[p].libres);
-
-      if (chartSemanalInstance) chartSemanalInstance.destroy();
-      const canvasSemanal = document.getElementById('chartSemanal');
-      if(canvasSemanal) {
-        const ctxSemanal = canvasSemanal.getContext('2d');
-        chartSemanalInstance = new Chart(ctxSemanal, {
-          type: 'bar',
-          data: {
-            labels: placasLabels,
-            datasets: [
-              { label: 'Pasajeros', data: pasajerosVehiculo, backgroundColor: '#3B8216' },
-              { label: 'Libres', data: libresVehiculo, backgroundColor: '#4A4A4A' }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { x: { stacked: true }, y: { stacked: true } }
-          }
-        });
-      }
-    }
-
-    function renderTable(data) {
-      const tbody = document.getElementById('tablaCuerpo');
-      if(!tbody) return;
-      
-      if(document.getElementById('lblContadorFilas')) {
-        document.getElementById('lblContadorFilas').innerText = `${data.length} Filas mostradas`;
-      }
-      tbody.innerHTML = "";
-
-      if(data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">No hay datos que coincidan con los filtros seleccionados.</td></tr>`;
-        return;
-      }
-
-      const diasSemana = ["DOMI", "LUNE", "MART", "MIÉR", "JUEV", "VIER", "SÁBA"];
-
-      data.forEach(row => {
-        let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
-        let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
-
-        let fechaFormateada = row.fecha;
-        if(row.fecha && row.fecha.includes("-")) {
-          let partes = row.fecha.split("-");
-          let anio = parseInt(partes[0], 10);
-          let mes = parseInt(partes[1], 10) - 1;
-          let dia = parseInt(partes[2], 10);
-          
-          let fechaObjeto = new Date(anio, mes, dia);
-          let nombreDia = diasSemana[fechaObjeto.getDay()];
-          
-          fechaFormateada = `${nombreDia}, ${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${anio}`;
-        }
+        // Calcular porcentaje de ocupación individual
+        let porcOcupacion = reg.capacidad > 0 ? ((reg.pasajeros / reg.capacidad) * 100).toFixed(1) : 0;
+        
+        // Criterio de color del semáforo solicitado
+        let claseSemaf = 'status-baja';
+        if (porcOcupacion >= 90) claseSemaf = 'status-alta';
+        else if (porcOcupacion >= 80) claseSemaf = 'status-media';
 
         tbody.innerHTML += `
           <tr>
-            <td><i class="fa-regular fa-calendar-days text-secondary me-1"></i> <strong>${fechaFormateada}</strong></td>
-            <td><span class="badge bg-light text-dark border">Sem ${row.semana}</span></td>
-            <td><strong class="text-primary">${row.placa}</strong></td>
-            <td class="small">${row.conductor}</td>
-            <td class="small text-truncate" style="max-width: 220px;">${row.ruta}</td>
-            <td class="text-center font-weight-bold">${row.capacidad}</td>
-            <td class="text-center text-success font-weight-bold">${row.pasajeros}</td>
-            <td class="text-center text-danger font-weight-bold">${row.libres}</td>
-            <td><span class="badge ${badgeColor}">${pctUso}%</span></td>
+            <td>${reg.fechaAgrupada}</td>
+            <td class="fw-bold text-frusan">${reg.placa}</td>
+            <td><i class="fa-solid fa-user-tie text-muted me-1"></i> ${reg.conductor}</td>
+            <td><small class="d-block text-secondary">${reg.ruta}</small><span class="badge bg-light text-dark">${reg.cultivo}</span></td>
+            <td class="text-center fw-bold">${reg.capacidad}</td>
+            <td class="text-center text-success fw-bold">${reg.pasajeros}</td>
+            <td class="text-center text-danger fw-bold">${reg.libres}</td>
+            <td class="text-center"><span class="badge ${claseSemaf} badge-status">${porcOcupacion}%</span></td>
           </tr>
         `;
+      });
+
+      // Actualizar valores de tarjetas KPI globales
+      document.getElementById('kpiUnidades').innerText = totalUnidades;
+      document.getElementById('kpiCapacidad').innerText = capacidadTotal;
+      document.getElementById('kpiPasajeros').innerText = totalPasajeros;
+      document.getElementById('kpiLibres').innerText = totalLibres;
+
+      let porcGlobalPasajeros = capacidadTotal > 0 ? ((totalPasajeros / capacidadTotal) * 100).toFixed(1) : 0;
+      let porcGlobalLibres = capacidadTotal > 0 ? ((totalLibres / capacidadTotal) * 100).toFixed(1) : 0;
+
+      document.getElementById('porcentajePasajeros').innerText = `${porcGlobalPasajeros}% Ocupado`;
+      document.getElementById('porcentajeLibres').innerText = `${porcGlobalLibres}% Libre`;
+    }
+
+    function procesarGraficos(datos) {
+      // --- GRÁFICO 1: COMPARATIVA DIARIA (Identificar bajas capacidades) ---
+      let resumenDiario = {};
+      datos.forEach(r => {
+        let f = r.fechaAgrupada;
+        if (!resumenDiario[f]) resumenDiario[f] = { pasajeros: 0, libres: 0 };
+        resumenDiario[f].pasajeros += r.pasajeros;
+        resumenDiario[f].libres += r.libres;
+      });
+
+      let fechasLabels = Object.keys(resumenDiario).sort();
+      let pasajerosDiarios = fechasLabels.map(f => resumenDiario[f].pasajeros);
+      let libresDiarios = fechasLabels.map(f => resumenDiario[f].libres);
+
+      if (chartDiarioInstancia) chartDiarioInstancia.destroy();
+      
+      let ctxDiario = document.getElementById('chartDiario').getContext('2d');
+      chartDiarioInstancia = new Chart(ctxDiario, {
+        type: 'line',
+        data: {
+          labels: fechasLabels,
+          datasets: [
+            { label: 'Pasajeros', data: pasajerosDiarios, borderColor: '#7ba236', backgroundColor: 'rgba(123,162,54,0.1)', fill: true, tension: 0.2 },
+            { label: 'Asientos Libres', data: libresDiarios, borderColor: '#e71d36', backgroundColor: 'rgba(231,29,54,0.1)', fill: true, tension: 0.2 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+      });
+
+      // --- GRÁFICO 2: REPORTE SEMANAL ACUMULADO ---
+      let resumenSemanal = {};
+      datos.forEach(r => {
+        let s = "Sem " + r.semana;
+        if (!resumenSemanal[s]) resumenSemanal[s] = { pasajeros: 0, libres: 0 };
+        resumenSemanal[s].pasajeros += r.pasajeros;
+        resumenSemanal[s].libres += r.libres;
+      });
+
+      let semanasLabels = Object.keys(resumenSemanal).sort();
+      let pasajerosSemanales = semanasLabels.map(s => resumenSemanal[s].pasajeros);
+      let libresSemanales = semanasLabels.map(s => resumenSemanal[s].libres);
+
+      if (chartSemanalInstancia) chartSemanalInstancia.destroy();
+
+      let ctxSemanal = document.getElementById('chartSemanal').getContext('2d');
+      chartSemanalInstancia = new Chart(ctxSemanal, {
+        type: 'bar',
+        data: {
+          labels: semanasLabels,
+          datasets: [
+            { label: 'Pasajeros', data: pasajerosSemanales, backgroundColor: '#1b4d3e' },
+            { label: 'Asientos Libres', data: libresSemanales, backgroundColor: '#ff9f1c' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
       });
     }
   </script>
