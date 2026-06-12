@@ -167,6 +167,10 @@ function convertirAFechaLatina(fechaString) {
   return fechaString;
 }
 
+// =========================================================================
+// REEMPLAZA ÚNICAMENTE ESTAS DOS FUNCIONES EN TU SCRIPT (SIN TOCAR LO DEMÁS)
+// =========================================================================
+
 function construirCombosFiltros() {
   let sems = new Set(), placs = new Set(), fechasK = new Set();
   
@@ -176,30 +180,52 @@ function construirCombosFiltros() {
     if(r.columnaK) fechasK.add(r.columnaK);
   });
 
+  // 1. Llenar combo de Semanas (Se mantiene intacto)
   let cSem = document.getElementById('fSemana');
   cSem.innerHTML = '<option value="">Todas</option>';
   Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
+  // 2. Llenar combo de Placas (Se mantiene intacto)
   let cPlac = document.getElementById('fPlaca');
   cPlac.innerHTML = '<option value="">Todas</option>';
   Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
 
-  // Mostrar la lista de fechas K ordenadas y formateadas en español
+  // 3. Llenar combo de Columna K convertido totalmente a formato Español (DD/MM/YYYY)
   let cColK = document.getElementById('fColK');
   cColK.innerHTML = '<option value="">Todas las fechas K</option>';
+  
+  // Ordenamos cronológicamente de más reciente a más antigua
   Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
-    let fechaVisual = convertirAFechaLatina(f);
-    cColK.innerHTML += `<option value="${f}">${fechaVisual}</option>`;
+    // Convertimos de YYYY-MM-DD a DD/MM/YYYY
+    let fechaVisual = f;
+    if (f.includes("-")) {
+      let partes = f.split("-");
+      if (partes.length === 3) {
+        fechaVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+    }
+    // IMPORTANTE: Guardamos el formato DD/MM/YYYY tanto en el VALUE como en el TEXTO
+    cColK.innerHTML += `<option value="${fechaVisual}">${fechaVisual}</option>`;
   });
 }
 
 function procesarFiltros() {
-  let fColK = document.getElementById('fColK').value;
+  let fColK = document.getElementById('fColK').value; // Captura el valor en formato DD/MM/YYYY elegido
   let fSem = document.getElementById('fSemana').value;
   let fPlac = document.getElementById('fPlaca').value;
 
   let filtrados = datasetOriginal.filter(item => {
-    if(fColK && item.columnaK !== fColK) return false; // Filtrado síncrono interno
+    // Convertimos la propiedad del item para que coincida perfectamente en la comparación
+    let itemFechaKVisual = item.columnaK;
+    if (item.columnaK && item.columnaK.includes("-")) {
+      let partes = item.columnaK.split("-");
+      if (partes.length === 3) {
+        itemFechaKVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+    }
+
+    // Comparamos de forma directa e infalible en formato español
+    if(fColK && itemFechaKVisual !== fColK) return false;
     if(fSem && item.semana.toString() !== fSem.toString()) return false;
     if(fPlac && item.placa !== fPlac) return false;
     return true;
@@ -207,7 +233,6 @@ function procesarFiltros() {
 
   renderizarContenidos(filtrados);
 }
-
 function renderizarContenidos(datos) {
   let u = datos.length, c = 0, p = 0, l = 0;
   let tbody = document.getElementById('tablaCuerpo');
