@@ -34,48 +34,45 @@
 
   <div id="loader" class="loader-container">
     <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 fw-bold text-success">Consultando base de datos de movilidades...</h5>
+    <h5 class="mt-3 fw-bold text-success">Consultando base de datos remota...</h5>
   </div>
 
   <nav class="navbar navbar-frusan shadow-sm mb-4">
-  <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-    <span class="navbar-brand fw-bold mb-0 text-white d-flex align-items-center">
-      
-      <img src="ICO FRUSAN.png" alt="Logo Frusan" width="40" height="40" class="d-inline-block align-text-top me-2" style="object-fit: contain; background: white; border-radius: 4px; padding: 2px;">
-      
-      Agrícola Huarmey - Fundo Frusan
-    </span>
-    <div class="d-flex align-items-center gap-3">
-      <span id="dbStatusBadge" class="status-badge status-loading">
-        <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Verificando BD...
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+      <span class="navbar-brand fw-bold mb-0 text-white d-flex align-items-center">
+        <img src="ICO FRUSAN.png" alt="Logo Frusan" width="40" height="40" class="d-inline-block align-text-top me-2" style="object-fit: contain; background: white; border-radius: 4px; padding: 2px;">
+        Agrícola Huarmey - Fundo Frusan
       </span>
-      <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
-        <i class="fa-solid fa-arrows-rotate"></i> Actualizar
-      </button>
+      <div class="d-flex align-items-center gap-3">
+        <span id="dbStatusBadge" class="status-badge status-loading">
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Verificando BD...
+        </span>
+        <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
   <div class="container-fluid px-4">
     <div class="card p-3 mb-4 kpi-card bg-white">
-  <div class="row g-2">
-    <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-    <div class="col-12 col-md-4">
-      <label class="small text-muted">Filtro (FECHA)</label>
-      <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
-        <option value="">Todas las fechas</option>
-      </select>
-    </div>
-    <div class="col-6 col-md-4">
-      <label class="small text-muted">Semana (SEM)</label>
-      <select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
-    </div>
-    <div class="col-6 col-md-4">
-      <label class="small text-muted">Placa</label>
-      <select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
-    </div>
-  </div>
-</div>
+      <div class="row g-2">
+        <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+        <div class="col-12 col-md-4">
+          <label class="small text-muted">Filtro Columna K (FECHA)</label>
+          <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
+            <option value="">Todas las fechas K</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="small text-muted">Semana (SEM)</label>
+          <select id="fSemana" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="small text-muted">Placa</label>
+          <select id="fPlaca" class="form-select form-select-sm" onchange="procesarFiltros()"><option value="">Todas</option></select>
+        </div>
+      </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -104,10 +101,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // =========================================================================
-    // PEGA AQUÍ TU URL GENERADA AL IMPLEMENTAR NUEVA VERSIÓN EN APPS SCRIPT
-    // =========================================================================
-    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyTekVTkDxafpECbKQ1exBLDZNjMhKdsE2zhN50En7YIZhwz1G_GSRO7zfFOURgph_Q/exec";
+    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbz0gtWMlKI47TLagrxTso6CRIYmqsZlta6V59lt0oPrlHTnubdpjeoxVro7IVsM0Vpo/exec";
 
     let datasetOriginal = [];
     let chartD = null, chartS = null;
@@ -138,9 +132,8 @@
         } else {
           datasetOriginal = data;
           
-          // Estatus exitoso 🟢
           badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Base datos movilidades Conectado';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> BDXX_HUARMEY Conectada';
           
           construirCombosFiltros();
           procesarFiltros();
@@ -160,169 +153,164 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
-    // Función auxiliar para transformar el texto yyyy-mm-dd a dd/mm/yyyy para la vista
-function convertirAFechaLatina(fechaString) {
-  if (!fechaString || fechaString.includes("/")) return fechaString;
-  let partes = fechaString.split("-");
-  if (partes.length === 3) {
-    return `${partes[2]}/${partes[1]}/${partes[0]}`; // Retorna dd/mm/yyyy
-  }
-  return fechaString;
-}
-
-// =========================================================================
-// REEMPLAZA ÚNICAMENTE ESTAS DOS FUNCIONES EN TU SCRIPT
-// =========================================================================
-
-function construirCombosFiltros() {
-  let sems = new Set(), placs = new Set(), fechasK = new Set();
-  
-  datasetOriginal.forEach(r => {
-    if(r.semana) sems.add(r.semana);
-    if(r.placa) placs.add(r.placa);
-    if(r.columnaK) fechasK.add(r.columnaK);
-  });
-
-  // 1. Combo de Semanas (Intacto)
-  let cSem = document.getElementById('fSemana');
-  cSem.innerHTML = '<option value="">Todas</option>';
-  Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
-
-  // 2. Combo de Placas (Intacto)
-  let cPlac = document.getElementById('fPlaca');
-  cPlac.innerHTML = '<option value="">Todas</option>';
-  Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
-
-  // 3. Combo de Columna K: VALUE en formato nativo ordenable, TEXTO en formato español
-  let cColK = document.getElementById('fColK');
-  cColK.innerHTML = '<option value="">Todas las fechas</option>';
-  
-  // Ordenamos usando las fechas nativas (YYYY-MM-DD) de más reciente a más antigua
-  Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
-    let fechaVisual = f;
-    // Transformamos SOLO el texto visual a DD/MM/YYYY
-    if (f && f.includes("-")) {
-      let partes = f.split("-");
-      if (partes.length === 3) {
-        fechaVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    // 1. FUNCIÓN AUXILIAR PARA CORREGIR EL FORMATO DE INGLÉS A ESPAÑOL
+    function formatearAFechaLatina(fechaRaw) {
+      if (!fechaRaw) return "";
+      let texto = fechaRaw.toString().trim();
+      
+      if (texto.includes("/") && !texto.includes("-")) {
+        return texto;
       }
+      
+      if (texto.includes("-")) {
+        let soloFecha = texto.split(" ")[0].split("T")[0];
+        let partes = soloFecha.split("-");
+        if (partes.length === 3) {
+          if (partes[0].length === 4) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+          }
+          return `${partes[0]}/${partes[1]}/${partes[2]}`;
+        }
+      }
+      return texto;
     }
-    // value mantiene el formato ISO (del motor) y el texto muestra el formato español
-    cColK.innerHTML += `<option value="${f}">${fechaVisual}</option>`;
-  });
-}
 
-function procesarFiltros() {
-  // Captura los valores de los filtros en tiempo real
-  let fColK = document.getElementById('fColK').value; 
-  let fSem = document.getElementById('fSemana').value;
-  let fPlac = document.getElementById('fPlaca').value;
+    // 2. CONSTRUCCIÓN DE LOS FILTROS DESPLEGABLES
+    function construirCombosFiltros() {
+      let sems = new Set(), placs = new Set(), fechasK = new Set();
+      
+      datasetOriginal.forEach(r => {
+        if(r.semana) sems.add(r.semana);
+        if(r.placa) placs.add(r.placa);
+        if(r.columnaK) {
+          fechasK.add(formatearAFechaLatina(r.columnaK));
+        }
+      });
 
-  let filtrados = datasetOriginal.filter(item => {
-    // Asociación estricta y encadenada de filtros:
-    if (fColK && item.columnaK !== fColK) return false;
-    if (fSem && item.semana.toString() !== fSem.toString()) return false;
-    if (fPlac && item.placa !== fPlac) return false;
-    
-    return true;
-  });
+      let cSem = document.getElementById('fSemana');
+      cSem.innerHTML = '<option value="">Todas</option>';
+      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
-  // Renderiza la tabla y los gráficos con los datos correctamente asociados
-  renderizarContenidos(filtrados);
-}    
+      let cPlac = document.getElementById('fPlaca');
+      cPlac.innerHTML = '<option value="">Todas</option>';
+      Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
+
+      let cColK = document.getElementById('fColK');
+      cColK.innerHTML = '<option value="">Todas las fechas </option>';
+      
+      Array.from(fechasK).sort((a, b) => {
+        let pA = a.split('/'), pB = b.split('/');
+        return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
+      }).forEach(f => {
+        cColK.innerHTML += `<option value="${f}">${f}</option>`;
+      });
+    }
+
+    // 3. PROCESADOR DE FILTROS EN CADENA SIMULTÁNEOS
+    function procesarFiltros() {
+      let fColK = document.getElementById('fColK').value; 
+      let fSem = document.getElementById('fSemana').value;
+      let fPlac = document.getElementById('fPlaca').value;
+
+      let filtrados = datasetOriginal.filter(item => {
+        let itemFechaKVisual = formatearAFechaLatina(item.columnaK);
+
+        if (fColK && itemFechaKVisual !== fColK) return false;
+        if (fSem && item.semana.toString() !== fSem.toString()) return false;
+        if (fPlac && item.placa !== fPlac) return false;
+        
+        return true;
+      });
+
+      renderizarContenidos(filtrados);
+    }
+
+    // 4. RENDERIZAR CONTENIDOS CON LA FECHA CORREGIDA EN LA PRIMERA COLUMNA
     function renderizarContenidos(datos) {
-  let u = datos.length, c = 0, p = 0, l = 0;
-  let tbody = document.getElementById('tablaCuerpo');
-  tbody.innerHTML = '';
+      let u = datos.length, c = 0, p = 0, l = 0;
+      let tbody = document.getElementById('tablaCuerpo');
+      tbody.innerHTML = '';
 
-  datos.forEach(f => {
-    // -----------------------------------------------------------------
-    // ¡AQUÍ VA EL CÓDIGO! (Justo al iniciar el recorrido de la fila)
-    // -----------------------------------------------------------------
-    let fechaTabla = f.fechaAgrupada;
-    if (f.fechaAgrupada && f.fechaAgrupada.includes("-")) {
-      let partes = f.fechaAgrupada.split("-");
-      if (partes.length === 3) {
-        fechaTabla = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
+      datos.forEach(f => {
+        let fechaTabla = formatearAFechaLatina(f.fechaAgrupada || f.columnaK);
+
+        c += f.capacidad; p += f.pasajeros; l += f.libres;
+        let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
+        
+        let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
+        if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
+        else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
+
+        tbody.innerHTML += `
+          <tr class="${estFila}">
+            <td>${fechaTabla}</td>
+            <td class="fw-bold">${f.placa}</td>
+            <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
+            <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
+            <td class="text-center">${f.capacidad}</td>
+            <td class="text-center fw-bold text-success">${f.pasajeros}</td>
+            <td class="text-center fw-bold text-danger">${f.libres}</td>
+            <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
+          </tr>`;
+      });
+
+      document.getElementById('kpiUnidades').innerText = u;
+      document.getElementById('kpiCapacidad').innerText = c;
+      document.getElementById('kpiPasajeros').innerText = p;
+      document.getElementById('kpiLibres').innerText = l;
+
+      let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
+      let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
+      document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
+      document.getElementById('pctLibres').innerText = pL + "% Libre";
+
+      armarGraficos(datos);
     }
-    // -----------------------------------------------------------------
 
-    c += f.capacidad; p += f.pasajeros; l += f.libres;
-    let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
-    
-    let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
-    if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
-    else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
+    function armarGraficos(datos) {
+      let rDias = {};
+      datos.forEach(x => {
+        let fechaFormateada = formatearAFechaLatina(x.fechaAgrupada || x.columnaK);
+        if(!rDias[fechaFormateada]) rDias[fechaFormateada] = {p:0, l:0};
+        rDias[fechaFormateada].p += x.pasajeros; rDias[fechaFormateada].l += x.libres;
+      });
+      
+      let lDiasVisuales = Object.keys(rDias).sort((a,b) => {
+        let pA = a.split('/'), pB = b.split('/');
+        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
+      });
 
-    // Usamos la variable 'fechaTabla' corregida en la primera celda (<td>)
-    tbody.innerHTML += `
-      <tr class="${estFila}">
-        <td>${fechaTabla}</td>
-        <td class="fw-bold">${f.placa}</td>
-        <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
-        <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
-        <td class="text-center">${f.capacidad}</td>
-        <td class="text-center fw-bold text-success">${f.pasajeros}</td>
-        <td class="text-center fw-bold text-danger">${f.libres}</td>
-        <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
-      </tr>`;
-  });
+      if(chartD) chartD.destroy();
+      chartD = new Chart(document.getElementById('canvasDiario'), {
+        type: 'line',
+        data: { 
+          labels: lDiasVisuales, 
+          datasets: [
+            { label: 'Pasajeros', data: lDiasVisuales.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
+            { label: 'Libres', data: lDiasVisuales.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
 
-  document.getElementById('kpiUnidades').innerText = u;
-  document.getElementById('kpiCapacidad').innerText = c;
-  document.getElementById('kpiPasajeros').innerText = p;
-  document.getElementById('kpiLibres').innerText = l;
+      let rSem = {};
+      datos.forEach(x => {
+        let k = "Sem " + x.semana;
+        if(!rSem[k]) rSem[k] = {p:0, l:0};
+        rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
+      });
+      let lSem = Object.keys(rSem).sort();
 
-  let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
-  let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
-  document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
-  document.getElementById('pctLibres').innerText = pL + "% Libre";
-
-  armarGraficos(datos);
-}
-function armarGraficos(datos) {
-  let rDias = {};
-  datos.forEach(x => {
-    if(!rDias[x.fechaAgrupada]) rDias[x.fechaAgrupada] = {p:0, l:0};
-    rDias[x.fechaAgrupada].p += x.pasajeros; rDias[x.fechaAgrupada].l += x.libres;
-  });
-  
-  // Convertir las etiquetas del gráfico de líneas a formato dd/mm/yyyy
-  let lDiasClaves = Object.keys(rDias).sort();
-  let lDiasVisuales = lDiasClaves.map(d => convertirAFechaLatina(d));
-
-  if(chartD) chartD.destroy();
-  chartD = new Chart(document.getElementById('canvasDiario'), {
-    type: 'line',
-    data: { 
-      labels: lDiasVisuales, // Aplicado en español
-      datasets: [
-        { label: 'Pasajeros', data: lDiasClaves.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
-        { label: 'Libres', data: lDiasClaves.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  let rSem = {};
-  datos.forEach(x => {
-    let k = "Sem " + x.semana;
-    if(!rSem[k]) rSem[k] = {p:0, l:0};
-    rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
-  });
-  let lSem = Object.keys(rSem).sort();
-
-  if(chartS) chartS.destroy();
-  chartS = new Chart(document.getElementById('canvasSemanal'), {
-    type: 'bar',
-    data: { labels: lSem, datasets: [
-      { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
-      { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
-    ]},
-    options: { responsive: true, maintainAspectRatio: false, scales: { x:{stacked:true}, y:{stacked:true} } }
-  });
-}
-</script>
+      if(chartS) chartS.destroy();
+      chartS = new Chart(document.getElementById('canvasSemanal'), {
+        type: 'bar',
+        data: { labels: lSem, datasets: [
+          { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
+          { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, scales: { x:{stacked:true}, y:{stacked:true} } }
+      });
+    }
+  </script>
 </body>
 </html>
