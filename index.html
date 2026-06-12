@@ -153,6 +153,10 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
+    // =========================================================================
+    // ¡AQUÍ EMPIEZA EL CAMBIO! COPIA Y PEGA DESDE AQUÍ HASTA EL FINAL DEL SCRIPT
+    // =========================================================================
+
     // 1. FUNCIÓN AUXILIAR PARA CORREGIR EL FORMATO DE INGLÉS A ESPAÑOL
     function formatearAFechaLatina(fechaRaw) {
       if (!fechaRaw) return "";
@@ -196,7 +200,7 @@
       Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
 
       let cColK = document.getElementById('fColK');
-      cColK.innerHTML = '<option value="">Todas las fechas </option>';
+      cColK.innerHTML = '<option value="">Todas las fechas K</option>';
       
       Array.from(fechasK).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
@@ -225,13 +229,14 @@
       renderizarContenidos(filtrados);
     }
 
-    // 4. RENDERIZAR CONTENIDOS CON LA FECHA CORREGIDA EN LA PRIMERA COLUMNA
+    // 4. RENDERIZAR TABLA CON LA FECHA CORREGIDA EN LA PRIMERA COLUMNA
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
       let tbody = document.getElementById('tablaCuerpo');
       tbody.innerHTML = '';
 
       datos.forEach(f => {
+        // AQUÍ ES DONDE SE CONVIERTE LA FECHA PARA LA TABLA
         let fechaTabla = formatearAFechaLatina(f.fechaAgrupada || f.columnaK);
 
         c += f.capacidad; p += f.pasajeros; l += f.libres;
@@ -275,7 +280,7 @@
         rDias[fechaFormateada].p += x.pasajeros; rDias[fechaFormateada].l += x.libres;
       });
       
-      let lDiasVisuales = Object.keys(rDias).sort((a,b) => {
+      let lDiasClaves = Object.keys(rDias).sort((a,b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
       });
@@ -284,10 +289,10 @@
       chartD = new Chart(document.getElementById('canvasDiario'), {
         type: 'line',
         data: { 
-          labels: lDiasVisuales, 
+          labels: lDiasClaves,
           datasets: [
-            { label: 'Pasajeros', data: lDiasVisuales.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
-            { label: 'Libres', data: lDiasVisuales.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
+            { label: 'Pasajeros', data: lDiasClaves.map(d => rDias[d].p), borderColor: '#7ba236', tension: 0.1 },
+            { label: 'Libres', data: lDiasClaves.map(d => rDias[d].l), borderColor: '#dc3545', tension: 0.1 }
           ]
         },
         options: { responsive: true, maintainAspectRatio: false }
