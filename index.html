@@ -305,7 +305,7 @@
         statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando a Base de Datos...';
       }
       
-      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbywpTPpMo375ZlESsZwDYzNQyTDo8NKHkXha-fXPgC8V2pcP8FIdnyfmXGYxx0M0VMg/exec";
+      const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbygTj01BbGKT88KBT2mbIlYXSbvFYgUkkUPPGLTB3caMVi7GtGhxqStDD5JoA5mPv1J/exec";
       
       fetch(URL_GOOGLE_SCRIPT)
         .then(response => {
@@ -318,7 +318,7 @@
             ALL_DATA = response.rows;
             populateFilterOptions();
             
-            // Inicializar el filtro de fecha diario en limpio al cargar
+            // Forzar el input HTML a vacío al iniciar
             if(document.getElementById('filterFecha')) {
               document.getElementById('filterFecha').value = ""; 
             }
@@ -343,7 +343,7 @@
             statusBadge.className = "badge bg-danger ms-2 text-white";
             statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin Conexión';
           }
-          console.error(err);
+          console.error("Error de conexión:", err);
         });
     }
 
@@ -375,7 +375,7 @@
 
     function applyFilters() {
       const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
-      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; // CORREGIDO: id="filterFecha" coincide con tu HTML
+      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; // Vinculado correctamente con la columna K
       const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
       let filtered = ALL_DATA.filter(row => {
@@ -494,14 +494,14 @@
         return;
       }
 
-      // CORREGIDO: Arreglo estático con formato de 4 letras requerido (JUEV, MART, etc.)
+      // Estructura fija en mayúsculas de 4 letras para cumplir con el requerimiento
       const diasSemana = ["DOMI", "LUNE", "MART", "MIÉR", "JUEV", "VIER", "SÁBA"];
 
       data.forEach(row => {
         let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
         let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
 
-        // CORREGIDO: Formato de presentación final "JUEV, 11/06/2026" estable sin importar el idioma de la PC
+        // Formateado a: JUEV, 11/06/2026
         let fechaFormateada = row.fecha;
         if(row.fecha && row.fecha.includes("-")) {
           let partes = row.fecha.split("-");
@@ -530,5 +530,6 @@
         `;
       });
     }
-  </script></body>
+  </script>
+</body>
 </html>
