@@ -191,268 +191,266 @@
   </main>
 
   <script>
-    // Variables globales
-    let baseDatos = [];
+    // VARIABLE GLOBAL PARA ALMACENAR LOS DATOS DE GOOGLE SHEETS
+    let ALL_DATA = [];
+    
+    // Instancias globales de los gráficos
     let chartDiarioInstance = null;
     let chartSemanalInstance = null;
 
-    // Inicialización al cargar la ventana
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('txt-fecha-actual').innerText = new Date().toLocaleDateString('es-ES', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-      });
-      cargarDatosDesdeSheets();
+    document.addEventListener("DOMContentLoaded", function() {
+      fetchDataJSONP();
     });
 
-    // Llamada al backend de Google Apps Script
-    function cargarDatosDesdeSheets() {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            baseDatos = data;
-            inicializarFiltros();
-            procesarDashboard();
-            
-            // Ocultar cargador y mostrar contenido
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('panel-dashboard').classList.remove('hidden');
-            lucide.createIcons();
-          })
-          .withFailureHandler(function(err) {
-            document.getElementById('loader').innerHTML = `
-              <div class="text-rose-500 font-bold p-4 text-center">
-                <i data-lucide="alert-triangle" class="mx-auto w-10 h-10 mb-2"></i>
-                Error al conectar con la Base de Datos: <br> ${err.message}
-              </div>`;
-            lucide.createIcons();
-          })
-          .getDatosRegistros();
-      } else {
-        // Modo Desarrollo Local alternativo por si pruebas fuera del ecosistema
-        console.warn("Entorno Google Script no detectado. Cargando datos simulados de pruebas.");
-        simularDatosPrueba();
+    // CONEXIÓN DEFINITIVA SIN BLOQUEOS DE NAVEGADOR
+    function fetchDataJSONP() {
+      document.getElementById('loader').style.display = 'flex';
+      const statusBadge = document.getElementById('dbStatus');
+      
+      if (statusBadge) {
+        statusBadge.className = "badge bg-warning text-dark ms-2";
+        statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Conectando de forma segura...';
+      }
+      
+      // URL de tu script de Google
+      const URL_BASE = "https://script.google.com/macros/s/AKfycbyK9HIcULLZ84XwVUBTVDEyYwzLJMKJb506KVPRIo0mkkan2rAuuNVDAfpUzT9CHMU/exec";
+      
+      // Creamos una función global temporal para recibir el paquete de datos
+      const callbackName = "jsonp_callback_" + Date.now();
+      window[callbackName] = function(response) {
+        // Limpieza del script inyectado
+        document.body.removeChild(script);
+        delete window[callbackName];
+        
+        document.getElementById('loader').style.display = 'none';
+        
+        if(response && response.success) {
+          ALL_DATA = response.rows;
+          populateFilterOptions();
+          
+          // Aseguramos que empiece vacío para renderizar todo al inicio
+          if(document.getElementById('filterFecha')) {
+            document.getElementById('filterFecha').value = ""; 
+          }
+          
+          applyFilters();
+          
+          if (statusBadge) {
+            statusBadge.className = "badge bg-success ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> BD Conectada con Éxito';
+          }
+        } else {
+          if (statusBadge) {
+            statusBadge.className = "badge bg-danger ms-2 text-white";
+            statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error en Datos';
+          }
+          alert("Error en la estructura de la base de datos.");
+        }
+      };
+
+      // Inyección del tag script para saltar la seguridad CORS
+      const script = document.createElement('script');
+      script.src = `${URL_BASE}?callback=${callbackName}`;
+      script.onerror = function() {
+        document.getElementById('loader').style.display = 'none';
+        if (statusBadge) {
+          statusBadge.className = "badge bg-danger ms-2 text-white";
+          statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Error de Red';
+        }
+        console.error("Fallo crítico en la inyección de red.");
+      };
+      document.body.appendChild(script);
+    }
+
+    function populateFilterOptions() {
+      const placasSet = new Set();
+      const semanasSet = new Set();
+      
+      ALL_DATA.forEach(row => {
+        if(row.placa) placasSet.add(row.placa);
+        if(row.semana) semanasSet.add(row.semana);
+      });
+
+      const selectPlaca = document.getElementById('filterPlaca');
+      if(selectPlaca) {
+        selectPlaca.innerHTML = '<option value="">-- Todas las Placas --</option>';
+        [...placasSet].sort().forEach(p => {
+          selectPlaca.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+      }
+
+      const selectSemana = document.getElementById('filterSemana');
+      if(selectSemana) {
+        selectSemana.innerHTML = '<option value="">-- Todas las Semanas --</option>';
+        [...semanasSet].sort((a,b)=>a-b).forEach(s => {
+          selectSemana.innerHTML += `<option value="${s}">Semana ${s}</option>`;
+        });
       }
     }
 
-    function inicializarFiltros() {
-      const placasSet = new Set();
-      const fechasSet = new Set();
-      const semanasSet = new Set();
+    function applyFilters() {
+      const valPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value : "";
+      const valFecha = document.getElementById('filterFecha') ? document.getElementById('filterFecha').value : ""; 
+      const valSemana = document.getElementById('filterSemana') ? document.getElementById('filterSemana').value : "";
 
-      baseDatos.forEach(item => {
-        if(item.placa) placasSet.add(item.placa);
-        if(item.fechaK) fechasSet.add(item.fechaK);
-        if(item.semana) semanasSet.add(item.semana);
+      let filtered = ALL_DATA.filter(row => {
+        let matchPlaca = !valPlaca || row.placa === valPlaca;
+        let matchFecha = !valFecha || row.fecha === valFecha; 
+        let matchSemana = !valSemana || String(row.semana) === String(valSemana);
+        return matchPlaca && matchFecha && matchSemana;
       });
 
-      // Rellenar selectores ordenadamente
-      rellenarSelect('filtro-placa', Array.from(placasSet).sort());
-      rellenarSelect('filtro-fecha', Array.from(fechasSet).sort().reverse());
-      rellenarSelect('filtro-semana', Array.from(semanasSet).sort());
+      renderKPIs(filtered);
+      renderCharts(filtered);
+      renderTable(filtered);
     }
 
-    function rellenarSelect(id, array) {
-      const select = document.getElementById(id);
-      array.forEach(valor => {
-        const option = document.createElement('option');
-        option.value = valor;
-        option.textContent = valor;
-        select.appendChild(option);
-      });
-    }
-
-    function limpiarFiltros() {
-      document.getElementById('filtro-placa').value = "";
-      document.getElementById('filtro-fecha').value = "";
-      document.getElementById('filtro-semana').value = "";
-      procesarDashboard();
-    }
-
-    // LÓGICA CORE: Filtrado y Renderizado de Indicadores
-    function procesarDashboard() {
-      const fPlaca = document.getElementById('filtro-placa').value;
-      const fFecha = document.getElementById('filtro-fecha').value;
-      const fSemana = document.getElementById('filtro-semana').value;
-
-      // Aplicar filtros seleccionados por usuario
-      const datosFiltrados = baseDatos.filter(item => {
-        return (!fPlaca || item.placa === fPlaca) &&
-               (!fFecha || item.fechaK === fFecha) &&
-               (!fSemana || String(item.semana) === fSemana);
-      });
-
-      // Inicializadores de Totales
+    function renderKPIs(data) {
+      let totalVehiculos = data.length;
       let totalCapacidad = 0;
       let totalPasajeros = 0;
       let totalLibres = 0;
-      const totalMovilidades = datosFiltrados.length;
 
-      // Agrupaciones para gráficos
-      const resumenFechas = {};
-      const resumenSemanas = {};
-
-      datosFiltrados.forEach(item => {
-        totalCapacidad += item.capacidad;
-        totalPasajeros += item.pasajeros;
-        totalLibres += item.libres;
-
-        // Agrupación Diaria
-        if (!resumenFechas[item.fechaK]) {
-          resumenFechas[item.fechaK] = { pasajeros: 0, libres: 0 };
-        }
-        resumenFechas[item.fechaK].pasajeros += item.pasajeros;
-        resumenFechas[item.fechaK].libres += item.libres;
-
-        // Agrupación Semanal
-        let semLabel = item.semana ? `Semana ${item.semana}` : 'Sin Semana';
-        if (!resumenSemanas[semLabel]) {
-          resumenSemanas[semLabel] = { pasajeros: 0, libres: 0 };
-        }
-        resumenSemanas[semLabel].pasajeros += item.pasajeros;
-        resumenSemanas[semLabel].libres += item.libres;
+      data.forEach(row => {
+        totalCapacidad += row.capacidad;
+        totalPasajeros += row.pasajeros;
+        totalLibres += row.libres;
       });
 
-      // Calcular Porcentaje General de Ocupación
-      let porcentajeOcupacion = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100) : 0;
+      if(document.getElementById('kpiVehiculos')) document.getElementById('kpiVehiculos').innerText = totalVehiculos;
+      if(document.getElementById('kpiCapacidad')) document.getElementById('kpiCapacidad').innerText = totalCapacidad;
+      if(document.getElementById('kpiPasajeros')) document.getElementById('kpiPasajeros').innerText = totalPasajeros;
+      if(document.getElementById('kpiLibres')) document.getElementById('kpiLibres').innerText = totalLibres;
 
-      // Actualizar KPIs visuales en pantalla
-      document.getElementById('kpi-movilidades').innerText = totalMovilidades;
-      document.getElementById('kpi-capacidad').innerText = totalCapacidad;
-      document.getElementById('kpi-pasajeros').innerText = totalPasajeros;
-      document.getElementById('kpi-libres').innerText = totalLibres;
-      document.getElementById('badge-total-filas').innerText = `${totalMovilidades} Registros`;
+      let pctP = totalCapacidad > 0 ? ((totalPasajeros / totalCapacidad) * 100).toFixed(1) : 0;
+      let pctL = totalCapacidad > 0 ? ((totalLibres / totalCapacidad) * 100).toFixed(1) : 0;
 
-      // Aplicar Regla Semáforo por colores corporativos solicitados
-      actualizarSemaforoOcupacion(porcentajeOcupacion);
-
-      // Renderizar Tablas y Gráficos
-      renderizarTabla(datosFiltrados);
-      renderizarGraficoDiario(resumenFechas);
-      renderizarGraficoSemanal(resumenSemanas);
+      if(document.getElementById('pctPasajeros')) document.getElementById('pctPasajeros').innerText = pctP + '%';
+      if(document.getElementById('pctLibres')) document.getElementById('pctLibres').innerText = pctL + '%';
     }
 
-    function actualizarSemaforoOcupacion(porcentaje) {
-      const contenedor = document.getElementById('semaforo-contenedor');
-      const texto = document.getElementById('txt-porcentaje-ocupacion');
+    function renderCharts(data) {
+      let resumenDiario = {};
+      data.forEach(row => {
+        if(!resumenDiario[row.fecha]) {
+          resumenDiario[row.fecha] = { pasajeros: 0, libres: 0 };
+        }
+        resumenDiario[row.fecha].pasajeros += row.pasajeros;
+        resumenDiario[row.fecha].libres += row.libres;
+      });
+
+      let fechasSorted = Object.keys(resumenDiario).sort();
       
-      texto.innerText = `${porcentaje.toFixed(1)}%`;
+      // Eje X del gráfico configurado por fechas del Sheets de forma ordenada
+      const diasSemanaCorto = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"];
+      let labelsGrafico = fechasSorted.map(f => {
+        let p = f.split("-");
+        let d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+        return `${diasSemanaCorto[d.getDay()]} ${p[2]}/${p[1]}`;
+      });
 
-      // Resetear clases previas
-      contenedor.className = "w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center border-8 transition-all duration-500 shadow-md bg-white";
+      let pasajerosDiarios = fechasSorted.map(f => resumenDiario[f].pasajeros);
+      let libresDiarios = fechasSorted.map(f => resumenDiario[f].libres);
 
-      if (porcentaje >= 90) {
-        // Verde Frusan / Confortable
-        contenedor.classList.add('border-emerald-500', 'text-emerald-600 font-black');
-      } else if (porcentaje >= 80) {
-        // Naranja preventivo
-        contenedor.classList.add('border-amber-500', 'text-amber-600 font-black');
-      } else {
-        // Rojo - Alerta subocupación
-        contenedor.classList.add('border-rose-500', 'text-rose-600 font-black');
+      if (chartDiarioInstance) chartDiarioInstance.destroy();
+      const canvasDiario = document.getElementById('chartDiario');
+      if(canvasDiario) {
+        const ctxDiario = canvasDiario.getContext('2d');
+        chartDiarioInstance = new Chart(ctxDiario, {
+          type: 'line',
+          data: {
+            labels: labelsGrafico,
+            datasets: [
+              { label: 'Pasajeros Abordo', data: pasajerosDiarios, borderColor: '#3B8216', backgroundColor: 'rgba(59,130,22,0.1)', fill: true, tension: 0.2 },
+              { label: 'Asientos Libres', data: libresDiarios, borderColor: '#D6331D', backgroundColor: 'rgba(214,51,29,0.1)', fill: true, tension: 0.2 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      let resumenVehiculo = {};
+      data.forEach(row => {
+        if(!resumenVehiculo[row.placa]) {
+          resumenVehiculo[row.placa] = { pasajeros: 0, libres: 0 };
+        }
+        resumenVehiculo[row.placa].pasajeros += row.pasajeros;
+        resumenVehiculo[row.placa].libres += row.libres;
+      });
+
+      let placasLabels = Object.keys(resumenVehiculo);
+      let pasajerosVehiculo = placasLabels.map(p => resumenVehiculo[p].pasajeros);
+      let libresVehiculo = placasLabels.map(p => resumenVehiculo[p].libres);
+
+      if (chartSemanalInstance) chartSemanalInstance.destroy();
+      const canvasSemanal = document.getElementById('chartSemanal');
+      if(canvasSemanal) {
+        const ctxSemanal = canvasSemanal.getContext('2d');
+        chartSemanalInstance = new Chart(ctxSemanal, {
+          type: 'bar',
+          data: {
+            labels: placasLabels,
+            datasets: [
+              { label: 'Pasajeros', data: pasajerosVehiculo, backgroundColor: '#3B8216' },
+              { label: 'Libres', data: libresVehiculo, backgroundColor: '#4A4A4A' }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+          }
+        });
       }
     }
 
-    function renderizarTabla(datos) {
-      const tbody = document.getElementById('tabla-cuerpo');
+    function renderTable(data) {
+      const tbody = document.getElementById('tablaCuerpo');
+      if(!tbody) return;
+      
+      if(document.getElementById('lblContadorFilas')) {
+        document.getElementById('lblContadorFilas').innerText = `${data.length} Filas mostradas`;
+      }
       tbody.innerHTML = "";
 
-      if(datos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Ningún registro coincide con los filtros aplicados.</td></tr>`;
+      if(data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">No hay datos que coincidan con los filtros seleccionados.</td></tr>`;
         return;
       }
 
-      datos.forEach(row => {
-        let pct = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100) : 0;
-        let colorBadg = "text-rose-600 bg-rose-50";
-        if(pct >= 90) colorBadg = "text-emerald-600 bg-emerald-50";
-        else if(pct >= 80) colorBadg = "text-amber-600 bg-amber-50";
+      const diasSemana = ["DOMI", "LUNE", "MART", "MIÉR", "JUEV", "VIER", "SÁBA"];
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50/80 transition-colors";
-        tr.innerHTML = `
-          <td class="p-3 text-gray-500 font-mono">${row.fechaK}</td>
-          <td class="p-3">
-            <div class="font-bold text-gray-700">${row.placa}</div>
-            <div class="text-[11px] text-gray-400 font-normal">${row.conductor}</div>
-          </td>
-          <td class="p-3 text-center font-mono">${row.capacidad}</td>
-          <td class="p-3 text-center text-emerald-600 font-mono font-semibold">${row.pasajeros}</td>
-          <td class="p-3 text-center text-amber-600 font-mono">${row.libres}</td>
-          <td class="p-3 text-right">
-            <span class="px-2 py-0.5 rounded-md font-bold ${colorBadg}">${pct.toFixed(0)}%</span>
-          </td>
+      data.forEach(row => {
+        let pctUso = row.capacidad > 0 ? ((row.pasajeros / row.capacidad) * 100).toFixed(0) : 0;
+        let badgeColor = pctUso > 75 ? 'bg-success' : (pctUso > 40 ? 'bg-warning text-dark' : 'bg-danger');
+
+        let fechaFormateada = row.fecha;
+        if(row.fecha && row.fecha.includes("-")) {
+          let partes = row.fecha.split("-");
+          let anio = parseInt(partes[0], 10);
+          let mes = parseInt(partes[1], 10) - 1;
+          let dia = parseInt(partes[2], 10);
+          
+          let fechaObjeto = new Date(anio, mes, dia);
+          let nombreDia = diasSemana[fechaObjeto.getDay()];
+          
+          fechaFormateada = `${nombreDia}, ${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${anio}`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><i class="fa-regular fa-calendar-days text-secondary me-1"></i> <strong>${fechaFormateada}</strong></td>
+            <td><span class="badge bg-light text-dark border">Sem ${row.semana}</span></td>
+            <td><strong class="text-primary">${row.placa}</strong></td>
+            <td class="small">${row.conductor}</td>
+            <td class="small text-truncate" style="max-width: 220px;">${row.ruta}</td>
+            <td class="text-center font-weight-bold">${row.capacidad}</td>
+            <td class="text-center text-success font-weight-bold">${row.pasajeros}</td>
+            <td class="text-center text-danger font-weight-bold">${row.libres}</td>
+            <td><span class="badge ${badgeColor}">${pctUso}%</span></td>
+          </tr>
         `;
-        tbody.appendChild(tr);
       });
-    }
-
-    // CONFIGURACIÓN DE GRÁFICOS INTERACTIVOS (CHART.JS)
-    function renderizarGraficoDiario(resumen) {
-      const ctx = document.getElementById('chartDiario').getContext('2d');
-      const fechas = Object.keys(resumen).sort();
-      const pasajeros = fechas.map(f => resumen[f].pasajeros);
-      const libres = fechas.map(f => resumen[f].libres);
-
-      if (chartDiarioInstance) chartDiarioInstance.destroy();
-
-      chartDiarioInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: fechas,
-          datasets: [
-            { label: 'Pasajeros Ingresados', data: pasajeros, backgroundColor: '#1e5631', borderRadius: 6 },
-            { label: 'Asientos Libres', data: libres, backgroundColor: '#f59e0b', borderRadius: 6 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
-          scales: {
-            x: { stacked: true, grid: { display: false } },
-            y: { stacked: true, grid: { color: '#f3f4f6' } }
-          }
-        }
-      });
-    }
-
-    function renderizarGraficoSemanal(resumen) {
-      const ctx = document.getElementById('chartSemanal').getContext('2d');
-      const semanas = Object.keys(resumen).sort();
-      const pasajeros = semanas.map(s => resumen[s].pasajeros);
-      const libres = semanas.map(s => resumen[s].libres);
-
-      if (chartSemanalInstance) chartSemanalInstance.destroy();
-
-      chartSemanalInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Pasajeros Totales', 'Espacios Libres'],
-          datasets: [{
-            data: [pasajeros.reduce((a,b)=>a+b,0), libres.reduce((a,b)=>a+b,0)],
-            backgroundColor: ['#1e5631', '#f43f5e']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
-        }
-      });
-    }
-
-    // Simulación autónoma (Solo se activa si abres el HTML directo en navegador sin Sheets)
-    function simularDatosPrueba() {
-      baseDatos = [
-        { fechaCompleta:"12/6/2026", placa:"A9Z-969", conductor:"MUÑOZ SILVA MANUEL", capacidad:32, pasajeros:30, libres:2, fechaK:"2026-06-12", semana:"24" },
-        { fechaCompleta:"12/6/2026", placa:"W4M-851", conductor:"TORRES CHINCHAY NELVER", capacidad:15, pasajeros:11, libres:4, fechaK:"2026-06-12", semana:"24" },
-        { fechaCompleta:"11/6/2026", placa:"M1A-963", conductor:"SANCHEZ MORE JUAN", capacidad:15, pasajeros:14, libres:1, fechaK:"2026-06-11", semana:"24" }
-      ];
-      inicializarFiltros();
-      procesarDashboard();
-      document.getElementById('loader').classList.add('hidden');
-      document.getElementById('panel-dashboard').classList.remove('hidden');
-      lucide.createIcons();
     }
   </script>
 </body>
