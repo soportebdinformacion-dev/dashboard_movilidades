@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Agrícola Huarmey - URL Externa</title>
+  <title>Dashboard Agrícola Huarmey - Conexión API</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -12,12 +12,21 @@
     .btn-frusan { background-color: #7ba236; color: white; border: none; }
     .btn-frusan:hover { background-color: #64852b; color: white; }
     .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    /* Semáforo Solicitado */
     .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
     .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
     .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
     .badge-verde { background-color: #198754; color: white; }
     .badge-naranja { background-color: #fd7e14; color: white; }
     .badge-rojo { background-color: #dc3545; color: white; }
+    
+    /* Estado de Conexión Estilos */
+    .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
+    .status-loading { background-color: #ffc107; color: #000; }
+    .status-online { background-color: #198754; color: #fff; }
+    .status-offline { background-color: #dc3545; color: #fff; }
+
     .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
   </style>
 </head>
@@ -25,17 +34,22 @@
 
   <div id="loader" class="loader-container">
     <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 fw-bold text-success">Consumiendo Endpoint Externo de BDXX_HUARMEY...</h5>
+    <h5 class="mt-3 fw-bold text-success">Consultando base de datos remota...</h5>
   </div>
 
   <nav class="navbar navbar-frusan shadow-sm mb-4">
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
       <span class="navbar-brand fw-bold mb-0 text-white d-flex align-items-center">
-        <i class="fa-solid fa-leaf text-warning me-2"></i> Agrícola Huarmey - Fundo Frusan (API)
+        <i class="fa-solid fa-leaf text-warning me-2"></i> Agrícola Huarmey - Fundo Frusan
       </span>
-      <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
-        <i class="fa-solid fa-arrows-rotate"></i> Actualizar via API
-      </button>
+      <div class="d-flex align-items-center gap-3">
+        <span id="dbStatusBadge" class="status-badge status-loading">
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Verificando BD...
+        </span>
+        <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -58,8 +72,8 @@
     </div>
 
     <div class="row g-3 mb-4">
-      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
-      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
+      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
+      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
     <div class="card kpi-card p-3 bg-white mb-4">
@@ -76,41 +90,61 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    
-  // REEMPLAZA CON TU NUEVA URL DE IMPLEMENTACIÓN DE GOOGLE (DEBE TERMINAR EN /exec)
-const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyE4ZNVoB2dP3gspXN8Ljlv6JKAhftvZQ1uKm9gEhPrMnXw8_TnWA0MgnWOwBbBVn1N/exec"; 
+    // =========================================================================
+    // PEGA AQUÍ TU URL GENERADA AL IMPLEMENTAR NUEVA VERSIÓN EN APPS SCRIPT
+    // =========================================================================
+    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyTekVTkDxafpECbKQ1exBLDZNjMhKdsE2zhN50En7YIZhwz1G_GSRO7zfFOURgph_Q/exec";
 
-function obtenerDatosAPIExterno() {
-  document.getElementById('loader').style.display = 'flex';
-  
-  // Realizamos la consulta externa configurando el seguimiento de redirección
-  fetch(URL_API_EXTERNA, {
-    method: "GET",
-    mode: "cors", // Habilita la comunicación entre servidores distintos
-    redirect: "follow" // CRÍTICO: Obliga a seguir la redirección interna de Google
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error("Respuesta de red incorrecta. Código: " + response.status);
+    let datasetOriginal = [];
+    let chartD = null, chartS = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      obtenerDatosAPIExterno();
+    });
+
+    function obtenerDatosAPIExterno() {
+      document.getElementById('loader').style.display = 'flex';
+      let badge = document.getElementById('dbStatusBadge');
+      
+      badge.className = "status-badge status-loading";
+      badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i> Conectando...';
+
+      fetch(URL_API_EXTERNA, {
+        method: "GET",
+        mode: "cors",
+        redirect: "follow"
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Status: " + response.status);
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          marcarDesconectado(data.message);
+        } else {
+          datasetOriginal = data;
+          
+          // Estatus exitoso 🟢
+          badge.className = "status-badge status-online";
+          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> BDXX_HUARMEY Conectada';
+          
+          construirCombosFiltros();
+          procesarFiltros();
+        }
+        document.getElementById('loader').style.display = 'none';
+      })
+      .catch(err => {
+        marcarDesconectado("Error CORS o URL Errónea");
+        document.getElementById('loader').style.display = 'none';
+      });
     }
-    return response.json();
-  })
-  .then(data => {
-    if (data.error) {
-      alert("Error en Base de Datos: " + data.message);
-    } else {
-      datasetOriginal = data;
-      construirCombosFiltros();
-      procesarFiltros();
+
+    function marcarDesconectado(mensaje) {
+      let badge = document.getElementById('dbStatusBadge');
+      badge.className = "status-badge status-offline";
+      badge.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i> BD Desconectada';
+      console.error("Fallo de enlace: ", mensaje);
     }
-    document.getElementById('loader').style.display = 'none';
-  })
-  .catch(err => {
-    console.error("Detalle del error:", err);
-    alert("Error de Conexión Externa.\n\nPor favor, verifica que la implementación esté publicada correctamente para 'Cualquiera'.");
-    document.getElementById('loader').style.display = 'none';
-  });
-}
 
     function construirCombosFiltros() {
       let sems = new Set(), placs = new Set();
