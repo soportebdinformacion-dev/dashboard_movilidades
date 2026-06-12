@@ -196,7 +196,6 @@ function construirCombosFiltros() {
   
   // Ordenamos cronológicamente de más reciente a más antigua
   Array.from(fechasK).sort((a, b) => new Date(b) - new Date(a)).forEach(f => {
-    // Convertimos de YYYY-MM-DD a DD/MM/YYYY
     let fechaVisual = f;
     if (f.includes("-")) {
       let partes = f.split("-");
@@ -204,18 +203,19 @@ function construirCombosFiltros() {
         fechaVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
       }
     }
-    // IMPORTANTE: Guardamos el formato DD/MM/YYYY tanto en el VALUE como en el TEXTO
+    // Guardamos y mostramos siempre en formato DD/MM/YYYY
     cColK.innerHTML += `<option value="${fechaVisual}">${fechaVisual}</option>`;
   });
 }
 
 function procesarFiltros() {
-  let fColK = document.getElementById('fColK').value; // Captura el valor en formato DD/MM/YYYY elegido
+  // Captura el valor actual de los tres filtros de forma simultánea
+  let fColK = document.getElementById('fColK').value; 
   let fSem = document.getElementById('fSemana').value;
   let fPlac = document.getElementById('fPlaca').value;
 
   let filtrados = datasetOriginal.filter(item => {
-    // Convertimos la propiedad del item para que coincida perfectamente en la comparación
+    // 1. Convertimos la fecha original del registro (YYYY-MM-DD) a Español (DD/MM/YYYY)
     let itemFechaKVisual = item.columnaK;
     if (item.columnaK && item.columnaK.includes("-")) {
       let partes = item.columnaK.split("-");
@@ -224,19 +224,30 @@ function procesarFiltros() {
       }
     }
 
-    // Comparamos de forma directa e infalible en formato español
-    if(fColK && itemFechaKVisual !== fColK) return false;
-    if(fSem && item.semana.toString() !== fSem.toString()) return false;
-    if(fPlac && item.placa !== fPlac) return false;
+    // 2. Lógica de asociación de filtros encadenados (No se ignoran entre sí)
+    if (fColK && itemFechaKVisual !== fColK) return false;
+    if (fSem && item.semana.toString() !== fSem.toString()) return false;
+    if (fPlac && item.placa !== fPlac) return false;
+    
     return true;
   });
 
+  // Re-renderiza la tabla y gráficos con los datos cruzados correctamente
   renderizarContenidos(filtrados);
 }
-function renderizarContenidos(datos) {
+    
+    function renderizarContenidos(datos) {
   let u = datos.length, c = 0, p = 0, l = 0;
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
+// Asegúrate de que la fecha agrupada se transforme antes de insertarse en la tabla:
+let fechaTabla = f.fechaAgrupada;
+if (f.fechaAgrupada && f.fechaAgrupada.includes("-")) {
+  let partes = f.fechaAgrupada.split("-");
+  if (partes.length === 3) {
+    fechaTabla = `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+}
 
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
