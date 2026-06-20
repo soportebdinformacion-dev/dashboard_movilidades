@@ -309,11 +309,10 @@
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
 
-  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ESTILO MATRIZ VISUAL) ---
-  let fColK = document.getElementById('fColK').value;
-  let fSem = document.getElementById('fSemana').value;
+  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ESTRICTO POR FILTRO DE FECHA) ---
+  let fColK = document.getElementById('fColK').value; // Captura el valor del select de Fecha
   
-  // 1. Crear un mapa con la información maestra de cada placa (para conocer su Tipo y Ruta habitual)
+  // 1. Crear un mapa con la información maestra de cada placa (Tipo y Ruta habitual)
   let mapaMaestroPlacas = {};
   datasetOriginal.forEach(item => {
     if (item.placa) {
@@ -327,32 +326,30 @@
   let universoPlacas = Object.keys(mapaMaestroPlacas);
   let placasFaltantes = [];
 
-  // Determinar faltantes según el filtro activo
-  if (fColK) {
+  // 2. Aplicar el efecto SOLAMENTE cuando se filtra por una FECHA específica
+  if (fColK && fColK !== "") {
+    // Identificamos las placas que SÍ enviaron datos en la fecha seleccionada
     let placasConReporteDia = new Set(datos.map(item => item.placa));
+    
+    // Las faltantes son aquellas del universo que NO están en los reportes de ese día
     placasFaltantes = universoPlacas.filter(placa => !placasConReporteDia.has(placa));
-  } else if (fSem) {
-    let placasConReporteSemana = new Set(
-      datasetOriginal
-        .filter(item => item.semana && item.semana.toString() === fSem.toString())
-        .map(item => item.placa)
-    );
-    placasFaltantes = universoPlacas.filter(placa => !placasConReporteSemana.has(placa));
   }
 
-  // Renderizado adaptado a la estructura de la imagen
+  // 3. Renderizado visual en la estructura de la matriz
   let contenedorAlertas = document.getElementById('contenedorAlertas');
   let tbodyOmisiones = document.getElementById('tablaOmisionesCuerpo');
   
-  if ((fColK || fSem) && placasFaltantes.length > 0 && datos.length > 0) { 
+  // El panel se muestra únicamente si hay una fecha seleccionada y existen omisiones
+  if (fColK && fColK !== "" && placasFaltantes.length > 0) { 
     contenedorAlertas.style.display = 'block';
     tbodyOmisiones.innerHTML = '';
     
-    // Convertir a objetos y ordenar por Tipo (Combi, Omnibus, etc.) y Placa tal como el Excel
+    // Convertir a objetos y ordenar por Tipo (Combi, Omnibus) y Placa de forma alfabética (Estilo Excel)
     let listaObjetosFaltantes = placasFaltantes.map(p => {
       return { placa: p, tipo: mapaMaestroPlacas[p].tipo, ruta: mapaMaestroPlacas[p].ruta };
     }).sort((a, b) => a.tipo.localeCompare(b.tipo) || a.placa.localeCompare(b.placa));
 
+    // Inyectar las filas en la tabla de omisiones
     listaObjetosFaltantes.forEach(item => {
       let iconoTipo = item.tipo.toUpperCase().includes("BUS") ? "fa-bus" : "fa-van-shuttle";
       
@@ -368,14 +365,15 @@
             <small>${item.ruta}</small>
           </td>
           <td class="text-center">
-            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> SIN REPORTE</span>
+            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> NO REPORTÓ HOY</span>
           </td>
         </tr>`;
     });
   } else {
+    // Si se selecciona "Todas las fechas" o no hay faltantes, se oculta por completo
     contenedorAlertas.style.display = 'none'; 
   }
-  // --- FIN DE LA NUEVA LÓGICA SUPERVISORA ---
+  // --- FIN DE LA LÓGICA DE CONTROL ---
   
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
