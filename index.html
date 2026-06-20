@@ -295,29 +295,45 @@
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
 
-  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (MODULAR) ---
-  // 1. Obtenemos de forma dinámica todas las placas únicas existentes en el histórico
-  let universoPlacas = new Set(datasetOriginal.map(item => item.placa).filter(Boolean));
-  // 2. Identificamos qué placas SÍ están reportando en el filtro actual
-  let placasConReporte = new Set(datos.map(item => item.placa));
-  // 3. Cruzamos los datos para saber cuáles faltan
-  let placasFaltantes = Array.from(universoPlacas).filter(placa => !placasConReporte.has(placa));
+  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ADAPTATIVA A DIARIO Y SEMANAL) ---
+  let fColK = document.getElementById('fColK').value;
+  let fSem = document.getElementById('fSemana').value;
   
-  // 4. Renderizar visualmente las alertas
+  let universoPlacas = new Set(datasetOriginal.map(item => item.placa).filter(Boolean));
+  let placasFaltantes = [];
+
+  // Caso 1: Filtro por Fecha Diaria Activo (Prioridad)
+  if (fColK) {
+    let placasConReporteDia = new Set(datos.map(item => item.placa));
+    placasFaltantes = Array.from(universoPlacas).filter(placa => !placasConReporteDia.has(placa));
+  } 
+  // Caso 2: Filtro por Semana Activo (Sin fecha diaria específica)
+  else if (fSem) {
+    // Buscamos qué placas SÍ tienen reportes registrados en la semana seleccionada
+    let placasConReporteSemana = new Set(
+      datasetOriginal
+        .filter(item => item.semana && item.semana.toString() === fSem.toString())
+        .map(item => item.placa)
+    );
+    // Las faltantes son las que están en el universo pero NO aparecieron en toda la semana
+    placasFaltantes = Array.from(universoPlacas).filter(placa => !placasConReporteSemana.has(placa));
+  }
+
+  // Renderizado visual del contenedor de alertas
   let contenedorAlertas = document.getElementById('contenedorAlertas');
   let listaPlacasFaltantes = document.getElementById('listaPlacasFaltantes');
   
-  if (placasFaltantes.length > 0 && datos.length > 0) { 
+  // Solo mostramos la alerta si hay un filtro de fecha o semana activo, y hay placas faltantes
+  if ((fColK || fSem) && placasFaltantes.length > 0 && datos.length > 0) { 
     contenedorAlertas.style.display = 'block';
     listaPlacasFaltantes.innerHTML = '';
     placasFaltantes.sort().forEach(placa => {
       listaPlacasFaltantes.innerHTML += `<span class="badge bg-danger p-2 fs-6"><i class="fa-solid fa-bus-simple me-1"></i> ${placa}</span>`;
     });
   } else {
-    contenedorAlertas.style.display = 'none'; // Si todo está reportado o no hay filtros, se oculta
+    contenedorAlertas.style.display = 'none'; 
   }
   // --- FIN DE LA NUEVA LÓGICA ---
-
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
     let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
