@@ -83,12 +83,26 @@
 </div>
 
 <div class="card kpi-card p-3 bg-white mb-4 border-start border-danger border-3" id="contenedorAlertas" style="display: none;">
-  <div class="d-flex align-items-center text-danger mb-2">
+  <div class="d-flex align-items-center text-danger mb-3">
     <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
-    <h6 class="mb-0 fw-bold">Control de Omisiones: Placas sin reporte para el filtro seleccionado</h6>
+    <h6 class="mb-0 fw-bold text-uppercase" style="font-size: 0.9rem; letter-spacing: 0.5px;">
+      Control de Omisiones: Unidades sin reporte en el periodo seleccionado
+    </h6>
   </div>
-  <div id="listaPlacasFaltantes" class="d-flex flex-wrap gap-2">
-    </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle mb-0" style="font-size:0.85em;">
+      <thead class="table-dark" style="background-color: #dc3545; border-color: #dc3545;">
+        <tr class="text-center">
+          <th style="width: 15%;">Tipo</th>
+          <th style="width: 20%;">Placa</th>
+          <th>Última Ruta Registrada (Referencial)</th>
+          <th style="width: 20%;">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaOmisionesCuerpo">
+        </tbody>
+    </table>
+  </div>
 </div>
 
     <div class="row g-3 mb-4">
@@ -295,45 +309,74 @@
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
 
-  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ADAPTATIVA A DIARIO Y SEMANAL) ---
+  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ESTILO MATRIZ VISUAL) ---
   let fColK = document.getElementById('fColK').value;
   let fSem = document.getElementById('fSemana').value;
   
-  let universoPlacas = new Set(datasetOriginal.map(item => item.placa).filter(Boolean));
+  // 1. Crear un mapa con la información maestra de cada placa (para conocer su Tipo y Ruta habitual)
+  let mapaMaestroPlacas = {};
+  datasetOriginal.forEach(item => {
+    if (item.placa) {
+      mapaMaestroPlacas[item.placa] = {
+        tipo: item.tipo || "Otros",
+        ruta: item.ruta || "Sin Ruta Registrada"
+      };
+    }
+  });
+
+  let universoPlacas = Object.keys(mapaMaestroPlacas);
   let placasFaltantes = [];
 
-  // Caso 1: Filtro por Fecha Diaria Activo (Prioridad)
+  // Determinar faltantes según el filtro activo
   if (fColK) {
     let placasConReporteDia = new Set(datos.map(item => item.placa));
-    placasFaltantes = Array.from(universoPlacas).filter(placa => !placasConReporteDia.has(placa));
-  } 
-  // Caso 2: Filtro por Semana Activo (Sin fecha diaria específica)
-  else if (fSem) {
-    // Buscamos qué placas SÍ tienen reportes registrados en la semana seleccionada
+    placasFaltantes = universoPlacas.filter(placa => !placasConReporteDia.has(placa));
+  } else if (fSem) {
     let placasConReporteSemana = new Set(
       datasetOriginal
         .filter(item => item.semana && item.semana.toString() === fSem.toString())
         .map(item => item.placa)
     );
-    // Las faltantes son las que están en el universo pero NO aparecieron en toda la semana
-    placasFaltantes = Array.from(universoPlacas).filter(placa => !placasConReporteSemana.has(placa));
+    placasFaltantes = universoPlacas.filter(placa => !placasConReporteSemana.has(placa));
   }
 
-  // Renderizado visual del contenedor de alertas
+  // Renderizado adaptado a la estructura de la imagen
   let contenedorAlertas = document.getElementById('contenedorAlertas');
-  let listaPlacasFaltantes = document.getElementById('listaPlacasFaltantes');
+  let tbodyOmisiones = document.getElementById('tablaOmisionesCuerpo');
   
-  // Solo mostramos la alerta si hay un filtro de fecha o semana activo, y hay placas faltantes
   if ((fColK || fSem) && placasFaltantes.length > 0 && datos.length > 0) { 
     contenedorAlertas.style.display = 'block';
-    listaPlacasFaltantes.innerHTML = '';
-    placasFaltantes.sort().forEach(placa => {
-      listaPlacasFaltantes.innerHTML += `<span class="badge bg-danger p-2 fs-6"><i class="fa-solid fa-bus-simple me-1"></i> ${placa}</span>`;
+    tbodyOmisiones.innerHTML = '';
+    
+    // Convertir a objetos y ordenar por Tipo (Combi, Omnibus, etc.) y Placa tal como el Excel
+    let listaObjetosFaltantes = placasFaltantes.map(p => {
+      return { placa: p, tipo: mapaMaestroPlacas[p].tipo, ruta: mapaMaestroPlacas[p].ruta };
+    }).sort((a, b) => a.tipo.localeCompare(b.tipo) || a.placa.localeCompare(b.placa));
+
+    listaObjetosFaltantes.forEach(item => {
+      let iconoTipo = item.tipo.toUpperCase().includes("BUS") ? "fa-bus" : "fa-van-shuttle";
+      
+      tbodyOmisiones.innerHTML += `
+        <tr class="table-danger" style="background-color: #fdf2f2;">
+          <td class="fw-bold text-center text-uppercase text-secondary">
+            <i class="fa-solid ${iconoTipo} me-1"></i> ${item.tipo}
+          </td>
+          <td class="fw-bold text-center text-danger" style="letter-spacing: 0.5px;">
+            ${item.placa}
+          </td>
+          <td class="text-muted">
+            <small>${item.ruta}</small>
+          </td>
+          <td class="text-center">
+            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> SIN REPORTE</span>
+          </td>
+        </tr>`;
     });
   } else {
     contenedorAlertas.style.display = 'none'; 
   }
-  // --- FIN DE LA NUEVA LÓGICA ---
+  // --- FIN DE LA NUEVA LÓGICA SUPERVISORA ---
+  
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
     let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
