@@ -58,11 +58,12 @@
     <div class="card p-3 mb-4 kpi-card bg-white">
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-        <div class="col-12 col-md-4">
-          <label class="small text-muted">(FECHA)</label>
-          <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
-            <option value="">Todas las fechas K</option>
-          </select>
+        <!-- Busca la línea donde estaba el select "fColK" y reemplázala por este bloque -->
+            <div class="col-12 col-md-4">
+            <label class="small text-muted fw-bold"><i class="fa-solid fa-calendar-days text-success"></i> Seleccionar Fechas (Selección Múltiple)</label>
+            <div id="contenedorFechasCheckboxes" class="form-control form-control-sm" style="max-height: 120px; overflow-y: auto; background-color: #fff;">
+            <!-- Los checkboxes de las fechas se generarán aquí dinámicamente -->
+            </div>
         </div>
         <div class="col-6 col-md-4">
           <label class="small text-muted">Semana (SEM)</label>
@@ -82,25 +83,28 @@
   <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
 </div>
 
+<!-- CONTENEDOR DE OMISIONES CON COLUMNA DE FECHA FALTANTE -->
 <div class="card kpi-card p-3 bg-white mb-4 border-start border-danger border-3" id="contenedorAlertas" style="display: none;">
   <div class="d-flex align-items-center text-danger mb-3">
     <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
     <h6 class="mb-0 fw-bold text-uppercase" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-      Control de Omisiones: Unidades sin reporte en el periodo seleccionado
+      Control de Omisiones: Unidades sin reporte en las fechas seleccionadas
     </h6>
   </div>
   <div class="table-responsive">
     <table class="table table-sm table-bordered align-middle mb-0" style="font-size:0.85em;">
       <thead class="table-dark" style="background-color: #dc3545; border-color: #dc3545;">
         <tr class="text-center">
+          <th style="width: 15%;">Fecha Omitida</th>
           <th style="width: 15%;">Tipo</th>
-          <th style="width: 20%;">Placa</th>
-          <th>Última Ruta Registrada (Referencial)</th>
-          <th style="width: 20%;">Estado</th>
+          <th style="width: 15%;">Placa</th>
+          <th>Ruta Habitual (Referencial)</th>
+          <th style="width: 15%;">Estado</th>
         </tr>
       </thead>
       <tbody id="tablaOmisionesCuerpo">
-        </tbody>
+        <!-- Se inyecta dinámicamente -->
+      </tbody>
     </table>
   </div>
 </div>
@@ -251,36 +255,46 @@
     }
 
     function renderizarComboFechasDinamico() {
-      let fSem = document.getElementById('fSemana').value;
-      let fPlac = document.getElementById('fPlaca').value;
-      let cColK = document.getElementById('fColK');
-      
-      let valorGuardado = cColK.value;
-      let fechasFiltradas = new Set();
+  let fSem = document.getElementById('fSemana').value;
+  let fPlac = document.getElementById('fPlaca').value;
+  let contenedor = document.getElementById('contenedorFechasCheckboxes');
+  
+  // Guardar qué fechas estaban checkeadas antes de actualizar
+  let fechasCheckeadas previamente = new Set();
+  contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+    fechasCheckeadaspreviamente.add(cb.value);
+  });
 
-      datasetOriginal.forEach(r => {
-        if (fSem && r.semana.toString() !== fSem.toString()) return;
-        if (fPlac && r.placa !== fPlac) return;
-        
-        if (r.columnaK) {
-          fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
-        }
-      });
-
-      cColK.innerHTML = '<option value="">Todas las fechas</option>';
-      
-      Array.from(fechasFiltradas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
-      }).forEach(f => {
-        cColK.innerHTML += `<option value="${f}">${f}</option>`;
-      });
-
-      if (fechasFiltradas.has(valorGuardado)) {
-        cColK.value = valorGuardado;
-      }
+  let fechasFiltradas = new Set();
+  datasetOriginal.forEach(r => {
+    if (fSem && r.semana.toString() !== fSem.toString()) return;
+    if (fPlac && r.placa !== fPlac) return;
+    if (r.columnaK) {
+      fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
     }
+  });
 
+  let listaFechas Ordenadas = Array.from(fechasFiltradas).sort((a, b) => {
+    let pA = a.split('/'), pB = b.split('/');
+    return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
+  });
+
+  contenedor.innerHTML = '';
+  
+  if(listaFechasOrdenadas.length === 0) {
+    contenedor.innerHTML = '<span class="text-muted small p-1 d-block">Sin fechas disponibles</span>';
+    return;
+  }
+
+  listaFechasOrdenadas.forEach(f => {
+    let checked = fechasCheckeadaspreviamente.has(f) ? 'checked' : '';
+    contenedor.innerHTML += `
+      <div class="form-check custom-cb-fecha px-4 py-0.5">
+        <input class="form-check-input" type="checkbox" value="${f}" id="cb_${f}" ${checked} onchange="procesarFiltros()">
+        <label class="form-check-label small fw-bold" for="cb_${f}">${f}</label>
+      </div>`;
+  });
+}
     // CORRECCIÓN QUIRÚRGICA: Se corrige el nombre de la función invocada para que coincida exactamente con "renderizarComboFechasDinamico"
     function actualizarFiltrosCascada() {
       renderizarComboFechasDinamico();
@@ -288,33 +302,48 @@
     }
 
     function procesarFiltros() {
-      let fColK = document.getElementById('fColK').value;
-      let fSem = document.getElementById('fSemana').value;
-      let fPlac = document.getElementById('fPlaca').value;
+  let fSem = document.getElementById('fSemana').value;
+  let fPlac = document.getElementById('fPlaca').value;
+  
+  // Obtener todas las fechas seleccionadas en los checkboxes
+  let fechasSeleccionadas = [];
+  document.querySelectorAll('#contenedorFechasCheckboxes input[type="checkbox"]:checked').forEach(cb => {
+    fechasSeleccionadas.push(cb.value);
+  });
 
-      let filtrados = datasetOriginal.filter(item => {
-        let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
+  let filtrados = datasetOriginal.filter(item => {
+    let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
 
-        if(fColK && itemFechaKVisual !== fColK) return false;
-        if(fSem && item.semana.toString() !== fSem.toString()) return false;
-        if(fPlac && item.placa !== fPlac) return false;
-        return true;
-      });
+    // Si hay fechas seleccionadas, el registro debe pertenecer a una de ellas
+    if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
+    if(fSem && item.semana.toString() !== fSem.toString()) return false;
+    if(fPlac && item.placa !== fPlac) return false;
+    return true;
+  });
 
-      renderizarContenidos(filtrados);
-    }
+  renderizarContenidos(filtrados, fechasSeleccionadas);
+}
 
-    function renderizarContenidos(datos) {
+    function renderizarContenidos(datos, fechasSeleccionadas = []) {
   let u = datos.length, c = 0, p = 0, l = 0;
   let tbody = document.getElementById('tablaCuerpo');
   tbody.innerHTML = '';
 
-  // --- NUEVA LÓGICA DE CONTROL DE PLACAS FALTANTES (ESTRICTO POR FILTRO DE FECHA) ---
-  let fColK = document.getElementById('fColK').value; // Captura el valor del select de Fecha
-  
-  // 1. Crear un mapa con la información maestra de cada placa (Tipo y Ruta habitual)
+  // --- LÓGICA DE CONTROL DE OMISIONES MULTI-FECHA CORREGIDA ---
+  let contenedorAlertas = document.getElementById('contenedorAlertas');
+  let tbodyOmisiones = document.getElementById('tablaOmisionesCuerpo');
+  tbodyOmisiones.innerHTML = '';
+
+  // Definimos las fechas a evaluar: si el usuario marcó casillas usamos esas; si no, evaluamos las fechas que existan en el set de datos actual
+  let fechasAEvaluar = fechasSeleccionadas;
+  if (fechasAEvaluar.length === 0) {
+    let setFechasVisibles = new Set(datos.map(item => convertirAFechaLatina(item.fechaAgrupada || item.columnaK)).filter(Boolean));
+    fechasAEvaluar = Array.from(setFechasVisibles);
+  }
+
+  // Establecemos el universo real de placas activas basándonos en el bloque actual de datos para evitar placas fantasmas del pasado
   let mapaMaestroPlacas = {};
-  datasetOriginal.forEach(item => {
+  datos.forEach(item => {
     if (item.placa) {
       mapaMaestroPlacas[item.placa] = {
         tipo: item.tipo || "Otros",
@@ -322,39 +351,48 @@
       };
     }
   });
+  let universoPlacasActivas = Object.keys(mapaMaestroPlacas);
+  let matriculaOmisiones = [];
 
-  let universoPlacas = Object.keys(mapaMaestroPlacas);
-  let placasFaltantes = [];
+  // Recorremos día por día de forma independiente
+  fechasAEvaluar.forEach(fechaDia => {
+    // Placas que efectivamente reportaron en este día específico
+    let placasConReporteEseDia = new Set(
+      datos
+        .filter(item => convertirAFechaLatina(item.fechaAgrupada || item.columnaK) === fechaDia)
+        .map(item => item.placa)
+    );
 
-  // 2. Aplicar el efecto SOLAMENTE cuando se filtra por una FECHA específica
-  if (fColK && fColK !== "") {
-    // Identificamos las placas que SÍ enviaron datos en la fecha seleccionada
-    let placasConReporteDia = new Set(datos.map(item => item.placa));
-    
-    // Las faltantes son aquellas del universo que NO están en los reportes de ese día
-    placasFaltantes = universoPlacas.filter(placa => !placasConReporteDia.has(placa));
-  }
+    // Las que faltaron este día específico
+    universoPlacasActivas.forEach(placa => {
+      if (!placasConReporteEseDia.has(placa)) {
+        matriculaOmisiones.push({
+          fecha: fechaDia,
+          placa: placa,
+          tipo: mapaMaestroPlacas[placa].tipo,
+          ruta: mapaMaestroPlacas[placa].ruta
+        });
+      }
+    });
+  });
 
-  // 3. Renderizado visual en la estructura de la matriz
-  let contenedorAlertas = document.getElementById('contenedorAlertas');
-  let tbodyOmisiones = document.getElementById('tablaOmisionesCuerpo');
-  
-  // El panel se muestra únicamente si hay una fecha seleccionada y existen omisiones
-  if (fColK && fColK !== "" && placasFaltantes.length > 0) { 
+  // Mostrar el panel de control si hay omisiones detectadas
+  if (matriculaOmisiones.length > 0) {
     contenedorAlertas.style.display = 'block';
-    tbodyOmisiones.innerHTML = '';
     
-    // Convertir a objetos y ordenar por Tipo (Combi, Omnibus) y Placa de forma alfabética (Estilo Excel)
-    let listaObjetosFaltantes = placasFaltantes.map(p => {
-      return { placa: p, tipo: mapaMaestroPlacas[p].tipo, ruta: mapaMaestroPlacas[p].ruta };
-    }).sort((a, b) => a.tipo.localeCompare(b.tipo) || a.placa.localeCompare(b.placa));
+    // Ordenar los resultados cronológicamente y por tipo de vehículo (Combi, Omnibus...)
+    matriculaOmisiones.sort((a, b) => {
+      let pA = a.fecha.split('/'), pB = b.fecha.split('/');
+      let fechaDiff = new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
+      return fechaDiff || a.tipo.localeCompare(b.tipo) || a.placa.localeCompare(b.placa);
+    });
 
-    // Inyectar las filas en la tabla de omisiones
-    listaObjetosFaltantes.forEach(item => {
+    matriculaOmisiones.forEach(item => {
       let iconoTipo = item.tipo.toUpperCase().includes("BUS") ? "fa-bus" : "fa-van-shuttle";
       
       tbodyOmisiones.innerHTML += `
         <tr class="table-danger" style="background-color: #fdf2f2;">
+          <td class="text-center fw-bold text-dark">${item.fecha}</td>
           <td class="fw-bold text-center text-uppercase text-secondary">
             <i class="fa-solid ${iconoTipo} me-1"></i> ${item.tipo}
           </td>
@@ -365,16 +403,16 @@
             <small>${item.ruta}</small>
           </td>
           <td class="text-center">
-            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> NO REPORTÓ HOY</span>
+            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> FALTA REPORTAR</span>
           </td>
         </tr>`;
     });
   } else {
-    // Si se selecciona "Todas las fechas" o no hay faltantes, se oculta por completo
-    contenedorAlertas.style.display = 'none'; 
+    contenedorAlertas.style.display = 'none';
   }
   // --- FIN DE LA LÓGICA DE CONTROL ---
-  
+
+  // (El resto de la función encargada de rellenar la tabla principal permanece intacto para no alterar tu lógica base)
   datos.forEach(f => {
     c += f.capacidad; p += f.pasajeros; l += f.libres;
     let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
