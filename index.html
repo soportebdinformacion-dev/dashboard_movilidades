@@ -60,15 +60,15 @@
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
         
         <div class="col-12 col-md-4">
-          <div class="d-flex justify-content-between align-items-center">
-            <label class="small text-muted">(FECHA)</label>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="small text-muted mb-0">(FECHA)</label>
             <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas()">Limpiar</button>
           </div>
           <div id="contenedorFechas" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
             <span class="text-muted small">Cargando fechas...</span>
           </div>
         </div>
-        
+
         <div class="col-6 col-md-4">
           <label class="small text-muted">Semana (SEM)</label>
           <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
@@ -158,7 +158,6 @@
       console.error("Fallo de enlace: ", mensaje);
     }
 
-    // CORRECCIÓN QUIRÚRGICA: Evita el desfasaje del año 2001 provocado por el formato largo GMT/UTC de Apps Script
     function convertirAFechaLatina(fechaRaw) {
       if (!fechaRaw) return "";
       let texto = fechaRaw.toString().trim();
@@ -168,7 +167,6 @@
       }
       
       if (isNaN(texto.charAt(0)) && (texto.includes(" ") || texto.includes(","))) {
-        // Limpiamos referencias molestas de huso horario que confunden al motor JS (ej: GMT-0500)
         let textoLimpio = texto.split("GMT")[0].trim();
         let d = new Date(textoLimpio);
         
@@ -223,7 +221,7 @@
 
       let cSem = document.getElementById('fSemana');
       cSem.innerHTML = '<option value="">Todas</option>';
-      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+      Array.from(seems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
       let cPlac = document.getElementById('fPlaca');
       cPlac.innerHTML = '<option value="">Todas</option>';
@@ -237,13 +235,12 @@
       let fPlac = document.getElementById('fPlaca').value;
       let contenedor = document.getElementById('contenedorFechas');
       
-      // 1. Guardamos temporalmente qué fechas ya estaban marcadas por el usuario
-      let seleccionadas Anterior = new Set();
+      // Guardar estados de selección previa
+      let seleccionadasAnterior = new Set();
       contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
         seleccionadasAnterior.add(cb.value);
       });
 
-      // 2. Extraemos el universo de fechas según los otros filtros activos
       let fechasFiltradas = new Set();
       datasetOriginal.forEach(r => {
         if (fSem && r.semana.toString() !== fSem.toString()) return;
@@ -254,7 +251,6 @@
         }
       });
 
-      // 3. Limpiamos y renderizamos los nuevos checkboxes de manera cronológica descendente
       contenedor.innerHTML = '';
       let listaFechas = Array.from(fechasFiltradas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
@@ -278,17 +274,21 @@
       });
     }
 
+    function actualizarFiltrosCascada() {
+      renderizarComboFechasDinamico();
+      procesarFiltros();
+    }
+
     function procesarFiltros() {
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
 
-      // Capturamos todas las fechas que el usuario ha seleccionado
+      // Obtener todas las fechas seleccionadas en los checkboxes
       let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha:checked')).map(cb => cb.value);
 
       let filtrados = datasetOriginal.filter(item => {
         let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
 
-        // Si hay casillas marcadas, validamos que el registro pertenezca a alguna de ellas
         if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
         if(fSem && item.semana.toString() !== fSem.toString()) return false;
         if(fPlac && item.placa !== fPlac) return false;
@@ -298,11 +298,11 @@
       renderizarContenidos(filtrados);
     }
 
-    // Función extra para que el usuario pueda desmarcar todo de un solo golpe
     function limpiarSeleccionFechas() {
       document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
       procesarFiltros();
     }
+
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
       let tbody = document.getElementById('tablaCuerpo');
