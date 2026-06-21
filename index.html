@@ -221,7 +221,7 @@
 
       let cSem = document.getElementById('fSemana');
       cSem.innerHTML = '<option value="">Todas</option>';
-      Array.from(seems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
 
       let cPlac = document.getElementById('fPlaca');
       cPlac.innerHTML = '<option value="">Todas</option>';
@@ -235,11 +235,13 @@
       let fPlac = document.getElementById('fPlaca').value;
       let contenedor = document.getElementById('contenedorFechas');
       
-      // Guardar estados de selección previa
+      // Guardar estados de selección previa de manera segura
       let seleccionadasAnterior = new Set();
-      contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-        seleccionadasAnterior.add(cb.value);
-      });
+      if(contenedor) {
+        contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+          seleccionadasAnterior.add(cb.value);
+        });
+      }
 
       let fechasFiltradas = new Set();
       datasetOriginal.forEach(r => {
@@ -251,7 +253,9 @@
         }
       });
 
+      if(!contenedor) return;
       contenedor.innerHTML = '';
+      
       let listaFechas = Array.from(fechasFiltradas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
