@@ -28,6 +28,11 @@
     .status-offline { background-color: #dc3545; color: #fff; }
 
     .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    
+    /* Estilos para la Nueva Matriz de Placas y Fechas */
+    .matriz-asistencia { font-size: 0.8rem; }
+    .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
+    .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
   </style>
 </head>
 <body>
@@ -93,6 +98,18 @@
     </div>
 
     <div class="card kpi-card p-3 bg-white mb-4">
+      <h6 class="mb-3"><i class="fa-solid fa-calendar-days text-success"></i> Matriz de Cobertura de Unidades (Placas vs Fechas)</h6>
+      <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
+          <thead class="table-dark sticky-top" id="matrizCabecera">
+            </thead>
+          <tbody id="matrizCuerpo">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card kpi-card p-3 bg-white mb-4">
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle" style="font-size:0.9em;">
           <thead class="table-light">
@@ -138,7 +155,7 @@
           datasetOriginal = data;
           
           badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Base de datos Conectado';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> BDXX_HUARMEY Conectada';
           
           construirCombosFiltros();
           procesarFiltros();
@@ -346,6 +363,81 @@
       document.getElementById('pctLibres').innerText = pL + "% Libre";
 
       armarGraficos(datos);
+      
+      // Llamada obligatoria para renderizar la nueva tabla matriz dinámica
+      generarMatrizPlacasFechas(datos);
+    }
+
+    // NUEVA FUNCIÓN: CONSTRUCCIÓN DINÁMICA DE LA MATRIZ DE PLACAS VS FECHAS
+    function generarMatrizPlacasFechas(datosFiltrados) {
+      let tHead = document.getElementById('matrizCabecera');
+      let tBody = document.getElementById('matrizCuerpo');
+      
+      if (!tHead || !tBody) return;
+
+      // 1. Extraer universo único de Fechas y Placas del segmento filtrado
+      let conjuntoFechas = new Set();
+      let conjuntoPlacas = new Set();
+      
+      // Diccionario cruzado para guardar si la placa operó en dicha fecha [placa][fecha] = boolean
+      let registroCruces = {};
+
+      datosFiltrados.forEach(item => {
+        let fechaFormato = convertirAFechaLatina(item.columnaK);
+        let placaFormato = item.placa;
+
+        if(fechaFormato && placaFormato) {
+          conjuntoFechas.add(fechaFormato);
+          conjuntoPlacas.add(placaFormato);
+
+          if (!registroCruces[placaFormato]) {
+            registroCruces[placaFormato] = {};
+          }
+          registroCruces[placaFormato][fechaFormato] = true;
+        }
+      });
+
+      // 2. Ordenar las fechas cronológicamente de menor a mayor (izquierda a derecha)
+      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
+        let pA = a.split('/'), pB = b.split('/');
+        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
+      });
+
+      // Ordenar placas alfabéticamente
+      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
+
+      // Caso base: Si no hay datos tras filtrar
+      if (listaFechasOrdenadas.length === 0) {
+        tHead.innerHTML = '<tr><th>Placas registradas</th></tr>';
+        tBody.innerHTML = '<tr><td class="text-muted text-center p-3">Selecciona fechas u otros filtros para construir la matriz</td></tr>';
+        return;
+      }
+
+      // 3. Renderizar la Cabecera (Columnas)
+      let htmlCabecera = '<tr><th class="bg-secondary text-white">Placa / Unidades</th>';
+      listaFechasOrdenadas.forEach(fecha => {
+        htmlCabecera += `<th class="text-center text-nowrap">${fecha}</th>`;
+      });
+      htmlCabecera += '</tr>';
+      tHead.innerHTML = htmlCabecera;
+
+      // 4. Renderizar las Filas (Placas)
+      let htmlCuerpo = '';
+      listaPlacasOrdenadas.forEach(placa => {
+        htmlCuerpo += `<tr><td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
+        
+        listaFechasOrdenadas.forEach(fecha => {
+          // Validar si existe registro de operaciones
+          if (registroCruces[placa] && registroCruces[placa][fecha]) {
+            htmlCuerpo += `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`;
+          } else {
+            htmlCuerpo += `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`;
+          }
+        });
+        
+        htmlCuerpo += '</tr>';
+      });
+      tBody.innerHTML = htmlCuerpo;
     }
 
     function armarGraficos(datos) {
