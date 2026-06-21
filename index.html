@@ -92,6 +92,21 @@
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
+    <div class="card kpi-card p-3 bg-white mb-4 border-start border-danger border-4">
+      <h6 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de Movilidades Sin Reporte (Diario)</h6>
+      <p class="text-muted small mb-2">Lista de unidades que están registradas en el sistema pero no presentan ninguna actividad en las fechas seleccionadas.</p>
+      <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+        <table class="table table-sm table-bordered table-striped align-middle mb-0" style="font-size:0.85em;">
+          <thead class="table-dark">
+            <tr><th>Fecha sin Reporte</th><th>Placa Ausente</th><th>Conductor Frecuente</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="tablaSinReporteCuerpo">
+            <tr><td colspan="4" class="text-center text-muted">Selecciona filtros para evaluar ausencias</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle" style="font-size:0.9em;">
@@ -300,11 +315,76 @@
       });
 
       renderizarContenidos(filtrados);
+      // Analizar ausencias pasándole el contexto de fechas analizadas en este momento
+      calcularPlacasSinReporte(fechasSeleccionadas, fSem);
     }
 
     function limpiarSeleccionFechas() {
       document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
       procesarFiltros();
+    }
+
+    // NUEVA FUNCIÓN: Identifica qué unidades no tienen registros en las fechas activas
+    function calcularPlacasSinReporte(fechasEvaluadas, semanaFiltro) {
+      let tablaSR = document.getElementById('tablaSinReporteCuerpo');
+      if(!tablaSR) return;
+
+      // Si no hay fechas seleccionadas en los checkboxes, agarramos las últimas 3 con datos del dataset filtrado por semana
+      if(fechasEvaluadas.length === 0) {
+        let unvFechas = new Set();
+        datasetOriginal.forEach(x => {
+          if(!semanaFiltro || x.semana.toString() === semanaFiltro.toString()) {
+            unvFechas.add(convertirAFechaLatina(x.columnaK));
+          }
+        });
+        fechasEvaluadas = Array.from(unvFechas).sort((a, b) => {
+          let pA = a.split('/'), pB = b.split('/');
+          return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
+        }).slice(0, 3); // Evaluamos por defecto los últimos 3 días operativos
+      }
+
+      // Obtener el universo total de placas únicas registradas en el dataset y emparejar su último conductor
+      let mapeoPlacaConductor = {};
+      datasetOriginal.forEach(x => {
+        if(x.placa) mapeoPlacaConductor[x.placa] = x.conductor || "No asignado";
+      });
+      let todasLasPlacas = Object.keys(mapeoPlacaConductor);
+
+      let htmlAusencias = "";
+
+      // Verificar día por día qué placa faltó
+      fechasEvaluadas.forEach(fecha => {
+        // Placas que sí reportaron en esta fecha específica
+        let placasActivasEseDia = new Set();
+        datasetOriginal.forEach(x => {
+          if(convertirAFechaLatina(x.columnaK) === fecha && x.placa) {
+            placasActivasEseDia.add(x.placa);
+          }
+        });
+
+        // Filtrar las que faltan
+        todasLasPlacas.forEach(placa => {
+          // Si el usuario aplicó filtro de placa específica, solo evaluamos esa placa
+          let filtroPlacaCaja = document.getElementById('fPlaca').value;
+          if(filtroPlacaCaja && placa !== filtroPlacaCaja) return;
+
+          if(!placasActivasEseDia.has(placa)) {
+            htmlAusencias += `
+              <tr>
+                <td class="fw-bold text-secondary"><i class="fa-regular fa-calendar-times me-1"></i> ${fecha}</td>
+                <td class="text-danger fw-bold">${placa}</td>
+                <td>${mapeoPlacaConductor[placa]}</td>
+                <td><span class="badge bg-danger"><i class="fa-solid fa-eye-slash"></i> Sin Registro</span></td>
+              </tr>`;
+          }
+        });
+      });
+
+      if(htmlAusencias === "") {
+        tablaSR.innerHTML = `<tr><td colspan="4" class="text-center text-success fw-bold"><i class="fa-solid fa-circle-check"></i> Todas las movilidades reportaron correctamente en los días evaluados.</td></tr>`;
+      } else {
+        tablaSR.innerHTML = htmlAusencias;
+      }
     }
 
     function renderizarContenidos(datos) {
