@@ -58,12 +58,17 @@
     <div class="card p-3 mb-4 kpi-card bg-white">
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+        
         <div class="col-12 col-md-4">
-          <label class="small text-muted">(FECHA)</label>
-          <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
-            <option value="">Todas las fechas K</option>
-          </select>
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="small text-muted">(FECHA)</label>
+            <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas()">Limpiar</button>
+          </div>
+          <div id="contenedorFechas" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+            <span class="text-muted small">Cargando fechas...</span>
+          </div>
         </div>
+        
         <div class="col-6 col-md-4">
           <label class="small text-muted">Semana (SEM)</label>
           <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
@@ -230,11 +235,16 @@
     function renderizarComboFechasDinamico() {
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
-      let cColK = document.getElementById('fColK');
+      let contenedor = document.getElementById('contenedorFechas');
       
-      let valorGuardado = cColK.value;
-      let fechasFiltradas = new Set();
+      // 1. Guardamos temporalmente qué fechas ya estaban marcadas por el usuario
+      let seleccionadas Anterior = new Set();
+      contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+        seleccionadasAnterior.add(cb.value);
+      });
 
+      // 2. Extraemos el universo de fechas según los otros filtros activos
+      let fechasFiltradas = new Set();
       datasetOriginal.forEach(r => {
         if (fSem && r.semana.toString() !== fSem.toString()) return;
         if (fPlac && r.placa !== fPlac) return;
@@ -244,35 +254,42 @@
         }
       });
 
-      cColK.innerHTML = '<option value="">Todas las fechas</option>';
-      
-      Array.from(fechasFiltradas).sort((a, b) => {
+      // 3. Limpiamos y renderizamos los nuevos checkboxes de manera cronológica descendente
+      contenedor.innerHTML = '';
+      let listaFechas = Array.from(fechasFiltradas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
-      }).forEach(f => {
-        cColK.innerHTML += `<option value="${f}">${f}</option>`;
       });
 
-      if (fechasFiltradas.has(valorGuardado)) {
-        cColK.value = valorGuardado;
+      if(listaFechas.length === 0) {
+        contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay fechas disponibles</span>';
+        return;
       }
-    }
 
-    // CORRECCIÓN QUIRÚRGICA: Se corrige el nombre de la función invocada para que coincida exactamente con "renderizarComboFechasDinamico"
-    function actualizarFiltrosCascada() {
-      renderizarComboFechasDinamico();
-      procesarFiltros();
+      listaFechas.forEach(f => {
+        let checked = seleccionadasAnterior.has(f) ? 'checked' : '';
+        contenedor.innerHTML += `
+          <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
+            <input class="form-check-input chk-fecha" type="checkbox" value="${f}" id="chk_${f}" ${checked} onchange="procesarFiltros()">
+            <label class="form-check-label small" for="chk_${f}" style="cursor: pointer; font-size:0.85rem;">
+              ${f}
+            </label>
+          </div>`;
+      });
     }
 
     function procesarFiltros() {
-      let fColK = document.getElementById('fColK').value;
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
+
+      // Capturamos todas las fechas que el usuario ha seleccionado
+      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha:checked')).map(cb => cb.value);
 
       let filtrados = datasetOriginal.filter(item => {
         let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
 
-        if(fColK && itemFechaKVisual !== fColK) return false;
+        // Si hay casillas marcadas, validamos que el registro pertenezca a alguna de ellas
+        if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
         if(fSem && item.semana.toString() !== fSem.toString()) return false;
         if(fPlac && item.placa !== fPlac) return false;
         return true;
@@ -281,6 +298,11 @@
       renderizarContenidos(filtrados);
     }
 
+    // Función extra para que el usuario pueda desmarcar todo de un solo golpe
+    function limpiarSeleccionFechas() {
+      document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
+      procesarFiltros();
+    }
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
       let tbody = document.getElementById('tablaCuerpo');
