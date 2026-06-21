@@ -58,12 +58,11 @@
     <div class="card p-3 mb-4 kpi-card bg-white">
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-        <!-- Busca la línea donde estaba el select "fColK" y reemplázala por este bloque -->
-            <div class="col-12 col-md-4">
-            <label class="small text-muted fw-bold"><i class="fa-solid fa-calendar-days text-success"></i> Seleccionar Fechas (Selección Múltiple)</label>
-            <div id="contenedorFechasCheckboxes" class="form-control form-control-sm" style="max-height: 120px; overflow-y: auto; background-color: #fff;">
-            <!-- Los checkboxes de las fechas se generarán aquí dinámicamente -->
-            </div>
+        <div class="col-12 col-md-4">
+          <label class="small text-muted">(FECHA)</label>
+          <select id="fColK" class="form-select form-select-sm" onchange="procesarFiltros()">
+            <option value="">Todas las fechas K</option>
+          </select>
         </div>
         <div class="col-6 col-md-4">
           <label class="small text-muted">Semana (SEM)</label>
@@ -77,37 +76,11 @@
     </div>
 
     <div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
-  <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
-  <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
-  <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
-</div>
-
-<!-- CONTENEDOR DE OMISIONES CON COLUMNA DE FECHA FALTANTE -->
-<div class="card kpi-card p-3 bg-white mb-4 border-start border-danger border-3" id="contenedorAlertas" style="display: none;">
-  <div class="d-flex align-items-center text-danger mb-3">
-    <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
-    <h6 class="mb-0 fw-bold text-uppercase" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-      Control de Omisiones: Unidades sin reporte en las fechas seleccionadas
-    </h6>
-  </div>
-  <div class="table-responsive">
-    <table class="table table-sm table-bordered align-middle mb-0" style="font-size:0.85em;">
-      <thead class="table-dark" style="background-color: #dc3545; border-color: #dc3545;">
-        <tr class="text-center">
-          <th style="width: 15%;">Fecha Omitida</th>
-          <th style="width: 15%;">Tipo</th>
-          <th style="width: 15%;">Placa</th>
-          <th>Ruta Habitual (Referencial)</th>
-          <th style="width: 15%;">Estado</th>
-        </tr>
-      </thead>
-      <tbody id="tablaOmisionesCuerpo">
-        <!-- Se inyecta dinámicamente -->
-      </tbody>
-    </table>
-  </div>
-</div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
+      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
+    </div>
 
     <div class="row g-3 mb-4">
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
@@ -128,7 +101,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbwVOU0OPQXsWQNVminkDmK4MMY1Q2bslOtFEBv-TBjuBWthewYUMSr2KPxnwRAVoBNX/exec";
+    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyik79Vw9qMca_WYCsFxb7yTztcRjmK4_AJ9AIp_6wGuT9uIYMlHGA4ZpUosjk8XUnb/exec";
 
     let datasetOriginal = [];
     let chartD = null, chartS = null;
@@ -160,7 +133,7 @@
           datasetOriginal = data;
           
           badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Base datos Conectado';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> BDXX_HUARMEY Conectada';
           
           construirCombosFiltros();
           procesarFiltros();
@@ -255,46 +228,36 @@
     }
 
     function renderizarComboFechasDinamico() {
-  let fSem = document.getElementById('fSemana').value;
-  let fPlac = document.getElementById('fPlaca').value;
-  let contenedor = document.getElementById('contenedorFechasCheckboxes');
-  
-  // Guardar qué fechas estaban checkeadas antes de actualizar
-  let fechasCheckeadas previamente = new Set();
-  contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-    fechasCheckeadaspreviamente.add(cb.value);
-  });
+      let fSem = document.getElementById('fSemana').value;
+      let fPlac = document.getElementById('fPlaca').value;
+      let cColK = document.getElementById('fColK');
+      
+      let valorGuardado = cColK.value;
+      let fechasFiltradas = new Set();
 
-  let fechasFiltradas = new Set();
-  datasetOriginal.forEach(r => {
-    if (fSem && r.semana.toString() !== fSem.toString()) return;
-    if (fPlac && r.placa !== fPlac) return;
-    if (r.columnaK) {
-      fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
+      datasetOriginal.forEach(r => {
+        if (fSem && r.semana.toString() !== fSem.toString()) return;
+        if (fPlac && r.placa !== fPlac) return;
+        
+        if (r.columnaK) {
+          fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
+        }
+      });
+
+      cColK.innerHTML = '<option value="">Todas las fechas</option>';
+      
+      Array.from(fechasFiltradas).sort((a, b) => {
+        let pA = a.split('/'), pB = b.split('/');
+        return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
+      }).forEach(f => {
+        cColK.innerHTML += `<option value="${f}">${f}</option>`;
+      });
+
+      if (fechasFiltradas.has(valorGuardado)) {
+        cColK.value = valorGuardado;
+      }
     }
-  });
 
-  let listaFechas Ordenadas = Array.from(fechasFiltradas).sort((a, b) => {
-    let pA = a.split('/'), pB = b.split('/');
-    return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
-  });
-
-  contenedor.innerHTML = '';
-  
-  if(listaFechasOrdenadas.length === 0) {
-    contenedor.innerHTML = '<span class="text-muted small p-1 d-block">Sin fechas disponibles</span>';
-    return;
-  }
-
-  listaFechasOrdenadas.forEach(f => {
-    let checked = fechasCheckeadaspreviamente.has(f) ? 'checked' : '';
-    contenedor.innerHTML += `
-      <div class="form-check custom-cb-fecha px-4 py-0.5">
-        <input class="form-check-input" type="checkbox" value="${f}" id="cb_${f}" ${checked} onchange="procesarFiltros()">
-        <label class="form-check-label small fw-bold" for="cb_${f}">${f}</label>
-      </div>`;
-  });
-}
     // CORRECCIÓN QUIRÚRGICA: Se corrige el nombre de la función invocada para que coincida exactamente con "renderizarComboFechasDinamico"
     function actualizarFiltrosCascada() {
       renderizarComboFechasDinamico();
@@ -302,152 +265,63 @@
     }
 
     function procesarFiltros() {
-  let fSem = document.getElementById('fSemana').value;
-  let fPlac = document.getElementById('fPlaca').value;
-  
-  // Obtener todas las fechas seleccionadas en los checkboxes
-  let fechasSeleccionadas = [];
-  document.querySelectorAll('#contenedorFechasCheckboxes input[type="checkbox"]:checked').forEach(cb => {
-    fechasSeleccionadas.push(cb.value);
-  });
+      let fColK = document.getElementById('fColK').value;
+      let fSem = document.getElementById('fSemana').value;
+      let fPlac = document.getElementById('fPlaca').value;
 
-  let filtrados = datasetOriginal.filter(item => {
-    let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
+      let filtrados = datasetOriginal.filter(item => {
+        let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
 
-    // Si hay fechas seleccionadas, el registro debe pertenecer a una de ellas
-    if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
-    if(fSem && item.semana.toString() !== fSem.toString()) return false;
-    if(fPlac && item.placa !== fPlac) return false;
-    return true;
-  });
+        if(fColK && itemFechaKVisual !== fColK) return false;
+        if(fSem && item.semana.toString() !== fSem.toString()) return false;
+        if(fPlac && item.placa !== fPlac) return false;
+        return true;
+      });
 
-  renderizarContenidos(filtrados, fechasSeleccionadas);
-}
-
-    function renderizarContenidos(datos, fechasSeleccionadas = []) {
-  let u = datos.length, c = 0, p = 0, l = 0;
-  let tbody = document.getElementById('tablaCuerpo');
-  tbody.innerHTML = '';
-
-  // --- LÓGICA DE CONTROL DE OMISIONES MULTI-FECHA CORREGIDA ---
-  let contenedorAlertas = document.getElementById('contenedorAlertas');
-  let tbodyOmisiones = document.getElementById('tablaOmisionesCuerpo');
-  tbodyOmisiones.innerHTML = '';
-
-  // Definimos las fechas a evaluar: si el usuario marcó casillas usamos esas; si no, evaluamos las fechas que existan en el set de datos actual
-  let fechasAEvaluar = fechasSeleccionadas;
-  if (fechasAEvaluar.length === 0) {
-    let setFechasVisibles = new Set(datos.map(item => convertirAFechaLatina(item.fechaAgrupada || item.columnaK)).filter(Boolean));
-    fechasAEvaluar = Array.from(setFechasVisibles);
-  }
-
-  // Establecemos el universo real de placas activas basándonos en el bloque actual de datos para evitar placas fantasmas del pasado
-  let mapaMaestroPlacas = {};
-  datos.forEach(item => {
-    if (item.placa) {
-      mapaMaestroPlacas[item.placa] = {
-        tipo: item.tipo || "Otros",
-        ruta: item.ruta || "Sin Ruta Registrada"
-      };
+      renderizarContenidos(filtrados);
     }
-  });
-  let universoPlacasActivas = Object.keys(mapaMaestroPlacas);
-  let matriculaOmisiones = [];
 
-  // Recorremos día por día de forma independiente
-  fechasAEvaluar.forEach(fechaDia => {
-    // Placas que efectivamente reportaron en este día específico
-    let placasConReporteEseDia = new Set(
-      datos
-        .filter(item => convertirAFechaLatina(item.fechaAgrupada || item.columnaK) === fechaDia)
-        .map(item => item.placa)
-    );
+    function renderizarContenidos(datos) {
+      let u = datos.length, c = 0, p = 0, l = 0;
+      let tbody = document.getElementById('tablaCuerpo');
+      tbody.innerHTML = '';
 
-    // Las que faltaron este día específico
-    universoPlacasActivas.forEach(placa => {
-      if (!placasConReporteEseDia.has(placa)) {
-        matriculaOmisiones.push({
-          fecha: fechaDia,
-          placa: placa,
-          tipo: mapaMaestroPlacas[placa].tipo,
-          ruta: mapaMaestroPlacas[placa].ruta
-        });
-      }
-    });
-  });
+      datos.forEach(f => {
+        c += f.capacidad; p += f.pasajeros; l += f.libres;
+        let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
+        
+        let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
+        if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
+        else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
 
-  // Mostrar el panel de control si hay omisiones detectadas
-  if (matriculaOmisiones.length > 0) {
-    contenedorAlertas.style.display = 'block';
-    
-    // Ordenar los resultados cronológicamente y por tipo de vehículo (Combi, Omnibus...)
-    matriculaOmisiones.sort((a, b) => {
-      let pA = a.fecha.split('/'), pB = b.fecha.split('/');
-      let fechaDiff = new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      return fechaDiff || a.tipo.localeCompare(b.tipo) || a.placa.localeCompare(b.placa);
-    });
+        let fechaTabla = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
 
-    matriculaOmisiones.forEach(item => {
-      let iconoTipo = item.tipo.toUpperCase().includes("BUS") ? "fa-bus" : "fa-van-shuttle";
-      
-      tbodyOmisiones.innerHTML += `
-        <tr class="table-danger" style="background-color: #fdf2f2;">
-          <td class="text-center fw-bold text-dark">${item.fecha}</td>
-          <td class="fw-bold text-center text-uppercase text-secondary">
-            <i class="fa-solid ${iconoTipo} me-1"></i> ${item.tipo}
-          </td>
-          <td class="fw-bold text-center text-danger" style="letter-spacing: 0.5px;">
-            ${item.placa}
-          </td>
-          <td class="text-muted">
-            <small>${item.ruta}</small>
-          </td>
-          <td class="text-center">
-            <span class="badge bg-danger w-100 py-1.5"><i class="fa-solid fa-clock-rotate-left me-1"></i> FALTA REPORTAR</span>
-          </td>
-        </tr>`;
-    });
-  } else {
-    contenedorAlertas.style.display = 'none';
-  }
-  // --- FIN DE LA LÓGICA DE CONTROL ---
+        tbody.innerHTML += `
+          <tr class="${estFila}">
+            <td>${fechaTabla}</td>
+            <td class="fw-bold">${f.placa}</td>
+            <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
+            <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
+            <td class="text-center">${f.capacidad}</td>
+            <td class="text-center fw-bold text-success">${f.pasajeros}</td>
+            <td class="text-center fw-bold text-danger">${f.libres}</td>
+            <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
+          </tr>`;
+      });
 
-  // (El resto de la función encargada de rellenar la tabla principal permanece intacto para no alterar tu lógica base)
-  datos.forEach(f => {
-    c += f.capacidad; p += f.pasajeros; l += f.libres;
-    let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
-    
-    let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
-    if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
-    else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
+      document.getElementById('kpiUnidades').innerText = u;
+      document.getElementById('kpiCapacidad').innerText = c;
+      document.getElementById('kpiPasajeros').innerText = p;
+      document.getElementById('kpiLibres').innerText = l;
 
-    let fechaTabla = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
+      let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
+      let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
+      document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
+      document.getElementById('pctLibres').innerText = pL + "% Libre";
 
-    tbody.innerHTML += `
-      <tr class="${estFila}">
-        <td>${fechaTabla}</td>
-        <td class="fw-bold">${f.placa}</td>
-        <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
-        <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
-        <td class="text-center">${f.capacidad}</td>
-        <td class="text-center fw-bold text-success">${f.pasajeros}</td>
-        <td class="text-center fw-bold text-danger">${f.libres}</td>
-        <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
-      </tr>`;
-  });
+      armarGraficos(datos);
+    }
 
-  document.getElementById('kpiUnidades').innerText = u;
-  document.getElementById('kpiCapacidad').innerText = c;
-  document.getElementById('kpiPasajeros').innerText = p;
-  document.getElementById('kpiLibres').innerText = l;
-
-  let pP = c > 0 ? ((p / c) * 100).toFixed(1) : 0;
-  let pL = c > 0 ? ((l / c) * 100).toFixed(1) : 0;
-  document.getElementById('pctPasajeros').innerText = pP + "% Ocupado";
-  document.getElementById('pctLibres').innerText = pL + "% Libre";
-
-  armarGraficos(datos);
-}
     function armarGraficos(datos) {
       let rDias = {};
       datos.forEach(x => {
