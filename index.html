@@ -35,7 +35,7 @@
     .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
     .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
 
-    /* Estilos de colores para el cumplimiento basado en Pasajeros / Capacidad */
+    /* Estilos de colores para el cumplimiento con la nueva visualización solicitada */
     .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
@@ -119,7 +119,7 @@
       </div>
     </div>
 
-    <!-- 2. Reporte Detallado con Operación de Cumplimiento (Pasajeros / Capacidad) -->
+    <!-- 2. Reporte Detallado con Formato Solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
@@ -422,7 +422,7 @@
       tBody.innerHTML = htmlCuerpo;
     }
 
-    // 2. Nueva Matriz Detallada con Operación de Cumplimiento (Pasajeros / Capacidad) y Colores
+    // 2. Nueva Matriz Detallada con el formato solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad]
     function generarMatrizDetalleFechas(datosFiltrados) {
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
@@ -494,15 +494,15 @@
         listaFechasOrdenadas.forEach(fecha => {
           let reg = mapaDetalle[clave] && mapaDetalle[clave][fecha];
           if (reg) {
-            // Operación de cumplimiento: división de pasajeros entre capacidad para calcular porcentaje
-            let pct = reg.capacidad > 0 ? (reg.pasajeros / reg.capacidad) * 100 : 0;
+            let pct = reg.capacidad > 0 ? Math.round((reg.pasajeros / reg.capacidad) * 100) : 0;
             let claseCelda = "cell-detalle-verde";
             if (pct < 80) claseCelda = "cell-detalle-rojo";
             else if (pct < 90) claseCelda = "cell-detalle-naranja";
 
+            // Modificación solicitada: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad]
             htmlCuerpo += `<td class="text-center">
               <div class="${claseCelda}">
-                <div class="fw-bold">Cump. = ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
+                <div class="fw-bold">${pct}% Cump. / ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
               </div>
             </td>`;
           } else {
