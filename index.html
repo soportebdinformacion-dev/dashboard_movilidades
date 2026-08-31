@@ -35,7 +35,7 @@
     .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
     .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
 
-    /* Estilos de colores para el cumplimiento con la nueva visualización solicitada */
+    /* Estilos de colores para el cumplimiento con la visualización solicitada y asientos libres identificados por colores */
     .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
@@ -103,7 +103,7 @@
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
-    <!-- 1. Reporte Pivoteado (Fechas en Columnas) - INTACTO -->
+    <!-- 1. Reporte Pivoteado (Fechas en Columnas) -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
@@ -119,7 +119,7 @@
       </div>
     </div>
 
-    <!-- 2. Reporte Detallado con Formato Solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] -->
+    <!-- 2. Reporte Detallado con Formato Solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] e Identificación de Libres por colores -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
@@ -359,7 +359,6 @@
       generarMatrizDetalleFechas(datos);
     }
 
-    // 1. Matriz Principal (Fechas en Columnas) - Intacta
     function generarMatrizPlacasFechas(datosFiltrados) {
       let tHead = document.getElementById('matrizCabecera');
       let tBody = document.getElementById('matrizCuerpo');
@@ -422,7 +421,7 @@
       tBody.innerHTML = htmlCuerpo;
     }
 
-    // 2. Nueva Matriz Detallada con el formato solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad]
+    // 2. Matriz Detallada con el formato solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] y [X] LIBRES identificado por colores
     function generarMatrizDetalleFechas(datosFiltrados) {
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
@@ -499,10 +498,12 @@
             if (pct < 80) claseCelda = "cell-detalle-rojo";
             else if (pct < 90) claseCelda = "cell-detalle-naranja";
 
-            // Modificación solicitada: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad]
+            // Formato solicitado con asientos libres identificados por colores (ej. 01 LIBRES)
+            let libresStr = String(reg.libres).padStart(2, '0');
             htmlCuerpo += `<td class="text-center">
               <div class="${claseCelda}">
-                <div class="fw-bold">${pct}% Cump. / ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
+                <div class="fw-bold">${libresStr} LIBRES</div>
+                <div>${pct}% Cump. / ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
               </div>
             </td>`;
           } else {
