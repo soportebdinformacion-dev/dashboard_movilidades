@@ -6,6 +6,7 @@
   <title>Dashboard Agrícola Huarmey - Conexión API</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
     .navbar-frusan { background-color: #1b4d3e; color: white; }
@@ -13,7 +14,10 @@
     .btn-frusan:hover { background-color: #64852b; color: white; }
     .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
-    /* Semáforos */
+    /* Semáforo Solicitado */
+    .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
+    .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
+    .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
     .badge-verde { background-color: #198754; color: white; }
     .badge-naranja { background-color: #fd7e14; color: white; }
     .badge-rojo { background-color: #dc3545; color: white; }
@@ -26,11 +30,10 @@
 
     .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     
-    /* Estilos para la Matriz Pivoted */
-    .matriz-pivoted { font-size: 0.85rem; }
-    .matriz-pivoted th { text-align: center; white-space: nowrap; }
-    .cell-data { font-size: 0.8rem; text-align: center; }
-    .cell-empty { background-color: #f8f9fa; color: #ccc; text-align: center; }
+    /* Estilos para la Nueva Matriz de Placas y Fechas */
+    .matriz-asistencia { font-size: 0.8rem; }
+    .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
+    .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
   </style>
 </head>
 <body>
@@ -58,7 +61,6 @@
   </nav>
 
   <div class="container-fluid px-4">
-    <!-- Filtros -->
     <div class="card p-3 mb-4 kpi-card bg-white">
       <div class="row g-2">
         <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
@@ -84,7 +86,6 @@
       </div>
     </div>
 
-    <!-- KPIs -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
       <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
@@ -92,21 +93,35 @@
       <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
     </div>
 
-    <!-- Gráficos -->
     <div class="row g-3 mb-4">
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
-    <!-- TABLA REORGANIZADA CON FECHAS EN COLUMNAS -->
     <div class="card kpi-card p-3 bg-white mb-4">
-      <h6 class="mb-3"><i class="fa-solid fa-table text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
-      <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-        <table class="table table-sm table-bordered table-hover align-middle matriz-pivoted">
-          <thead class="table-dark sticky-top" id="tablaCabeceraPivoted">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Matriz de Cobertura de Unidades (Placas vs Fechas)</h6>
+        <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
+          <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
+        </button>
+      </div>
+      <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
+          <thead class="table-dark sticky-top" id="matrizCabecera">
+            </thead>
+          <tbody id="matrizCuerpo">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card kpi-card p-3 bg-white mb-4">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle" style="font-size:0.9em;">
+          <thead class="table-light">
+            <tr><th>Fecha</th><th>Placa</th><th>Conductor</th><th>Ruta / Cultivo</th><th class="text-center">Cap.</th><th class="text-center">Pasajeros</th><th class="text-center">Libres</th><th class="text-center">Eficiencia</th></tr>
           </thead>
-          <tbody id="tablaCuerpoPivoted">
-          </tbody>
+          <tbody id="tablaCuerpo"></tbody>
         </table>
       </div>
     </div>
@@ -117,6 +132,7 @@
     const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyik79Vw9qMca_WYCsFxb7yTztcRjmK4_AJ9AIp_6wGuT9uIYMlHGA4ZpUosjk8XUnb/exec";
 
     let datasetOriginal = [];
+    let ultimoDatasetFiltrado = []; // Variable global para retener los datos filtrados actuales
     let chartD = null, chartS = null;
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -293,6 +309,7 @@
     function procesarFiltros() {
       let fSem = document.getElementById('fSemana').value;
       let fPlac = document.getElementById('fPlaca').value;
+
       let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha:checked')).map(cb => cb.value);
 
       let filtrados = datasetOriginal.filter(item => {
@@ -304,6 +321,7 @@
         return true;
       });
 
+      ultimoDatasetFiltrado = filtrados; // Almacenar para exportar a Excel
       renderizarContenidos(filtrados);
     }
 
@@ -314,9 +332,30 @@
 
     function renderizarContenidos(datos) {
       let u = datos.length, c = 0, p = 0, l = 0;
+      let tbody = document.getElementById('tablaCuerpo');
+      tbody.innerHTML = '';
 
       datos.forEach(f => {
         c += f.capacidad; p += f.pasajeros; l += f.libres;
+        let pct = f.capacidad > 0 ? ((f.pasajeros / f.capacidad) * 100).toFixed(1) : 0;
+        
+        let estFila = 'semaforo-rojo', estBadge = 'badge-rojo';
+        if(pct >= 90) { estFila = 'semaforo-verde'; estBadge = 'badge-verde'; }
+        else if(pct >= 80) { estFila = 'semaforo-naranja'; estBadge = 'badge-naranja'; }
+
+        let fechaTabla = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
+
+        tbody.innerHTML += `
+          <tr class="${estFila}">
+            <td>${fechaTabla}</td>
+            <td class="fw-bold">${f.placa}</td>
+            <td><i class="fa-solid fa-user text-secondary"></i> ${f.conductor}</td>
+            <td><small>${f.ruta} / <b>${f.cultivo}</b></small></td>
+            <td class="text-center">${f.capacidad}</td>
+            <td class="text-center fw-bold text-success">${f.pasajeros}</td>
+            <td class="text-center fw-bold text-danger">${f.libres}</td>
+            <td class="text-center"><span class="badge ${estBadge}">${pct}%</span></td>
+          </tr>`;
       });
 
       document.getElementById('kpiUnidades').innerText = u;
@@ -331,95 +370,130 @@
 
       armarGraficos(datos);
       
-      // DIBUJAR LA NUEVA TABLA MATRICIAL PIVOTADA CON FECHAS EN COLUMNAS
-      renderizarTablaFechasEnColumnas(datos);
+      generarMatrizPlacasFechas(datos);
     }
 
-    // NUEVA LÓGICA: DIBUJAR LAS FECHAS COMO COLUMNAS DINÁMICAS
-    function renderizarTablaFechasEnColumnas(datos) {
-      let tHead = document.getElementById('tablaCabeceraPivoted');
-      let tBody = document.getElementById('tablaCuerpoPivoted');
-
+    function generarMatrizPlacasFechas(datosFiltrados) {
+      let tHead = document.getElementById('matrizCabecera');
+      let tBody = document.getElementById('matrizCuerpo');
+      
       if (!tHead || !tBody) return;
 
-      // 1. Obtener lista única de fechas y unidades/conductores
       let conjuntoFechas = new Set();
-      let mapaUnidades = {}; // Clave: Placa
+      let conjuntoPlacas = new Set();
+      let registroCruces = {};
 
-      datos.forEach(f => {
-        let fechaFmt = convertirAFechaLatina(f.fechaAgrupada || f.columnaK);
-        if (fechaFmt) conjuntoFechas.add(fechaFmt);
+      datosFiltrados.forEach(item => {
+        let fechaFormato = convertirAFechaLatina(item.columnaK);
+        let placaFormato = item.placa;
 
-        if (!mapaUnidades[f.placa]) {
-          mapaUnidades[f.placa] = {
-            placa: f.placa,
-            conductor: f.conductor,
-            ruta: f.ruta,
-            cultivo: f.cultivo,
-            capacidad: f.capacidad,
-            fechas: {}
-          };
+        if(fechaFormato && placaFormato) {
+          conjuntoFechas.add(fechaFormato);
+          conjuntoPlacas.add(placaFormato);
+
+          if (!registroCruces[placaFormato]) {
+            registroCruces[placaFormato] = {};
+          }
+          registroCruces[placaFormato][fechaFormato] = true;
         }
-        mapaUnidades[f.placa].fechas[fechaFmt] = f;
       });
 
-      // Ordenar fechas cronológicamente
-      let fechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
+      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
       });
 
-      if (fechasOrdenadas.length === 0) {
-        tHead.innerHTML = '<tr><th>Placa</th><th>Conductor</th></tr>';
-        tBody.innerHTML = '<tr><td colspan="2" class="text-center text-muted p-3">No hay registros para mostrar.</td></tr>';
+      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
+
+      if (listaFechasOrdenadas.length === 0) {
+        tHead.innerHTML = '<tr><th>Placas registradas</th></tr>';
+        tBody.innerHTML = '<tr><td class="text-muted text-center p-3">Selecciona fechas u otros filtros para construir la matriz</td></tr>';
         return;
       }
 
-      // 2. Construir Cabeceras
-      let htmlHead = '<tr>';
-      htmlHead += '<th class="text-start">Placa</th>';
-      htmlHead += '<th class="text-start">Conductor</th>';
-      htmlHead += '<th class="text-start">Ruta / Cultivo</th>';
-      htmlHead += '<th class="text-center">Cap.</th>';
-      
-      fechasOrdenadas.forEach(f => {
-        htmlHead += `<th class="bg-dark text-white text-center">${f}</th>`;
+      let htmlCabecera = '<tr><th class="bg-secondary text-white">Placa / Unidades</th>';
+      listaFechasOrdenadas.forEach(fecha => {
+        htmlCabecera += `<th class="text-center text-nowrap">${fecha}</th>`;
       });
-      htmlHead += '</tr>';
-      tHead.innerHTML = htmlHead;
+      htmlCabecera += '</tr>';
+      tHead.innerHTML = htmlCabecera;
 
-      // 3. Construir Cuerpo
-      let htmlBody = '';
-      Object.keys(mapaUnidades).sort().forEach(placa => {
-        let u = mapaUnidades[placa];
-        htmlBody += '<tr>';
-        htmlBody += `<td class="fw-bold">${u.placa}</td>`;
-        htmlBody += `<td><i class="fa-solid fa-user text-secondary me-1"></i>${u.conductor}</td>`;
-        htmlBody += `<td><small>${u.ruta} / <b>${u.cultivo}</b></small></td>`;
-        htmlBody += `<td class="text-center">${u.capacidad}</td>`;
-
-        fechasOrdenadas.forEach(f => {
-          let reg = u.fechas[f];
-          if (reg) {
-            let pct = reg.capacidad > 0 ? ((reg.pasajeros / reg.capacidad) * 100).toFixed(1) : 0;
-            let badgeCls = 'badge-rojo';
-            if (pct >= 90) badgeCls = 'badge-verde';
-            else if (pct >= 80) badgeCls = 'badge-naranja';
-
-            htmlBody += `
-              <td class="cell-data">
-                <div><span class="badge ${badgeCls}">${pct}%</span></div>
-                <small class="text-muted" style="font-size:0.75rem;">P:<b>${reg.pasajeros}</b> | L:<b class="text-danger">${reg.libres}</b></small>
-              </td>`;
+      let htmlCuerpo = '';
+      listaPlacasOrdenadas.forEach(placa => {
+        htmlCuerpo += `<tr><td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
+        
+        listaFechasOrdenadas.forEach(fecha => {
+          if (registroCruces[placa] && registroCruces[placa][fecha]) {
+            htmlCuerpo += `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`;
           } else {
-            htmlBody += `<td class="cell-empty">-</td>`;
+            htmlCuerpo += `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`;
           }
         });
+        
+        htmlCuerpo += '</tr>';
+      });
+      tBody.innerHTML = htmlCuerpo;
+    }
 
-        htmlBody += '</tr>';
+    // NUEVA FUNCIÓN: EXPORTAR A EXCEL SOLAMENTE LOS ASIENTOS LIBRES SEGÚN LA MATRIZ PIVOTEADA
+    function exportarAsientosLibresExcel() {
+      let datos = ultimoDatasetFiltrado;
+      if (!datos || datos.length === 0) {
+        alert("No hay datos disponibles para exportar con los filtros actuales.");
+        return;
+      }
+
+      // 1. Extraer universo único de fechas y placas de los datos filtrados
+      let conjuntoFechas = new Set();
+      let conjuntoPlacas = new Set();
+      let mapaLibres = {}; // [placa][fecha] = cantidad de asientos libres
+
+      datos.forEach(item => {
+        let fechaFormato = convertirAFechaLatina(item.columnaK);
+        let placaFormato = item.placa;
+
+        if (fechaFormato && placaFormato) {
+          conjuntoFechas.add(fechaFormato);
+          conjuntoPlacas.add(placaFormato);
+
+          if (!mapaLibres[placaFormato]) {
+            mapaLibres[placaFormato] = {};
+          }
+          // Acumulamos en caso de duplicidad por fecha/placa
+          mapaLibres[placaFormato][fechaFormato] = (mapaLibres[placaFormato][fechaFormato] || 0) + (item.libres || 0);
+        }
       });
 
-      tBody.innerHTML = htmlBody;
+      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
+        let pA = a.split('/'), pB = b.split('/');
+        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
+      });
+
+      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
+
+      // 2. Construir la estructura de filas/columnas para el reporte de Excel pivoteado de Asientos Libres
+      let datosMatrizExcel = [];
+
+      listaPlacasOrdenadas.forEach(placa => {
+        let filaObj = { "Placa / Unidades": placa };
+        let totalLibresFila = 0;
+
+        listaFechasOrdenadas.forEach(fecha => {
+          let libresVal = (mapaLibres[placa] && mapaLibres[placa][fecha]) ? mapaLibres[placa][fecha] : 0;
+          filaObj[fecha] = libresVal;
+          totalLibresFila += libresVal;
+        });
+
+        filaObj["Total Asientos Libres"] = totalLibresFila;
+        datosMatrizExcel.push(filaObj);
+      });
+
+      // 3. Generar archivo XLSX usando SheetJS
+      let worksheet = XLSX.utils.json_to_sheet(datosMatrizExcel);
+      let workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Asientos Libres");
+
+      XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
     }
 
     function armarGraficos(datos) {
