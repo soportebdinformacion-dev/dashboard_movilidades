@@ -14,6 +14,7 @@
     .btn-frusan:hover { background-color: #64852b; color: white; }
     .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
+    /* Semáforo Solicitado */
     .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
     .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
     .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
@@ -21,6 +22,7 @@
     .badge-naranja { background-color: #fd7e14; color: white; }
     .badge-rojo { background-color: #dc3545; color: white; }
     
+    /* Estado de Conexión Estilos */
     .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
     .status-loading { background-color: #ffc107; color: #000; }
     .status-online { background-color: #198754; color: #fff; }
@@ -28,10 +30,10 @@
 
     .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     
-    /* Estilos para la Matriz Dinámica por Fechas */
-    .matriz-asistencia { font-size: 0.75rem; }
-    .matriz-asistencia th, .matriz-asistencia td { text-align: center; vertical-align: middle; }
-    .cell-subcol { font-size: 0.7rem; padding: 2px 4px !important; }
+    /* Estilos para la Nueva Matriz de Placas y Fechas */
+    .matriz-asistencia { font-size: 0.8rem; }
+    .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
+    .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
   </style>
 </head>
 <body>
@@ -96,23 +98,23 @@
       <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
     </div>
 
-    <!-- MATRIZ MODIFICADA: FECHAS EN COLUMNAS Y CAP, PASAJEROS, LIBRES, EFICIENCIA DEBAJO DE CADA FECHA -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Matriz de Indicadores por Fechas y Movilidades</h6>
-        <button class="btn btn-sm btn-success fw-bold" onclick="exportarMatrizIndicadoresExcel()">
-          <i class="fa-solid fa-file-excel me-1"></i> Exportar Matriz a Excel
+        <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
+        <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
+          <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
         </button>
       </div>
-      <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
-        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 800px;">
-          <thead class="table-dark sticky-top" id="matrizCabecera"></thead>
-          <tbody id="matrizCuerpo"></tbody>
+      <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
+          <thead class="table-dark sticky-top" id="matrizCabecera">
+            </thead>
+          <tbody id="matrizCuerpo">
+            </tbody>
         </table>
       </div>
     </div>
 
-    <!-- TABLA DETALLE GENERAL (MANTENIDA) -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle" style="font-size:0.9em;">
@@ -130,7 +132,7 @@
     const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyik79Vw9qMca_WYCsFxb7yTztcRjmK4_AJ9AIp_6wGuT9uIYMlHGA4ZpUosjk8XUnb/exec";
 
     let datasetOriginal = [];
-    let ultimoDatasetFiltrado = [];
+    let ultimoDatasetFiltrado = []; // Variable global para retener los datos filtrados actuales
     let chartD = null, chartS = null;
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -319,7 +321,7 @@
         return true;
       });
 
-      ultimoDatasetFiltrado = filtrados;
+      ultimoDatasetFiltrado = filtrados; // Almacenar para exportar a Excel
       renderizarContenidos(filtrados);
     }
 
@@ -367,11 +369,11 @@
       document.getElementById('pctLibres').innerText = pL + "% Libre";
 
       armarGraficos(datos);
-      generarMatrizIndicadoresFechas(datos);
+      
+      generarMatrizPlacasFechas(datos);
     }
 
-    // NUEVA FUNCIÓN: CONSTRUIR MATRIZ CON FECHAS EN COLUMNAS Y SUB-COLUMNAS (Cap., Pasajeros, Libres, Eficiencia)
-    function generarMatrizIndicadoresFechas(datosFiltrados) {
+    function generarMatrizPlacasFechas(datosFiltrados) {
       let tHead = document.getElementById('matrizCabecera');
       let tBody = document.getElementById('matrizCuerpo');
       
@@ -379,7 +381,7 @@
 
       let conjuntoFechas = new Set();
       let conjuntoPlacas = new Set();
-      let mapaRegistros = {}; // Almacenará el objeto completo por [placa][fecha]
+      let registroCruces = {};
 
       datosFiltrados.forEach(item => {
         let fechaFormato = convertirAFechaLatina(item.columnaK);
@@ -389,10 +391,10 @@
           conjuntoFechas.add(fechaFormato);
           conjuntoPlacas.add(placaFormato);
 
-          if (!mapaRegistros[placaFormato]) {
-            mapaRegistros[placaFormato] = {};
+          if (!registroCruces[placaFormato]) {
+            registroCruces[placaFormato] = {};
           }
-          mapaRegistros[placaFormato][fechaFormato] = item;
+          registroCruces[placaFormato][fechaFormato] = true;
         }
       });
 
@@ -404,60 +406,27 @@
       let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
 
       if (listaFechasOrdenadas.length === 0) {
-        tHead.innerHTML = '<tr><th>Placa / Unidades</th></tr>';
+        tHead.innerHTML = '<tr><th>Placas registradas</th></tr>';
         tBody.innerHTML = '<tr><td class="text-muted text-center p-3">Selecciona fechas u otros filtros para construir la matriz</td></tr>';
         return;
       }
 
-      // Fila 1 de la Cabecera (Fechas abarcando 4 columnas secundarias cada una)
-      let fila1 = '<tr><th rowspan="2" class="align-middle bg-secondary text-white">Placa / Movilidad</th>';
+      let htmlCabecera = '<tr><th class="bg-secondary text-white">Placa / Unidades</th>';
       listaFechasOrdenadas.forEach(fecha => {
-        fila1 += `<th colspan="4" class="text-center bg-dark text-white border-start">${fecha}</th>`;
+        htmlCabecera += `<th class="text-center text-nowrap">${fecha}</th>`;
       });
-      fila1 += '</tr>';
+      htmlCabecera += '</tr>';
+      tHead.innerHTML = htmlCabecera;
 
-      // Fila 2 de la Cabecera (Cap., Pasajeros, Libres, Eficiencia por cada fecha)
-      let fila2 = '<tr>';
-      listaFechasOrdenadas.forEach(() => {
-        fila2 += `
-          <th class="cell-subcol bg-secondary text-white border-start">Cap.</th>
-          <th class="cell-subcol bg-success text-white">Pasaj.</th>
-          <th class="cell-subcol bg-danger text-white">Libres</th>
-          <th class="cell-subcol bg-secondary text-white">Efic.</th>`;
-      });
-      fila2 += '</tr>';
-
-      tHead.innerHTML = fila1 + fila2;
-
-      // Cuerpo de la tabla por cada Placa
       let htmlCuerpo = '';
       listaPlacasOrdenadas.forEach(placa => {
-        htmlCuerpo += `<tr><td class="fw-bold bg-light"><i class="fa-solid fa-bus text-muted me-1"></i> ${placa}</td>`;
+        htmlCuerpo += `<tr><td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
         
         listaFechasOrdenadas.forEach(fecha => {
-          let reg = mapaRegistros[placa] ? mapaRegistros[placa][fecha] : null;
-          
-          if (reg) {
-            let cap = reg.capacidad || 0;
-            let pas = reg.pasajeros || 0;
-            let lib = reg.libres || 0;
-            let efc = cap > 0 ? ((pas / cap) * 100).toFixed(1) : 0;
-            
-            let colorClase = "text-danger";
-            if (efc >= 90) colorClase = "text-success fw-bold";
-            else if (efc >= 80) colorClase = "text-warning fw-bold";
-
-            htmlCuerpo += `
-              <td class="cell-subcol text-center border-start">${cap}</td>
-              <td class="cell-subcol text-center fw-bold text-success">${pas}</td>
-              <td class="cell-subcol text-center fw-bold text-danger">${lib}</td>
-              <td class="cell-subcol text-center ${colorClase}">${efc}%</td>`;
+          if (registroCruces[placa] && registroCruces[placa][fecha]) {
+            htmlCuerpo += `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`;
           } else {
-            htmlCuerpo += `
-              <td class="cell-subcol text-center text-muted border-start">-</td>
-              <td class="cell-subcol text-center text-muted">-</td>
-              <td class="cell-subcol text-center text-muted">-</td>
-              <td class="cell-subcol text-center text-muted">-</td>`;
+            htmlCuerpo += `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`;
           }
         });
         
@@ -466,17 +435,18 @@
       tBody.innerHTML = htmlCuerpo;
     }
 
-    // EXPORTAR MATRIZ COMPLETA A EXCEL
-    function exportarMatrizIndicadoresExcel() {
+    // NUEVA FUNCIÓN: EXPORTAR A EXCEL SOLAMENTE LOS ASIENTOS LIBRES SEGÚN LA MATRIZ PIVOTEADA
+    function exportarAsientosLibresExcel() {
       let datos = ultimoDatasetFiltrado;
       if (!datos || datos.length === 0) {
         alert("No hay datos disponibles para exportar con los filtros actuales.");
         return;
       }
 
+      // 1. Extraer universo único de fechas y placas de los datos filtrados
       let conjuntoFechas = new Set();
       let conjuntoPlacas = new Set();
-      let mapaRegistros = {};
+      let mapaLibres = {}; // [placa][fecha] = cantidad de asientos libres
 
       datos.forEach(item => {
         let fechaFormato = convertirAFechaLatina(item.columnaK);
@@ -486,10 +456,10 @@
           conjuntoFechas.add(fechaFormato);
           conjuntoPlacas.add(placaFormato);
 
-          if (!mapaRegistros[placaFormato]) {
-            mapaRegistros[placaFormato] = {};
+          if (!mapaLibres[placaFormato]) {
+            mapaLibres[placaFormato] = {};
           }
-          mapaRegistros[placaFormato][fechaFormato] = item;
+          mapaLibres[placaFormato][fechaFormato] = (mapaLibres[placaFormato][fechaFormato] || 0) + (item.libres || 0);
         }
       });
 
@@ -499,39 +469,30 @@
       });
 
       let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
+
+      // 2. Construir la estructura de filas/columnas para el reporte de Excel pivoteado de Asientos Libres
       let datosMatrizExcel = [];
 
       listaPlacasOrdenadas.forEach(placa => {
-        let filaObj = { "Placa / Movilidad": placa };
+        let filaObj = { "Placa / Unidades": placa };
+        let totalLibresFila = 0;
 
         listaFechasOrdenadas.forEach(fecha => {
-          let reg = mapaRegistros[placa] ? mapaRegistros[placa][fecha] : null;
-          if (reg) {
-            let cap = reg.capacidad || 0;
-            let pas = reg.pasajeros || 0;
-            let lib = reg.libres || 0;
-            let efc = cap > 0 ? ((pas / cap) * 100).toFixed(1) + "%" : "0%";
-
-            filaObj[`${fecha} - Cap.`] = cap;
-            filaObj[`${fecha} - Pasajeros`] = pas;
-            filaObj[`${fecha} - Libres`] = lib;
-            filaObj[`${fecha} - Eficiencia`] = efc;
-          } else {
-            filaObj[`${fecha} - Cap.`] = 0;
-            filaObj[`${fecha} - Pasajeros`] = 0;
-            filaObj[`${fecha} - Libres`] = 0;
-            filaObj[`${fecha} - Eficiencia`] = "0%";
-          }
+          let libresVal = (mapaLibres[placa] && mapaLibres[placa][fecha]) ? mapaLibres[placa][fecha] : 0;
+          filaObj[fecha] = libresVal;
+          totalLibresFila += libresVal;
         });
 
+        filaObj["Total Asientos Libres"] = totalLibresFila;
         datosMatrizExcel.push(filaObj);
       });
 
+      // 3. Generar archivo XLSX usando SheetJS
       let worksheet = XLSX.utils.json_to_sheet(datosMatrizExcel);
       let workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Matriz Indicadores");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Asientos Libres");
 
-      XLSX.writeFile(workbook, "Matriz_Indicadores_Huarmey.xlsx");
+      XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
     }
 
     function armarGraficos(datos) {
