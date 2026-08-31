@@ -100,7 +100,7 @@
 
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Matriz de Cobertura de Unidades (Placas vs Fechas)</h6>
+        <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
         <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
           <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
         </button>
@@ -459,7 +459,6 @@
           if (!mapaLibres[placaFormato]) {
             mapaLibres[placaFormato] = {};
           }
-          // Acumulamos en caso de duplicidad por fecha/placa
           mapaLibres[placaFormato][fechaFormato] = (mapaLibres[placaFormato][fechaFormato] || 0) + (item.libres || 0);
         }
       });
