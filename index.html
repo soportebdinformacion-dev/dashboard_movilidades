@@ -34,6 +34,11 @@
     .matriz-asistencia { font-size: 0.8rem; }
     .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
     .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
+
+    /* Estilos para celdas detalladas con colores de cumplimiento */
+    .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
+    .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
+    .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
   </style>
 </head>
 <body>
@@ -114,13 +119,13 @@
       </div>
     </div>
 
-    <!-- 2. Reporte Detallado Pivoteado (Fechas en Columnas para Pasajeros / Ocupación) -->
+    <!-- 2. Reporte Detallado Pivoteado Modificado -->
     <div class="card kpi-card p-3 bg-white mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
       </div>
-      <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
-        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
+      <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 900px;">
           <thead class="table-dark sticky-top" id="tablaDetalleCabecera"></thead>
           <tbody id="tablaDetalleCuerpo"></tbody>
         </table>
@@ -417,7 +422,7 @@
       tBody.innerHTML = htmlCuerpo;
     }
 
-    // 2. Nueva Matriz Detallada (Fechas en Columnas para Pasajeros)
+    // 2. Nueva Matriz Detallada Actualizada (Placa, Conductor, Tipo, Ruta Cultivo y Cump. con Colores)
     function generarMatrizDetalleFechas(datosFiltrados) {
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
@@ -425,21 +430,27 @@
       if (!tHead || !tBody) return;
 
       let conjuntoFechas = new Set();
-      let conjuntoPlacas = new Set();
-      let mapaDetalle = {}; // [placa][fecha] = {pasajeros, libres, capacidad}
+      let mapaFilasUnicas = {}; // Clave única por asignación/placa + conductor + ruta
+      let mapaDetalle = {};     // [claveFila][fecha] = datos
 
       datosFiltrados.forEach(item => {
         let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placaFormato = item.placa;
+        let placa = item.placa || "";
+        let conductor = item.conductor || "";
+        // Dividir Ruta / Cultivo si vienen juntos o usar propiedades separadas si existieran
+        let rutaCultivo = item.ruta || item.cultivo ? `${item.ruta || ''} / ${item.cultivo || ''}` : "";
+        let tipoMovilidad = item.tipo || "Movilidad";
 
-        if(fechaFormato && placaFormato) {
+        if(fechaFormato && placa) {
           conjuntoFechas.add(fechaFormato);
-          conjuntoPlacas.add(placaFormato);
 
-          if (!mapaDetalle[placaFormato]) {
-            mapaDetalle[placaFormato] = {};
+          let claveUnica = `${placa}_${conductor}_${rutaCultivo}`;
+          mapaFilasUnicas[claveUnica] = { placa, conductor, tipo: tipoMovilidad, rutaCultivo };
+
+          if (!mapaDetalle[claveUnica]) {
+            mapaDetalle[claveUnica] = {};
           }
-          mapaDetalle[placaFormato][fechaFormato] = {
+          mapaDetalle[claveUnica][fechaFormato] = {
             pasajeros: item.pasajeros || 0,
             libres: item.libres || 0,
             capacidad: item.capacidad || 0
@@ -452,31 +463,49 @@
         return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
       });
 
-      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
+      let llavesFilas = Object.keys(mapaFilasUnicas).sort((a,b) => mapaFilasUnicas[a].placa.localeCompare(mapaFilasUnicas[b].placa));
 
       if (listaFechasOrdenadas.length === 0) {
-        tHead.innerHTML = '<tr><th>Placas registradas</th></tr>';
-        tBody.innerHTML = '<tr><td class="text-muted text-center p-3">No hay datos disponibles para mostrar</td></tr>';
+        tHead.innerHTML = '<tr><th>Placa</th><th>Conductor</th><th>Tipo</th><th>Ruta / Cultivo</th></tr>';
+        tBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center p-3">No hay datos disponibles para mostrar</td></tr>';
         return;
       }
 
-      let htmlCabecera = '<tr><th class="bg-secondary text-white">Placa / Unidades</th>';
+      // Construir Cabecera con las nuevas columnas solicitadas
+      let htmlCabecera = `<tr>
+        <th class="bg-secondary text-white">Placa</th>
+        <th class="bg-secondary text-white">Conductor</th>
+        <th class="bg-secondary text-white">Tipo</th>
+        <th class="bg-secondary text-white">Ruta / Cultivo</th>`;
+      
       listaFechasOrdenadas.forEach(fecha => {
-        htmlCabecera += `<th class="text-center text-nowrap">${fecha}</th>`;
+        htmlCabecera += `<th class="text-center text-nowrap bg-secondary text-white">${fecha}</th>`;
       });
       htmlCabecera += '</tr>';
       tHead.innerHTML = htmlCabecera;
 
       let htmlCuerpo = '';
-      listaPlacasOrdenadas.forEach(placa => {
-        htmlCuerpo += `<tr><td class="fw-bold bg-light"><i class="fa-solid fa-bus text-success me-1"></i> ${placa}</td>`;
+      llavesFilas.forEach(clave => {
+        let info = mapaFilasUnicas[clave];
+        htmlCuerpo += `<tr>
+          <td class="fw-bold"><i class="fa-solid fa-bus text-success me-1"></i> ${info.placa}</td>
+          <td><small>${info.conductor}</small></td>
+          <td><small class="badge bg-light text-dark border">${info.tipo}</small></td>
+          <td><small>${info.rutaCultivo}</small></td>`;
         
         listaFechasOrdenadas.forEach(fecha => {
-          let reg = mapaDetalle[placa] && mapaDetalle[placa][fecha];
+          let reg = mapaDetalle[clave] && mapaDetalle[clave][fecha];
           if (reg) {
-            htmlCuerpo += `<td class="text-center bg-white">
-              <span class="fw-bold text-success">${reg.pasajeros} pas.</span><br>
-              <small class="text-danger">(${reg.libres} lib. / Cap: ${reg.capacidad})</small>
+            let pct = reg.capacidad > 0 ? (reg.pasajeros / reg.capacidad) * 100 : 0;
+            let claseCelda = "cell-detalle-verde";
+            if (pct < 80) claseCelda = "cell-detalle-rojo";
+            else if (pct < 90) claseCelda = "cell-detalle-naranja";
+
+            htmlCuerpo += `<td class="text-center">
+              <div class="${claseCelda}">
+                <div class="fw-bold">Cump. = ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
+                <div>(${reg.libres} lib.)</div>
+              </div>
             </td>`;
           } else {
             htmlCuerpo += `<td class="text-center text-muted bg-light">-</td>`;
