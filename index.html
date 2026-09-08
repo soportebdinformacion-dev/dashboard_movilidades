@@ -132,9 +132,15 @@
               <label class="small text-muted">Semana (SEM)</label>
               <select id="fSemana_dash" class="form-select form-select-sm" onchange="sincronizarYProcesar('dash', 'sem')"><option value="">Todas</option></select>
             </div>
+
             <div class="col-6 col-md-4">
-              <label class="small text-muted">Placa</label>
-              <select id="fPlaca_dash" class="form-select form-select-sm" onchange="sincronizarYProcesar('dash', 'plac')"><option value="">Todas</option></select>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('dash')">Limpiar</button>
+              </div>
+              <div id="contenedorPlacas_dash" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando placas...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -172,10 +178,17 @@
               <label class="small text-muted">Semana (SEM)</label>
               <select id="fSemana_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'sem')"><option value="">Todas</option></select>
             </div>
+
             <div class="col-6 col-md-3">
-              <label class="small text-muted">Placa</label>
-              <select id="fPlaca_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'plac')"><option value="">Todas</option></select>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('p1')">Limpiar</button>
+              </div>
+              <div id="contenedorPlacas_p1" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando placas...</span>
+              </div>
             </div>
+
             <div class="col-12 col-md-3">
               <label class="small text-muted">Filtro por Color / Estado</label>
               <select id="fColor_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'col')">
@@ -230,10 +243,17 @@
               <label class="small text-muted">Semana (SEM)</label>
               <select id="fSemana_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'sem')"><option value="">Todas</option></select>
             </div>
+
             <div class="col-6 col-md-3">
-              <label class="small text-muted">Placa</label>
-              <select id="fPlaca_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'plac')"><option value="">Todas</option></select>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('p2')">Limpiar</button>
+              </div>
+              <div id="contenedorPlacas_p2" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando placas...</span>
+              </div>
             </div>
+
             <div class="col-12 col-md-3">
               <label class="small text-muted">Filtro por Color / Estado</label>
               <select id="fColor_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'col')">
@@ -381,32 +401,27 @@
     }
 
     function construirCombosFiltros() {
-      let sems = new Set(), placs = new Set();
+      let sems = new Set();
       
       datasetOriginal.forEach(r => {
         if(r.semana) sems.add(r.semana);
-        if(r.placa) placs.add(r.placa);
       });
 
       let opcionesSem = '<option value="">Todas</option>';
       Array.from(sems).sort((a,b)=>a-b).forEach(s => opcionesSem += `<option value="${s}">Semana ${s}</option>`);
 
-      let opcionesPlac = '<option value="">Todas</option>';
-      Array.from(placs).sort().forEach(p => opcionesPlac += `<option value="${p}">${p}</option>`);
-
       VISTAS.forEach(v => {
         let elSem = document.getElementById(`fSemana_${v}`);
-        let elPlac = document.getElementById(`fPlaca_${v}`);
         if (elSem) elSem.innerHTML = opcionesSem;
-        if (elPlac) elPlac.innerHTML = opcionesPlac;
       });
 
       renderizarComboFechasDinamico();
+      renderizarComboPlacasDinamico();
     }
 
     function renderizarComboFechasDinamico() {
       let fSem = document.getElementById('fSemana_dash').value;
-      let fPlac = document.getElementById('fPlaca_dash').value;
+      let placasSeleccionadas = Array.from(document.querySelectorAll('.chk-placa-dash:checked')).map(cb => cb.value);
 
       let seleccionadasAnterior = new Set();
       let primerContenedor = document.getElementById('contenedorFechas_dash');
@@ -419,7 +434,7 @@
       let fechasFiltradas = new Set();
       datasetOriginal.forEach(r => {
         if (fSem && r.semana.toString() !== fSem.toString()) return;
-        if (fPlac && r.placa !== fPlac) return;
+        if (placasSeleccionadas.length > 0 && !placasSeleccionadas.includes(r.placa)) return;
         
         if (r.columnaK) {
           fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
@@ -445,9 +460,57 @@
           let checked = seleccionadasAnterior.has(f) ? 'checked' : '';
           contenedor.innerHTML += `
             <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
-              <input class="form-check-input chk-fecha chk-fecha-${v}" type="checkbox" value="${f}" id="chk_${v}_${f}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk', '${f}')">
-              <label class="form-check-label small" for="chk_${v}_${f}" style="cursor: pointer; font-size:0.85rem;">
+              <input class="form-check-input chk-fecha chk-fecha-${v}" type="checkbox" value="${f}" id="chk_fecha_${v}_${f}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk_fecha', '${f}')">
+              <label class="form-check-label small" for="chk_fecha_${v}_${f}" style="cursor: pointer; font-size:0.85rem;">
                 ${f}
+              </label>
+            </div>`;
+        });
+      });
+    }
+
+    function renderizarComboPlacasDinamico() {
+      let fSem = document.getElementById('fSemana_dash').value;
+      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha-dash:checked')).map(cb => cb.value);
+
+      let seleccionadasAnterior = new Set();
+      let primerContenedor = document.getElementById('contenedorPlacas_dash');
+      if(primerContenedor) {
+        primerContenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+          seleccionadasAnterior.add(cb.value);
+        });
+      }
+
+      let placasFiltradas = new Set();
+      datasetOriginal.forEach(r => {
+        let itemFechaKVisual = convertirAFechaLatina(r.columnaK);
+        if (fSem && r.semana.toString() !== fSem.toString()) return;
+        if (fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return;
+        
+        if (r.placa) {
+          placasFiltradas.add(r.placa);
+        }
+      });
+
+      let listaPlacas = Array.from(placasFiltradas).sort();
+
+      VISTAS.forEach(v => {
+        let contenedor = document.getElementById(`contenedorPlacas_${v}`);
+        if(!contenedor) return;
+        contenedor.innerHTML = '';
+
+        if(listaPlacas.length === 0) {
+          contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay placas disponibles</span>';
+          return;
+        }
+
+        listaPlacas.forEach(p => {
+          let checked = seleccionadasAnterior.has(p) ? 'checked' : '';
+          contenedor.innerHTML += `
+            <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
+              <input class="form-check-input chk-placa chk-placa-${v}" type="checkbox" value="${p}" id="chk_placa_${v}_${p}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk_placa', '${p}')">
+              <label class="form-check-label small" for="chk_placa_${v}_${p}" style="cursor: pointer; font-size:0.85rem;">
+                ${p}
               </label>
             </div>`;
         });
@@ -462,25 +525,27 @@
           if (el) el.value = val; 
         });
         renderizarComboFechasDinamico();
-      } else if (tipo === 'plac') {
-        let val = document.getElementById(`fPlaca_${origenVista}`).value;
-        VISTAS.forEach(v => { 
-          let el = document.getElementById(`fPlaca_${v}`);
-          if (el) el.value = val; 
-        });
-        renderizarComboFechasDinamico();
+        renderizarComboPlacasDinamico();
       } else if (tipo === 'col') {
         let val = document.getElementById(`fColor_${origenVista}`).value;
         ['p1', 'p2'].forEach(v => {
           let el = document.getElementById(`fColor_${v}`);
           if (el) el.value = val;
         });
-      } else if (tipo === 'chk') {
-        let estaMarcado = document.getElementById(`chk_${origenVista}_${valor}`).checked;
+      } else if (tipo === 'chk_fecha') {
+        let estaMarcado = document.getElementById(`chk_fecha_${origenVista}_${valor}`).checked;
         VISTAS.forEach(v => {
-          let target = document.getElementById(`chk_${v}_${valor}`);
+          let target = document.getElementById(`chk_fecha_${v}_${valor}`);
           if(target) target.checked = estaMarcado;
         });
+        renderizarComboPlacasDinamico();
+      } else if (tipo === 'chk_placa') {
+        let estaMarcado = document.getElementById(`chk_placa_${origenVista}_${valor}`).checked;
+        VISTAS.forEach(v => {
+          let target = document.getElementById(`chk_placa_${v}_${valor}`);
+          if(target) target.checked = estaMarcado;
+        });
+        renderizarComboFechasDinamico();
       }
       procesarFiltros();
     }
@@ -498,16 +563,15 @@
 
     function procesarFiltros() {
       let fSem = document.getElementById('fSemana_dash').value;
-      let fPlac = document.getElementById('fPlaca_dash').value;
-
       let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha-dash:checked')).map(cb => cb.value);
+      let placasSeleccionadas = Array.from(document.querySelectorAll('.chk-placa-dash:checked')).map(cb => cb.value);
 
       let filtrados = datasetOriginal.filter(item => {
         let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
 
         if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
         if(fSem && item.semana.toString() !== fSem.toString()) return false;
-        if(fPlac && item.placa !== fPlac) return false;
+        if(placasSeleccionadas.length > 0 && !placasSeleccionadas.includes(item.placa)) return false;
         return true;
       });
 
@@ -517,6 +581,13 @@
 
     function limpiarSeleccionFechas(origenVista) {
       document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
+      renderizarComboPlacasDinamico();
+      procesarFiltros();
+    }
+
+    function limpiarSeleccionPlacas(origenVista) {
+      document.querySelectorAll('.chk-placa').forEach(cb => cb.checked = false);
+      renderizarComboFechasDinamico();
       procesarFiltros();
     }
 
@@ -640,7 +711,7 @@
       });
 
       if (htmlCuerpo === '') {
-        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 2}" class="text-muted text-center p-3">No existen registros para el color seleccionado</td></tr>`;
+        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 2}" class="text-muted text-center p-3">No existen registros para los filtros seleccionados</td></tr>`;
       }
 
       tBody.innerHTML = htmlCuerpo;
@@ -773,7 +844,7 @@
       });
 
       if (htmlCuerpo === '') {
-        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 6}" class="text-muted text-center p-3">No existen registros para el color seleccionado</td></tr>`;
+        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 6}" class="text-muted text-center p-3">No existen registros para los filtros seleccionados</td></tr>`;
       }
 
       tBody.innerHTML = htmlCuerpo;
