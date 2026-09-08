@@ -158,7 +158,7 @@
           <div class="row g-2">
             <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
             
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="small text-muted mb-0">(FECHA)</label>
                 <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p1')">Limpiar</button>
@@ -168,13 +168,23 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-3">
               <label class="small text-muted">Semana (SEM)</label>
               <select id="fSemana_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'sem')"><option value="">Todas</option></select>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-3">
               <label class="small text-muted">Placa</label>
               <select id="fPlaca_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'plac')"><option value="">Todas</option></select>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="small text-muted">Filtro por Color / Estado</label>
+              <select id="fColor_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'col')">
+                <option value="">Todos los colores</option>
+                <option value="verde">🟢 Verde (Registrado / ≥ 90%)</option>
+                <option value="naranja">🟠 Naranja (80% - 89%)</option>
+                <option value="rojo">🔴 Rojo (< 80%)</option>
+                <option value="blanco">⚪ Blanco / Sin Registro (-)</option>
+              </select>
             </div>
           </div>
         </div>
@@ -206,7 +216,7 @@
           <div class="row g-2">
             <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
             
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="small text-muted mb-0">(FECHA)</label>
                 <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p2')">Limpiar</button>
@@ -216,13 +226,23 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-3">
               <label class="small text-muted">Semana (SEM)</label>
               <select id="fSemana_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'sem')"><option value="">Todas</option></select>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-3">
               <label class="small text-muted">Placa</label>
               <select id="fPlaca_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'plac')"><option value="">Todas</option></select>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="small text-muted">Filtro por Color / Estado</label>
+              <select id="fColor_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'col')">
+                <option value="">Todos los colores</option>
+                <option value="verde">🟢 Verde (≥ 90% Cump.)</option>
+                <option value="naranja">🟠 Naranja (80% - 89% Cump.)</option>
+                <option value="rojo">🔴 Rojo (< 80% Cump.)</option>
+                <option value="blanco">⚪ Blanco / Sin Registro (-)</option>
+              </select>
             </div>
           </div>
         </div>
@@ -375,8 +395,10 @@
       Array.from(placs).sort().forEach(p => opcionesPlac += `<option value="${p}">${p}</option>`);
 
       VISTAS.forEach(v => {
-        document.getElementById(`fSemana_${v}`).innerHTML = opcionesSem;
-        document.getElementById(`fPlaca_${v}`).innerHTML = opcionesPlac;
+        let elSem = document.getElementById(`fSemana_${v}`);
+        let elPlac = document.getElementById(`fPlaca_${v}`);
+        if (elSem) elSem.innerHTML = opcionesSem;
+        if (elPlac) elPlac.innerHTML = opcionesPlac;
       });
 
       renderizarComboFechasDinamico();
@@ -435,12 +457,24 @@
     function sincronizarYProcesar(origenVista, tipo, valor) {
       if (tipo === 'sem') {
         let val = document.getElementById(`fSemana_${origenVista}`).value;
-        VISTAS.forEach(v => { document.getElementById(`fSemana_${v}`).value = val; });
+        VISTAS.forEach(v => { 
+          let el = document.getElementById(`fSemana_${v}`);
+          if (el) el.value = val; 
+        });
         renderizarComboFechasDinamico();
       } else if (tipo === 'plac') {
         let val = document.getElementById(`fPlaca_${origenVista}`).value;
-        VISTAS.forEach(v => { document.getElementById(`fPlaca_${v}`).value = val; });
+        VISTAS.forEach(v => { 
+          let el = document.getElementById(`fPlaca_${v}`);
+          if (el) el.value = val; 
+        });
         renderizarComboFechasDinamico();
+      } else if (tipo === 'col') {
+        let val = document.getElementById(`fColor_${origenVista}`).value;
+        ['p1', 'p2'].forEach(v => {
+          let el = document.getElementById(`fColor_${v}`);
+          if (el) el.value = val;
+        });
       } else if (tipo === 'chk') {
         let estaMarcado = document.getElementById(`chk_${origenVista}_${valor}`).checked;
         VISTAS.forEach(v => {
@@ -449,6 +483,17 @@
         });
       }
       procesarFiltros();
+    }
+
+    function obtenerColorDeRegistro(item) {
+      if (!item) return "blanco";
+      let cap = item.capacidad || 0;
+      let pas = item.pasajeros || 0;
+      let pct = cap > 0 ? (pas / cap) * 100 : 0;
+
+      if (pct >= 90) return "verde";
+      if (pct >= 80) return "naranja";
+      return "rojo";
     }
 
     function procesarFiltros() {
@@ -511,9 +556,12 @@
       let tBody = document.getElementById('matrizCuerpo');
       if (!tHead || !tBody) return;
 
+      let filtroColor = document.getElementById('fColor_p1') ? document.getElementById('fColor_p1').value : "";
+
       let conjuntoFechas = new Set();
       let conjuntoPlacas = new Set();
       let registroCruces = {};
+      let registroItems = {};
 
       datosFiltrados.forEach(item => {
         let fechaFormato = convertirAFechaLatina(item.columnaK);
@@ -524,7 +572,10 @@
           conjuntoPlacas.add(placaFormato);
 
           if (!registroCruces[placaFormato]) registroCruces[placaFormato] = {};
+          if (!registroItems[placaFormato]) registroItems[placaFormato] = {};
+          
           registroCruces[placaFormato][fechaFormato] = true;
+          registroItems[placaFormato][fechaFormato] = item;
         }
       });
 
@@ -550,21 +601,48 @@
 
       let htmlCuerpo = '';
       let numOrden = 1;
+      
       listaPlacasOrdenadas.forEach(placa => {
-        htmlCuerpo += `<tr>
-          <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
-          <td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
-        
+        let celdasFila = [];
+        let coincideFiltro = false;
+
         listaFechasOrdenadas.forEach(fecha => {
-          if (registroCruces[placa] && registroCruces[placa][fecha]) {
-            htmlCuerpo += `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`;
+          let existe = registroCruces[placa] && registroCruces[placa][fecha];
+          let item = registroItems[placa] ? registroItems[placa][fecha] : null;
+          let color = existe ? obtenerColorDeRegistro(item) : "blanco";
+
+          if (!filtroColor || filtroColor === color) {
+            coincideFiltro = true;
+          }
+
+          if (existe) {
+            celdasFila.push({ html: `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`, color });
           } else {
-            htmlCuerpo += `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`;
+            celdasFila.push({ html: `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`, color: "blanco" });
           }
         });
-        
-        htmlCuerpo += '</tr>';
+
+        if (coincideFiltro) {
+          htmlCuerpo += `<tr>
+            <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
+            <td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
+          
+          celdasFila.forEach(c => {
+            if (filtroColor && c.color !== filtroColor) {
+              htmlCuerpo += `<td class="text-center text-muted bg-light opacity-25">-</td>`;
+            } else {
+              htmlCuerpo += c.html;
+            }
+          });
+          
+          htmlCuerpo += '</tr>';
+        }
       });
+
+      if (htmlCuerpo === '') {
+        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 2}" class="text-muted text-center p-3">No existen registros para el color seleccionado</td></tr>`;
+      }
+
       tBody.innerHTML = htmlCuerpo;
     }
 
@@ -572,6 +650,8 @@
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
       if (!tHead || !tBody) return;
+
+      let filtroColor = document.getElementById('fColor_p2') ? document.getElementById('fColor_p2').value : "";
 
       let conjuntoFechas = new Set();
       let mapaFilasUnicas = {}; 
@@ -599,7 +679,8 @@
           mapaDetalle[claveUnica][fechaFormato] = {
             pasajeros: item.pasajeros || 0,
             libres: item.libres || 0,
-            capacidad: capacidadReg
+            capacidad: capacidadReg,
+            itemOriginal: item
           };
         }
       });
@@ -633,39 +714,68 @@
 
       let htmlCuerpo = '';
       let numOrden = 1;
+
       llavesFilas.forEach(clave => {
         let info = mapaFilasUnicas[clave];
-        htmlCuerpo += `<tr>
-          <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
-          <td class="fw-bold"><i class="fa-solid fa-bus text-success me-1"></i> ${info.placa}</td>
-          <td><small>${info.conductor}</small></td>
-          <td><small class="badge bg-light text-dark border">${info.tipo}</small></td>
-          <td><small>${info.rutaCultivo}</small></td>
-          <td class="text-center fw-bold text-primary">${formatearNumero(info.capacidad)}</td>`;
-        
+        let celdasFila = [];
+        let coincideFiltro = false;
+
         listaFechasOrdenadas.forEach(fecha => {
           let reg = mapaDetalle[clave] && mapaDetalle[clave][fecha];
           if (reg) {
+            let color = obtenerColorDeRegistro(reg.itemOriginal);
+            if (!filtroColor || filtroColor === color) coincideFiltro = true;
+
             let pct = reg.capacidad > 0 ? Math.round((reg.pasajeros / reg.capacidad) * 100) : 0;
             let claseCelda = "cell-detalle-verde";
-            if (pct < 80) claseCelda = "cell-detalle-rojo";
-            else if (pct < 90) claseCelda = "cell-detalle-naranja";
+            if (color === "rojo") claseCelda = "cell-detalle-rojo";
+            else if (color === "naranja") claseCelda = "cell-detalle-naranja";
 
             let libresStr = reg.libres >= 1000 ? formatearNumero(reg.libres) : String(reg.libres).padStart(2, '0');
             
-            htmlCuerpo += `<td class="text-center">
-              <div class="${claseCelda}">
-                <div class="fw-bold">${libresStr} LIBRES</div>
-                <div>${pct}% Cump. / <span class="texto-pasajeros-azul">${formatearNumero(reg.pasajeros)} pas.</span></div>
-              </div>
-            </td>`;
+            celdasFila.push({
+              color,
+              html: `<td class="text-center">
+                <div class="${claseCelda}">
+                  <div class="fw-bold">${libresStr} LIBRES</div>
+                  <div>${pct}% Cump. / <span class="texto-pasajeros-azul">${formatearNumero(reg.pasajeros)} pas.</span></div>
+                </div>
+              </td>`
+            });
           } else {
-            htmlCuerpo += `<td class="text-center text-muted bg-light">-</td>`;
+            if (!filtroColor || filtroColor === "blanco") coincideFiltro = true;
+            celdasFila.push({
+              color: "blanco",
+              html: `<td class="text-center text-muted bg-light">-</td>`
+            });
           }
         });
-        
-        htmlCuerpo += '</tr>';
+
+        if (coincideFiltro) {
+          htmlCuerpo += `<tr>
+            <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
+            <td class="fw-bold"><i class="fa-solid fa-bus text-success me-1"></i> ${info.placa}</td>
+            <td><small>${info.conductor}</small></td>
+            <td><small class="badge bg-light text-dark border">${info.tipo}</small></td>
+            <td><small>${info.rutaCultivo}</small></td>
+            <td class="text-center fw-bold text-primary">${formatearNumero(info.capacidad)}</td>`;
+          
+          celdasFila.forEach(c => {
+            if (filtroColor && c.color !== filtroColor) {
+              htmlCuerpo += `<td class="text-center text-muted bg-light opacity-25">-</td>`;
+            } else {
+              htmlCuerpo += c.html;
+            }
+          });
+          
+          htmlCuerpo += '</tr>';
+        }
       });
+
+      if (htmlCuerpo === '') {
+        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 6}" class="text-muted text-center p-3">No existen registros para el color seleccionado</td></tr>`;
+      }
+
       tBody.innerHTML = htmlCuerpo;
     }
 
