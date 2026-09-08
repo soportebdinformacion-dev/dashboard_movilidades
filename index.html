@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Librería HTML a PDF (solución rápida y estable para conservar estilos y colores) -->
+  <!-- Librería HTML a PDF para conservar estilos, colores y estructura completa -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
@@ -16,7 +16,7 @@
     .btn-frusan:hover { background-color: #64852b; color: white; }
     .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
-    /* Semáforo Solicitado */
+    /* Semáforo y Badges */
     .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
     .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
     .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
@@ -24,7 +24,7 @@
     .badge-naranja { background-color: #fd7e14; color: white; }
     .badge-rojo { background-color: #dc3545; color: white; }
     
-    /* Estado de Conexión Estilos */
+    /* Estado de Conexión */
     .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
     .status-loading { background-color: #ffc107; color: #000; }
     .status-online { background-color: #198754; color: #fff; }
@@ -32,24 +32,23 @@
 
     .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     
-    /* Estilos para las Matrices de Placas y Fechas */
+    /* Estilos para las Matrices */
     .matriz-asistencia { font-size: 0.8rem; }
     .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
     .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
 
-    /* Estilos de colores para el cumplimiento con la visualización solicitada y asientos libres identificados por colores */
+    /* Estilos de celdas para detalle de asientos libres */
     .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
 
-    /* Estilo específico para "X pas." en negrita y color azul */
     .texto-pasajeros-azul { color: #0d6efd !important; font-weight: bold; }
     
-    /* Estilos Botón PDF */
+    /* Botón PDF */
     .btn-pdf { background-color: #dc3545; color: white; border: none; font-weight: 600; }
     .btn-pdf:hover { background-color: #bb2d3b; color: white; }
 
-    /* Estilos de Navegación por Páginas */
+    /* Navegación */
     .nav-tabs .nav-link {
       color: #1b4d3e;
       font-weight: 600;
@@ -111,7 +110,6 @@
   </div>
 
   <div class="container-fluid px-4">
-    <!-- Contenido de Páginas Independientes mediante Tab Panes -->
     <div class="tab-content" id="mainTabContent">
 
       <!-- PÁGINA PRINCIPAL - DASHBOARD DE UNIDADES -->
@@ -123,20 +121,20 @@
             <div class="col-12 col-md-4">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="small text-muted mb-0">(FECHA)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas()">Limpiar</button>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('dash')">Limpiar</button>
               </div>
-              <div id="contenedorFechas" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+              <div id="contenedorFechas_dash" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                 <span class="text-muted small">Cargando fechas...</span>
               </div>
             </div>
 
             <div class="col-6 col-md-4">
               <label class="small text-muted">Semana (SEM)</label>
-              <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+              <select id="fSemana_dash" class="form-select form-select-sm" onchange="sincronizarYProcesar('dash', 'sem')"><option value="">Todas</option></select>
             </div>
             <div class="col-6 col-md-4">
               <label class="small text-muted">Placa</label>
-              <select id="fPlaca" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+              <select id="fPlaca_dash" class="form-select form-select-sm" onchange="sincronizarYProcesar('dash', 'plac')"><option value="">Todas</option></select>
             </div>
           </div>
         </div>
@@ -156,6 +154,31 @@
 
       <!-- PÁGINA 1 - REPORTE DE PLACAS -->
       <div class="tab-pane fade" id="pagina1" role="tabpanel" aria-labelledby="pagina1-tab">
+        <div class="card p-3 mb-4 kpi-card bg-white">
+          <div class="row g-2">
+            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+            
+            <div class="col-12 col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">(FECHA)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p1')">Limpiar</button>
+              </div>
+              <div id="contenedorFechas_p1" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando fechas...</span>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Semana (SEM)</label>
+              <select id="fSemana_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'sem')"><option value="">Todas</option></select>
+            </div>
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Placa</label>
+              <select id="fPlaca_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'plac')"><option value="">Todas</option></select>
+            </div>
+          </div>
+        </div>
+
         <div class="card kpi-card p-3 bg-white mb-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
@@ -179,6 +202,31 @@
 
       <!-- PÁGINA 2 - REPORTE PLACAS DETALLADO -->
       <div class="tab-pane fade" id="pagina2" role="tabpanel" aria-labelledby="pagina2-tab">
+        <div class="card p-3 mb-4 kpi-card bg-white">
+          <div class="row g-2">
+            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+            
+            <div class="col-12 col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">(FECHA)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p2')">Limpiar</button>
+              </div>
+              <div id="contenedorFechas_p2" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando fechas...</span>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Semana (SEM)</label>
+              <select id="fSemana_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'sem')"><option value="">Todas</option></select>
+            </div>
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Placa</label>
+              <select id="fPlaca_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'plac')"><option value="">Todas</option></select>
+            </div>
+          </div>
+        </div>
+
         <div class="card kpi-card p-3 bg-white mb-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
@@ -207,14 +255,14 @@
     let ultimoDatasetFiltrado = []; 
     let chartD = null, chartS = null;
 
+    const VISTAS = ['dash', 'p1', 'p2'];
+
     document.addEventListener("DOMContentLoaded", () => {
       obtenerDatosAPIExterno();
     });
 
     function formatearNumero(valor) {
-      if (typeof valor !== 'number' || isNaN(valor)) {
-        return valor;
-      }
+      if (typeof valor !== 'number' || isNaN(valor)) return valor;
       return valor.toLocaleString('en-US');
     }
 
@@ -265,9 +313,7 @@
       if (!fechaRaw) return "";
       let texto = fechaRaw.toString().trim();
       
-      if (texto.includes("/") && !texto.includes("-")) {
-        return texto;
-      }
+      if (texto.includes("/") && !texto.includes("-")) return texto;
       
       if (isNaN(texto.charAt(0)) && (texto.includes(" ") || texto.includes(","))) {
         let textoLimpio = texto.split("GMT")[0].trim();
@@ -322,25 +368,28 @@
         if(r.placa) placs.add(r.placa);
       });
 
-      let cSem = document.getElementById('fSemana');
-      cSem.innerHTML = '<option value="">Todas</option>';
-      Array.from(sems).sort((a,b)=>a-b).forEach(s => cSem.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+      let opcionesSem = '<option value="">Todas</option>';
+      Array.from(sems).sort((a,b)=>a-b).forEach(s => opcionesSem += `<option value="${s}">Semana ${s}</option>`);
 
-      let cPlac = document.getElementById('fPlaca');
-      cPlac.innerHTML = '<option value="">Todas</option>';
-      Array.from(placs).sort().forEach(p => cPlac.innerHTML += `<option value="${p}">${p}</option>`);
+      let opcionesPlac = '<option value="">Todas</option>';
+      Array.from(placs).sort().forEach(p => opcionesPlac += `<option value="${p}">${p}</option>`);
+
+      VISTAS.forEach(v => {
+        document.getElementById(`fSemana_${v}`).innerHTML = opcionesSem;
+        document.getElementById(`fPlaca_${v}`).innerHTML = opcionesPlac;
+      });
 
       renderizarComboFechasDinamico();
     }
 
     function renderizarComboFechasDinamico() {
-      let fSem = document.getElementById('fSemana').value;
-      let fPlac = document.getElementById('fPlaca').value;
-      let contenedor = document.getElementById('contenedorFechas');
-      
+      let fSem = document.getElementById('fSemana_dash').value;
+      let fPlac = document.getElementById('fPlaca_dash').value;
+
       let seleccionadasAnterior = new Set();
-      if(contenedor) {
-        contenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+      let primerContenedor = document.getElementById('contenedorFechas_dash');
+      if(primerContenedor) {
+        primerContenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
           seleccionadasAnterior.add(cb.value);
         });
       }
@@ -355,41 +404,58 @@
         }
       });
 
-      if(!contenedor) return;
-      contenedor.innerHTML = '';
-      
       let listaFechas = Array.from(fechasFiltradas).sort((a, b) => {
         let pA = a.split('/'), pB = b.split('/');
         return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
       });
 
-      if(listaFechas.length === 0) {
-        contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay fechas disponibles</span>';
-        return;
-      }
+      VISTAS.forEach(v => {
+        let contenedor = document.getElementById(`contenedorFechas_${v}`);
+        if(!contenedor) return;
+        contenedor.innerHTML = '';
 
-      listaFechas.forEach(f => {
-        let checked = seleccionadasAnterior.has(f) ? 'checked' : '';
-        contenedor.innerHTML += `
-          <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
-            <input class="form-check-input chk-fecha" type="checkbox" value="${f}" id="chk_${f}" ${checked} onchange="procesarFiltros()">
-            <label class="form-check-label small" for="chk_${f}" style="cursor: pointer; font-size:0.85rem;">
-              ${f}
-            </label>
-          </div>`;
+        if(listaFechas.length === 0) {
+          contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay fechas disponibles</span>';
+          return;
+        }
+
+        listaFechas.forEach(f => {
+          let checked = seleccionadasAnterior.has(f) ? 'checked' : '';
+          contenedor.innerHTML += `
+            <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
+              <input class="form-check-input chk-fecha chk-fecha-${v}" type="checkbox" value="${f}" id="chk_${v}_${f}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk', '${f}')">
+              <label class="form-check-label small" for="chk_${v}_${f}" style="cursor: pointer; font-size:0.85rem;">
+                ${f}
+              </label>
+            </div>`;
+        });
       });
     }
 
-    function actualizarFiltrosCascada() {
-      renderizarComboFechasDinamico();
+    function sincronizarYProcesar(origenVista, tipo, valor) {
+      if (tipo === 'sem') {
+        let val = document.getElementById(`fSemana_${origenVista}`).value;
+        VISTAS.forEach(v => { document.getElementById(`fSemana_${v}`).value = val; });
+        renderizarComboFechasDinamico();
+      } else if (tipo === 'plac') {
+        let val = document.getElementById(`fPlaca_${origenVista}`).value;
+        VISTAS.forEach(v => { document.getElementById(`fPlaca_${v}`).value = val; });
+        renderizarComboFechasDinamico();
+      } else if (tipo === 'chk') {
+        let estaMarcado = document.getElementById(`chk_${origenVista}_${valor}`).checked;
+        VISTAS.forEach(v => {
+          let target = document.getElementById(`chk_${v}_${valor}`);
+          if(target) target.checked = estaMarcado;
+        });
+      }
       procesarFiltros();
     }
 
     function procesarFiltros() {
-      let fSem = document.getElementById('fSemana').value;
-      let fPlac = document.getElementById('fPlaca').value;
+      let fSem = document.getElementById('fSemana_dash').value;
+      let fPlac = document.getElementById('fPlaca_dash').value;
 
-      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha:checked')).map(cb => cb.value);
+      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha-dash:checked')).map(cb => cb.value);
 
       let filtrados = datasetOriginal.filter(item => {
         let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
@@ -404,7 +470,7 @@
       renderizarContenidos(filtrados);
     }
 
-    function limpiarSeleccionFechas() {
+    function limpiarSeleccionFechas(origenVista) {
       document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
       procesarFiltros();
     }
@@ -436,7 +502,6 @@
       badgeLib.className = "badge mt-1 " + (pLVal <= 10 ? "badge-verde" : (pLVal <= 20 ? "badge-naranja" : "badge-rojo"));
 
       armarGraficos(datos);
-      
       generarMatrizPlacasFechas(datos);
       generarMatrizDetalleFechas(datos);
     }
@@ -444,7 +509,6 @@
     function generarMatrizPlacasFechas(datosFiltrados) {
       let tHead = document.getElementById('matrizCabecera');
       let tBody = document.getElementById('matrizCuerpo');
-      
       if (!tHead || !tBody) return;
 
       let conjuntoFechas = new Set();
@@ -459,9 +523,7 @@
           conjuntoFechas.add(fechaFormato);
           conjuntoPlacas.add(placaFormato);
 
-          if (!registroCruces[placaFormato]) {
-            registroCruces[placaFormato] = {};
-          }
+          if (!registroCruces[placaFormato]) registroCruces[placaFormato] = {};
           registroCruces[placaFormato][fechaFormato] = true;
         }
       });
@@ -509,7 +571,6 @@
     function generarMatrizDetalleFechas(datosFiltrados) {
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
-      
       if (!tHead || !tBody) return;
 
       let conjuntoFechas = new Set();
@@ -534,9 +595,7 @@
             mapaFilasUnicas[claveUnica].capacidad = capacidadReg;
           }
 
-          if (!mapaDetalle[claveUnica]) {
-            mapaDetalle[claveUnica] = {};
-          }
+          if (!mapaDetalle[claveUnica]) mapaDetalle[claveUnica] = {};
           mapaDetalle[claveUnica][fechaFormato] = {
             pasajeros: item.pasajeros || 0,
             libres: item.libres || 0,
@@ -629,9 +688,7 @@
           conjuntoFechas.add(fechaFormato);
           conjuntoPlacas.add(placaFormato);
 
-          if (!mapaLibres[placaFormato]) {
-            mapaLibres[placaFormato] = {};
-          }
+          if (!mapaLibres[placaFormato]) mapaLibres[placaFormato] = {};
           mapaLibres[placaFormato][fechaFormato] = (mapaLibres[placaFormato][fechaFormato] || 0) + (item.libres || 0);
         }
       });
@@ -667,35 +724,44 @@
       XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
     }
 
-    /* EXPORTACIÓN PDF MEDIANTE html2pdf.js CONSERVANDO COLORES Y DISEÑO */
-    function exportarPDFPivoteado() {
-      let elemento = document.getElementById('contenedorMatrizPivoteada');
+    /* FUNCIONALIDAD DE EXPORTACIÓN A PDF COMPLETA CON ESTILOS, COLORES Y TABLA COMPLETA */
+    function exportarPDFGenerico(idContenedor, nombreArchivo) {
+      let elemento = document.getElementById(idContenedor);
       if (!elemento) return;
 
+      // Guardar estilos originales de scroll
+      let maxHeightOriginal = elemento.style.maxHeight;
+      let overflowYOriginal = elemento.style.overflowY;
+
+      // Expandir contenedor para renderizar la totalidad de los datos filtrados
+      elemento.style.maxHeight = 'none';
+      elemento.style.overflowY = 'visible';
+
       let opciones = {
-        margin:       [10, 10, 10, 10],
-        filename:     'Reporte_Pivoteado.pdf',
+        margin:       [8, 8, 8, 8],
+        filename:     nombreArchivo,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
       };
 
-      html2pdf().set(opciones).from(elemento).save();
+      html2pdf().set(opciones).from(elemento).save().then(() => {
+        // Restaurar scroll de pantalla
+        elemento.style.maxHeight = maxHeightOriginal;
+        elemento.style.overflowY = overflowYOriginal;
+      }).catch(err => {
+        elemento.style.maxHeight = maxHeightOriginal;
+        elemento.style.overflowY = overflowYOriginal;
+        console.error("Error al generar PDF:", err);
+      });
+    }
+
+    function exportarPDFPivoteado() {
+      exportarPDFGenerico('contenedorMatrizPivoteada', 'Reporte_Pivoteado_Placas.pdf');
     }
 
     function exportarPDFDetalle() {
-      let elemento = document.getElementById('contenedorTablaDetalle');
-      if (!elemento) return;
-
-      let opciones = {
-        margin:       [10, 10, 10, 10],
-        filename:     'Detalle_Pasajeros_por_Fecha.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-      };
-
-      html2pdf().set(opciones).from(elemento).save();
+      exportarPDFGenerico('contenedorTablaDetalle', 'Reporte_Placas_Detallado.pdf');
     }
 
     function armarGraficos(datos) {
@@ -730,9 +796,7 @@
                 label: function(context) {
                   let label = context.dataset.label || '';
                   if (label) label += ': ';
-                  if (context.parsed.y !== null) {
-                    label += formatearNumero(context.parsed.y);
-                  }
+                  if (context.parsed.y !== null) label += formatearNumero(context.parsed.y);
                   return label;
                 }
               }
@@ -741,9 +805,7 @@
           scales: {
             y: {
               ticks: {
-                callback: function(value) {
-                  return formatearNumero(value);
-                }
+                callback: function(value) { return formatearNumero(value); }
               }
             }
           }
@@ -773,9 +835,7 @@
             y:{
               stacked:true,
               ticks: {
-                callback: function(value) {
-                  return formatearNumero(value);
-                }
+                callback: function(value) { return formatearNumero(value); }
               }
             } 
           },
@@ -785,9 +845,7 @@
                 label: function(context) {
                   let label = context.dataset.label || '';
                   if (label) label += ': ';
-                  if (context.parsed.y !== null) {
-                    label += formatearNumero(context.parsed.y);
-                  }
+                  if (context.parsed.y !== null) label += formatearNumero(context.parsed.y);
                   return label;
                 }
               }
