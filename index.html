@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Librerías de Exportación PDF -->
+  <!-- Librerías de Exportación PDF e Captura de Pantalla -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.min.js"></script>
   <style>
     body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
     .navbar-frusan { background-color: #1b4d3e; color: white; }
@@ -126,7 +126,7 @@
           </button>
         </div>
       </div>
-      <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+      <div class="table-responsive" id="contenedorMatrizPivoteada" style="max-height: 350px; overflow-y: auto;">
         <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
           <thead class="table-dark sticky-top" id="matrizCabecera"></thead>
           <tbody id="matrizCuerpo"></tbody>
@@ -142,7 +142,7 @@
           <i class="fa-solid fa-file-pdf me-1"></i> 📄 Exportar PDF
         </button>
       </div>
-      <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+      <div class="table-responsive" id="contenedorTablaDetalle" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 900px;">
           <thead class="table-dark sticky-top" id="tablaDetalleCabecera"></thead>
           <tbody id="tablaDetalleCuerpo"></tbody>
@@ -539,10 +539,6 @@
 
             let libresStr = String(reg.libres).padStart(2, '0');
             
-            /* MODIFICACIÓN SOLICITADA:
-               - Quitado el "/ Cap: XX"
-               - Texto de pasajeros "X pas." resaltado en negrita y color azul
-            */
             htmlCuerpo += `<td class="text-center">
               <div class="${claseCelda}">
                 <div class="fw-bold">${libresStr} LIBRES</div>
@@ -616,227 +612,83 @@
       XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
     }
 
-    /* 3. CORRECCIÓN DE EXPORTACIÓN A PDF - REPORTE PIVOTEADO */
-    function exportarPDFPivoteado() {
-      let datos = ultimoDatasetFiltrado;
-      if (!datos || datos.length === 0) {
-        alert("No hay datos para exportar a PDF con los filtros actuales.");
-        return;
-      }
+    /* EXPORTACIÓN A PDF FIDEDIGNA CON COLORES Y ESTILOS MEDIANTE CAPTURA HTML */
+    async function exportarPDFPivoteado() {
+      let elemento = document.getElementById('contenedorMatrizPivoteada');
+      if (!elemento) return;
 
-      let conjuntoFechas = new Set();
-      let conjuntoPlacas = new Set();
-      let registroCruces = {};
+      document.getElementById('loader').style.display = 'flex';
 
-      datos.forEach(item => {
-        let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placaFormato = item.placa;
-
-        if(fechaFormato && placaFormato) {
-          conjuntoFechas.add(fechaFormato);
-          conjuntoPlacas.add(placaFormato);
-
-          if (!registroCruces[placaFormato]) {
-            registroCruces[placaFormato] = {};
-          }
-          registroCruces[placaFormato][fechaFormato] = true;
-        }
-      });
-
-      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
-
-      let pdfHead = [["Orden", "Placa / Unidades", ...listaFechasOrdenadas]];
-      let pdfBody = [];
-      let numOrden = 1;
-
-      listaPlacasOrdenadas.forEach(placa => {
-        let fila = [numOrden++, placa];
-        listaFechasOrdenadas.forEach(fecha => {
-          fila.push((registroCruces[placa] && registroCruces[placa][fecha]) ? "OK" : "-");
+      try {
+        let canvas = await html2canvas(elemento, {
+          scale: 2,
+          useCORS: true,
+          logging: false
         });
-        pdfBody.push(fila);
-      });
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'mm', 'a4');
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape', 'mm', 'a4');
 
-      doc.setFontSize(14);
-      doc.setTextColor(27, 77, 62);
-      doc.text("Agrícola Huarmey - Reporte Pivoteado (Fechas en Columnas)", 14, 15);
-      
-      doc.setFontSize(9);
-      doc.setTextColor(100);
-      doc.text(`Generado: ${new Date().toLocaleString()} | Datos filtrados según vista actual`, 14, 20);
+        doc.setFontSize(14);
+        doc.setTextColor(27, 77, 62);
+        doc.text("Agrícola Huarmey - Reporte Pivoteado (Fechas en Columnas)", 14, 15);
+        
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 20);
 
-      doc.autoTable({
-        head: pdfHead,
-        body: pdfBody,
-        startY: 25,
-        theme: 'grid',
-        styles: {
-          fontSize: 7,
-          cellPadding: 2,
-          halign: 'center',
-          valign: 'middle'
-        },
-        headStyles: {
-          fillColor: [27, 77, 62],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: {
-          0: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
-          1: { cellWidth: 25, halign: 'left', fontStyle: 'bold' }
-        },
-        margin: { top: 25, left: 10, right: 10, bottom: 15 },
-        tableWidth: 'auto',
-        horizontalPageBreak: true,
-        horizontalPageBreakRepeat: 0,
-        didDrawPage: function (data) {
-          let str = "Página " + doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.setTextColor(120);
-          doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 8);
-        }
-      });
-
-      doc.save("Reporte_Pivoteado.pdf");
+        let imgData = canvas.toDataURL('image/png');
+        let imgWidth = 270; 
+        let pageHeight = 185; 
+        let imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        doc.addImage(imgData, 'PNG', 14, 25, imgWidth, Math.min(imgHeight, pageHeight));
+        doc.save("Reporte_Pivoteado.pdf");
+      } catch (e) {
+        console.error(e);
+        alert("Ocurrió un error al generar el PDF.");
+      } finally {
+        document.getElementById('loader').style.display = 'none';
+      }
     }
 
-    /* 3. CORRECCIÓN DE EXPORTACIÓN A PDF - DETALLE DE PASAJEROS POR FECHA */
-    function exportarPDFDetalle() {
-      let datos = ultimoDatasetFiltrado;
-      if (!datos || datos.length === 0) {
-        alert("No hay datos para exportar a PDF con los filtros actuales.");
-        return;
-      }
+    async function exportarPDFDetalle() {
+      let elemento = document.getElementById('contenedorTablaDetalle');
+      if (!elemento) return;
 
-      let conjuntoFechas = new Set();
-      let mapaFilasUnicas = {}; 
-      let mapaDetalle = {};     
+      document.getElementById('loader').style.display = 'flex';
 
-      datos.forEach(item => {
-        let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placa = item.placa || "";
-        let conductor = item.conductor || "";
-        let rutaCultivo = item.ruta || item.cultivo ? `${item.ruta || ''} / ${item.cultivo || ''}` : "";
-        let tipoMovilidad = item.tipo || "Movilidad";
-        let capacidadReg = item.capacidad || 0;
-
-        if(fechaFormato && placa) {
-          conjuntoFechas.add(fechaFormato);
-
-          let claveUnica = `${placa}_${conductor}_${rutaCultivo}`;
-          if (!mapaFilasUnicas[claveUnica]) {
-            mapaFilasUnicas[claveUnica] = { placa, conductor, tipo: tipoMovilidad, rutaCultivo, capacidad: capacidadReg };
-          } else if (capacidadReg > mapaFilasUnicas[claveUnica].capacidad) {
-            mapaFilasUnicas[claveUnica].capacidad = capacidadReg;
-          }
-
-          if (!mapaDetalle[claveUnica]) {
-            mapaDetalle[claveUnica] = {};
-          }
-          mapaDetalle[claveUnica][fechaFormato] = {
-            pasajeros: item.pasajeros || 0,
-            libres: item.libres || 0,
-            capacidad: capacidadReg
-          };
-        }
-      });
-
-      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      let llavesFilas = Object.keys(mapaFilasUnicas).sort((a,b) => mapaFilasUnicas[a].placa.localeCompare(mapaFilasUnicas[b].placa));
-
-      let pdfHead = [["Orden", "Placa", "Conductor", "Tipo", "Ruta / Cultivo", "Capacidad", ...listaFechasOrdenadas]];
-      let pdfBody = [];
-      let numOrden = 1;
-
-      llavesFilas.forEach(clave => {
-        let info = mapaFilasUnicas[clave];
-        let fila = [
-          numOrden++,
-          info.placa,
-          info.conductor,
-          info.tipo,
-          info.rutaCultivo,
-          info.capacidad
-        ];
-
-        listaFechasOrdenadas.forEach(fecha => {
-          let reg = mapaDetalle[clave] && mapaDetalle[clave][fecha];
-          if (reg) {
-            let pct = reg.capacidad > 0 ? Math.round((reg.pasajeros / reg.capacidad) * 100) : 0;
-            let libresStr = String(reg.libres).padStart(2, '0');
-            // Formato limpio en texto para el PDF sin HTML
-            fila.push(`${libresStr} LIBRES\n${pct}% Cump.\n${reg.pasajeros} pas.`);
-          } else {
-            fila.push("-");
-          }
+      try {
+        let canvas = await html2canvas(elemento, {
+          scale: 2,
+          useCORS: true,
+          logging: false
         });
 
-        pdfBody.push(fila);
-      });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape', 'mm', 'a4');
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'mm', 'a4');
+        doc.setFontSize(14);
+        doc.setTextColor(27, 77, 62);
+        doc.text("Agrícola Huarmey - Detalle de Pasajeros por Fecha", 14, 15);
 
-      doc.setFontSize(14);
-      doc.setTextColor(27, 77, 62);
-      doc.text("Agrícola Huarmey - Detalle de Pasajeros por Fecha", 14, 15);
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 20);
 
-      doc.setFontSize(9);
-      doc.setTextColor(100);
-      doc.text(`Generado: ${new Date().toLocaleString()} | Respetando filtros seleccionados`, 14, 20);
+        let imgData = canvas.toDataURL('image/png');
+        let imgWidth = 270;
+        let pageHeight = 185;
+        let imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      doc.autoTable({
-        head: pdfHead,
-        body: pdfBody,
-        startY: 25,
-        theme: 'grid',
-        styles: {
-          fontSize: 6.5,
-          cellPadding: 1.8,
-          halign: 'center',
-          valign: 'middle',
-          overflow: 'linebreak'
-        },
-        headStyles: {
-          fillColor: [27, 77, 62],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: {
-          0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
-          1: { cellWidth: 20, halign: 'left', fontStyle: 'bold' },
-          2: { cellWidth: 28, halign: 'left' },
-          3: { cellWidth: 18, halign: 'center' },
-          4: { cellWidth: 28, halign: 'left' },
-          5: { cellWidth: 16, halign: 'center', fontStyle: 'bold' }
-        },
-        margin: { top: 25, left: 10, right: 10, bottom: 15 },
-        tableWidth: 'auto',
-        horizontalPageBreak: true,
-        horizontalPageBreakRepeat: 0,
-        didDrawPage: function (data) {
-          let str = "Página " + doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.setTextColor(120);
-          doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 8);
-        }
-      });
-
-      doc.save("Detalle_Pasajeros_por_Fecha.pdf");
+        doc.addImage(imgData, 'PNG', 14, 25, imgWidth, Math.min(imgHeight, pageHeight));
+        doc.save("Detalle_Pasajeros_por_Fecha.pdf");
+      } catch (e) {
+        console.error(e);
+        alert("Ocurrió un error al generar el PDF.");
+      } finally {
+        document.getElementById('loader').style.display = 'none';
+      }
     }
 
     function armarGraficos(datos) {
