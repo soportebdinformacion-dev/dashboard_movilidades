@@ -93,7 +93,12 @@
     <!-- Pestañas de Navegación -->
     <ul class="nav nav-tabs border-bottom-0" id="mainTab" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="pagina1-tab" data-bs-toggle="tab" data-bs-target="#pagina1" type="button" role="tab" aria-controls="pagina1" aria-selected="true">
+        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+          <i class="fa-solid fa-chart-line me-1"></i> DASHBOARD DE UNIDADES
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pagina1-tab" data-bs-toggle="tab" data-bs-target="#pagina1" type="button" role="tab" aria-controls="pagina1" aria-selected="false">
           <i class="fa-solid fa-table me-1"></i> REPORTE DE PLACAS
         </button>
       </li>
@@ -106,47 +111,51 @@
   </div>
 
   <div class="container-fluid px-4">
-    <div class="card p-3 mb-4 kpi-card bg-white">
-      <div class="row g-2">
-        <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-        
-        <div class="col-12 col-md-4">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <label class="small text-muted mb-0">(FECHA)</label>
-            <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas()">Limpiar</button>
-          </div>
-          <div id="contenedorFechas" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-            <span class="text-muted small">Cargando fechas...</span>
-          </div>
-        </div>
-
-        <div class="col-6 col-md-4">
-          <label class="small text-muted">Semana (SEM)</label>
-          <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
-        </div>
-        <div class="col-6 col-md-4">
-          <label class="small text-muted">Placa</label>
-          <select id="fPlaca" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
-      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
-      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
-      <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
-      <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
-    </div>
-
     <!-- Contenido de Páginas Independientes mediante Tab Panes -->
     <div class="tab-content" id="mainTabContent">
-      <!-- 1. PÁGINA 1 - REPORTE DE PLACAS -->
-      <div class="tab-pane fade show active" id="pagina1" role="tabpanel" aria-labelledby="pagina1-tab">
+
+      <!-- PÁGINA PRINCIPAL - DASHBOARD DE UNIDADES -->
+      <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+        <div class="card p-3 mb-4 kpi-card bg-white">
+          <div class="row g-2">
+            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
+            
+            <div class="col-12 col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="small text-muted mb-0">(FECHA)</label>
+                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas()">Limpiar</button>
+              </div>
+              <div id="contenedorFechas" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <span class="text-muted small">Cargando fechas...</span>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Semana (SEM)</label>
+              <select id="fSemana" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+            </div>
+            <div class="col-6 col-md-4">
+              <label class="small text-muted">Placa</label>
+              <select id="fPlaca" class="form-select form-select-sm" onchange="actualizarFiltrosCascada()"><option value="">Todas</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
+          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
+          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
+          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-line"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
+          <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
+        </div>
+      </div>
+
+      <!-- PÁGINA 1 - REPORTE DE PLACAS -->
+      <div class="tab-pane fade" id="pagina1" role="tabpanel" aria-labelledby="pagina1-tab">
         <div class="card kpi-card p-3 bg-white mb-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
@@ -159,7 +168,7 @@
               </button>
             </div>
           </div>
-          <div class="table-responsive" id="contenedorMatrizPivoteada" style="max-height: 350px; overflow-y: auto;">
+          <div class="table-responsive" id="contenedorMatrizPivoteada" style="max-height: 500px; overflow-y: auto;">
             <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
               <thead class="table-dark sticky-top" id="matrizCabecera"></thead>
               <tbody id="matrizCuerpo"></tbody>
@@ -168,7 +177,7 @@
         </div>
       </div>
 
-      <!-- 2. PÁGINA 2 - REPORTE PLACAS DETALLADO -->
+      <!-- PÁGINA 2 - REPORTE PLACAS DETALLADO -->
       <div class="tab-pane fade" id="pagina2" role="tabpanel" aria-labelledby="pagina2-tab">
         <div class="card kpi-card p-3 bg-white mb-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
@@ -177,7 +186,7 @@
               <i class="fa-solid fa-file-pdf me-1"></i> 📄 Exportar PDF
             </button>
           </div>
-          <div class="table-responsive" id="contenedorTablaDetalle" style="max-height: 400px; overflow-y: auto;">
+          <div class="table-responsive" id="contenedorTablaDetalle" style="max-height: 500px; overflow-y: auto;">
             <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 900px;">
               <thead class="table-dark sticky-top" id="tablaDetalleCabecera"></thead>
               <tbody id="tablaDetalleCuerpo"></tbody>
@@ -185,6 +194,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
