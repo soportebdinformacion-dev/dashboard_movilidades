@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- html2pdf.js para exportación a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
     .navbar-frusan { background-color: #1b4d3e; color: white; }
@@ -39,6 +41,19 @@
     .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
     .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
+
+    /* Estilo resaltado para el indicador "13 pas." */
+    .indicador-pas-destacado {
+      background-color: #d97706;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+      letter-spacing: 0.3px;
+    }
   </style>
 </head>
 <body>
@@ -104,12 +119,17 @@
     </div>
 
     <!-- 1. Reporte Pivoteado (Fechas en Columnas) -->
-    <div class="card kpi-card p-3 bg-white mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="card kpi-card p-3 bg-white mb-4" id="seccionReportePivoteado">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
-        <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
-          <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
-        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-danger fw-bold" onclick="exportarReportePivoteadoPDF()">
+            📄 Exportar Reporte Pivoteado a PDF
+          </button>
+          <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
+            <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
+          </button>
+        </div>
       </div>
       <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
         <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
@@ -119,10 +139,13 @@
       </div>
     </div>
 
-    <!-- 2. Reporte Detallado con Formato Solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] e Identificación de Libres por colores -->
-    <div class="card kpi-card p-3 bg-white mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- 2. Reporte Detallado con Formato Solicitado -->
+    <div class="card kpi-card p-3 bg-white mb-4" id="seccionDetallePasajeros">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
+        <button class="btn btn-sm btn-danger fw-bold" onclick="exportarDetallePasajerosPDF()">
+          📄 Exportar Detalle de Pasajeros a PDF
+        </button>
       </div>
       <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 900px;">
@@ -421,7 +444,7 @@
       tBody.innerHTML = htmlCuerpo;
     }
 
-    // 2. Matriz Detallada con el formato solicitado: [Porcentaje]% Cump. / [Pasajeros] pas. / Cap: [Capacidad] y [X] LIBRES identificado por colores
+    // 2. Matriz Detallada con el formato solicitado
     function generarMatrizDetalleFechas(datosFiltrados) {
       let tHead = document.getElementById('tablaDetalleCabecera');
       let tBody = document.getElementById('tablaDetalleCuerpo');
@@ -498,12 +521,12 @@
             if (pct < 80) claseCelda = "cell-detalle-rojo";
             else if (pct < 90) claseCelda = "cell-detalle-naranja";
 
-            // Formato solicitado con asientos libres identificados por colores (ej. 01 LIBRES)
+            // Modificación solicitada 3.1: Indicador "pas." resaltado
             let libresStr = String(reg.libres).padStart(2, '0');
             htmlCuerpo += `<td class="text-center">
               <div class="${claseCelda}">
                 <div class="fw-bold">${libresStr} LIBRES</div>
-                <div>${pct}% Cump. / ${reg.pasajeros} pas. / Cap: ${reg.capacidad}</div>
+                <div>${pct}% Cump. / <span class="indicador-pas-destacado">${reg.pasajeros} pas.</span> / Cap: ${reg.capacidad}</div>
               </div>
             </td>`;
           } else {
@@ -570,6 +593,60 @@
       XLSX.utils.book_append_sheet(workbook, worksheet, "Asientos Libres");
 
       XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
+    }
+
+    // Exportar PDF - Reporte Pivoteado
+    function exportarReportePivoteadoPDF() {
+      let elementoOriginal = document.getElementById('seccionReportePivoteado');
+      if (!elementoOriginal) return;
+
+      let clon = elementoOriginal.cloneNode(true);
+      let botones = clon.querySelectorAll('button');
+      botones.forEach(b => b.remove());
+
+      let contenedorTabla = clon.querySelector('.table-responsive');
+      if (contenedorTabla) {
+        contenedorTabla.style.maxHeight = 'none';
+        contenedorTabla.style.overflow = 'visible';
+      }
+
+      let opc = {
+        margin:       [10, 10, 10, 10],
+        filename:     'Reporte_Pivoteado_Huarmey.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opc).from(clon).save();
+    }
+
+    // Exportar PDF - Detalle de Pasajeros
+    function exportarDetallePasajerosPDF() {
+      let elementoOriginal = document.getElementById('seccionDetallePasajeros');
+      if (!elementoOriginal) return;
+
+      let clon = elementoOriginal.cloneNode(true);
+      let botones = clon.querySelectorAll('button');
+      botones.forEach(b => b.remove());
+
+      let contenedorTabla = clon.querySelector('.table-responsive');
+      if (contenedorTabla) {
+        contenedorTabla.style.maxHeight = 'none';
+        contenedorTabla.style.overflow = 'visible';
+      }
+
+      let opc = {
+        margin:       [8, 8, 8, 8],
+        filename:     'Detalle_Pasajeros_Huarmey.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opc).from(clon).save();
     }
 
     function armarGraficos(datos) {
