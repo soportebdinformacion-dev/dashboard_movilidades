@@ -1,1064 +1,369 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Agrícola Huarmey - Conexión API</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Librería HTML a PDF para conservar estilos, colores y estructura completa -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    body { background-color: #f1f5f4; font-family: 'Segoe UI', sans-serif; }
-    .navbar-frusan { background-color: #1b4d3e; color: white; }
-    .btn-frusan { background-color: #7ba236; color: white; border: none; }
-    .btn-frusan:hover { background-color: #64852b; color: white; }
-    .kpi-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    
-    /* Semáforo y Badges */
-    .semaforo-verde { background-color: #d1e7dd; color: #0f5132; border-left: 5px solid #198754; }
-    .semaforo-naranja { background-color: #fff3cd; color: #664d03; border-left: 5px solid #ffc107; }
-    .semaforo-rojo { background-color: #f8d7da; color: #842029; border-left: 5px solid #dc3545; }
-    .badge-verde { background-color: #198754; color: white; }
-    .badge-naranja { background-color: #fd7e14; color: white; }
-    .badge-rojo { background-color: #dc3545; color: white; }
-    
-    /* Estado de Conexión */
-    .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
-    .status-loading { background-color: #ffc107; color: #000; }
-    .status-online { background-color: #198754; color: #fff; }
-    .status-offline { background-color: #dc3545; color: #fff; }
-
-    .loader-container { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    
-    /* Estilos para las Matrices */
-    .matriz-asistencia { font-size: 0.8rem; }
-    .cell-active { background-color: #e2f0d9 !important; color: #385723; font-weight: bold; text-align: center; }
-    .cell-inactive { background-color: #fce4d6 !important; color: #c65911; text-align: center; }
-
-    /* Estilos de celdas para detalle de asientos libres */
-    .cell-detalle-verde { background-color: #d1e7dd !important; color: #0f5132; border: 1px solid #badbcc; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
-    .cell-detalle-naranja { background-color: #fff3cd !important; color: #664d03; border: 1px solid #ffecb5; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
-    .cell-detalle-rojo { background-color: #f8d7da !important; color: #842029; border: 1px solid #f5c2c7; border-radius: 4px; padding: 4px; font-size: 0.75rem; }
-
-    .texto-pasajeros-azul { color: #0d6efd !important; font-weight: bold; }
-    
-    /* Botón PDF */
-    .btn-pdf { background-color: #dc3545; color: white; border: none; font-weight: 600; }
-    .btn-pdf:hover { background-color: #bb2d3b; color: white; }
-
-    /* Navegación */
-    .nav-tabs .nav-link {
-      color: #1b4d3e;
-      font-weight: 600;
-      border: 1px solid transparent;
-      border-top-left-radius: .25rem;
-      border-top-right-radius: .25rem;
-    }
-    .nav-tabs .nav-link.active {
-      color: #1b4d3e;
-      background-color: #ffffff;
-      border-color: #dee2e6 #dee2e6 #ffffff;
-      border-bottom: 3px solid #7ba236;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de movilidades - Fundo Frusan</title>
+<link rel="icon" href="ICO FRUSAN.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{--ink:#17391f;--hoja:#3f8f2a;--manzana:#cf2d1b;--ambar:#e8a317;--fondo:#f2f5ee;--linea:#dde5d6;--muted:#5d6f5f}
+body{background:var(--fondo);color:#1d2b1f;font-family:Figtree,'Segoe UI',sans-serif;font-size:.95rem}
+h1,h2,h3,.num{font-family:'Bricolage Grotesque',Figtree,sans-serif}
+:focus-visible{outline:3px solid var(--ambar);outline-offset:2px}
+.top{background:var(--ink);color:#fff;padding:.7rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.top .logo{width:46px;height:46px;background:#fff;border-radius:12px;padding:3px;object-fit:contain}
+.top h1{font-size:1.3rem;margin:0;line-height:1.1}.top small{opacity:.75}
+.pill{font-size:.8rem;font-weight:600;padding:.3rem .8rem;border-radius:20px}
+.pill.load{background:var(--ambar);color:#2b2000}.pill.ok{background:#d6ecd0;color:#1d4d12}.pill.off{background:#f6c9c3;color:#7d1a10}
+.btn-hoja{background:var(--hoja);color:#fff;border:0;font-weight:600}.btn-hoja:hover{background:#357a23;color:#fff}
+.panel{background:#fff;border:1px solid var(--linea);border-radius:10px}
+.filtros{padding:.9rem 1rem}.filtros label{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:2px}
+.rapido button{border:1px solid var(--linea);background:#fff;font-size:.75rem;padding:.15rem .55rem;border-radius:6px;color:var(--ink)}
+.rapido button:hover{background:#e9f2e4}
+#resumenFiltro{font-size:.85rem;color:var(--muted)}
+.nav-tabs{border-bottom:2px solid var(--linea)}.nav-tabs .nav-link{color:var(--muted);font-weight:600;border:0;border-bottom:3px solid transparent}
+.nav-tabs .nav-link.active{color:var(--ink);background:none;border-bottom-color:var(--hoja)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr)}
+.kpi{padding:.9rem 1.1rem;border-right:1px solid var(--linea)}.kpi:last-child{border:0}
+.kpi span{font-size:.8rem;color:var(--muted)}.kpi .num{font-size:1.9rem;line-height:1.15;display:block}
+.gauge{position:relative;height:8px;background:#e8eee3;border-radius:4px;margin-top:.5rem}.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.gauge b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.45}
+@media(max-width:991px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi{border-bottom:1px solid var(--linea)}}
+.card-g{padding:1rem}.card-g h2{font-size:1.05rem;margin:0}.card-g p{font-size:.8rem;color:var(--muted);margin:0 0 .6rem}
+.chart{position:relative;height:270px}
+.leyenda span{font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;margin-right:.8rem}
+.leyenda i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.v{background:#d6ecd0;color:#1d4d12}.n{background:#fbe7b5;color:#6b4a00}.r{background:#f6c9c3;color:#7d1a10}
+.nr{background:#fff;color:#9aa79a;border:1px dashed var(--linea)!important}
+.seg button{border:1px solid var(--linea);background:#fff;font-size:.78rem;padding:.2rem .6rem;color:var(--ink)}
+.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabla{max-height:560px;overflow:auto;border:1px solid var(--linea);border-radius:8px}
+.tabla table{border-collapse:separate;border-spacing:0;font-size:.8rem;margin:0;white-space:nowrap}
+.tabla th{position:sticky;top:0;background:var(--ink);color:#fff;font-weight:600;text-align:center;padding:.35rem .5rem;z-index:3}
+.tabla th small{display:block;font-weight:400;opacity:.7;font-size:.68rem}
+.tabla td{padding:.3rem .5rem;border-bottom:1px solid var(--linea);border-right:1px solid #fff;text-align:center;vertical-align:middle}
+.tabla td.f{text-align:left;background:#f7faf4}
+.tabla .c1{position:sticky;left:0;z-index:2;min-width:42px}.tabla .c2{position:sticky;left:42px;z-index:2;min-width:96px;font-weight:700;box-shadow:2px 0 0 var(--linea)}
+.tabla th.c1,.tabla th.c2{z-index:4}
+.tabla td.fade{opacity:.2}.tabla tfoot td{position:sticky;bottom:0;background:#eef4ea;font-weight:700;z-index:2}
+.cel small{display:block;font-size:.68rem;opacity:.85}
+.mini{display:inline-block;width:46px;height:6px;background:#e8eee3;border-radius:3px;vertical-align:middle;margin-left:.3rem;overflow:hidden}.mini i{display:block;height:100%;background:var(--hoja)}
+.loader{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pdfdoc{width:1400px;background:#fff;padding:16px;color:#000}.pdfdoc h2{font-size:20px}.pdfdoc th,.pdfdoc td{position:static!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
+<div id="loader" class="loader"><div class="spinner-border text-success" style="width:2.6rem;height:2.6rem"></div><p class="mt-3 fw-semibold" style="color:var(--ink)">Consultando la base de movilidades…</p></div>
 
-  <div id="loader" class="loader-container">
-    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3 fw-bold text-success">Consultando base de datos de las Movilidades...</h5>
-  </div>
+<header class="top">
+  <img class="logo" src="ICO FRUSAN.png" alt="Logo Frusan" onerror="this.style.display='none'">
+  <div class="me-auto"><h1>Control de movilidades</h1><small>Agrícola Huarmey, Fundo Frusan</small></div>
+  <span id="estado" class="pill load"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Conectando…</span>
+  <button class="btn btn-sm btn-hoja" onclick="cargar()"><i class="fa-solid fa-arrows-rotate me-1"></i>Actualizar datos</button>
+</header>
 
-  <nav class="navbar navbar-frusan shadow-sm mb-3">
-    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-      <span class="navbar-brand fw-bold mb-0 text-white d-flex align-items-center">
-        <img src="ICO FRUSAN.png" alt="Logo Frusan" width="40" height="40" class="d-inline-block align-text-top me-2" style="object-fit: contain; background: white; border-radius: 4px; padding: 2px;">
-        Agrícola Huarmey - Fundo Frusan
-      </span>
-      <div class="d-flex align-items-center gap-3">
-        <span id="dbStatusBadge" class="status-badge status-loading">
-          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Verificando BD...
-        </span>
-        <button class="btn btn-sm btn-frusan" onclick="obtenerDatosAPIExterno()">
-          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
-        </button>
+<main class="container-fluid px-4 py-3">
+  <div id="aviso"></div>
+  <section class="panel filtros mb-3" aria-label="Filtros">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-lg-4">
+        <label>Rango de fechas</label>
+        <div class="d-flex gap-2"><input type="date" id="fDesde" class="form-control form-control-sm"><input type="date" id="fHasta" class="form-control form-control-sm"></div>
+        <div class="rapido mt-1 d-flex gap-1 flex-wrap">
+          <button onclick="rango(1)">Último día</button><button onclick="rango(7)">7 días</button><button onclick="rango(15)">15 días</button><button onclick="rango(30)">30 días</button><button onclick="rango(0)">Todo</button>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2"><label>Semana</label><select id="fSem" class="form-select form-select-sm"></select></div>
+      <div class="col-6 col-lg-2"><label>Placas</label>
+        <div class="dropdown"><button id="btnPlacas" class="form-select form-select-sm text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside">Todas</button>
+          <div class="dropdown-menu p-2" style="min-width:240px;max-height:300px;overflow:auto"><button class="btn btn-sm btn-light w-100 mb-1" onclick="limpiarPlacas()">Ver todas las placas</button><div id="listaPlacas"></div></div></div></div>
+      <div class="col-6 col-lg-2"><label>Ruta</label><select id="fRuta" class="form-select form-select-sm"></select></div>
+      <div class="col-6 col-lg-2"><label>Tipo de unidad</label><select id="fTipo" class="form-select form-select-sm"></select></div>
+    </div>
+    <div id="resumenFiltro" class="mt-2"></div>
+  </section>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t1" type="button"><i class="fa-solid fa-chart-column me-1"></i>Resumen de unidades</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t2" type="button"><i class="fa-solid fa-table-cells me-1"></i>Reporte de placas</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t3" type="button"><i class="fa-solid fa-list-check me-1"></i>Detalle por placa</button></li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="t1">
+      <div class="panel kpis mb-3" id="kpis"></div>
+      <div class="row g-3">
+        <div class="col-12 col-xl-7"><div class="panel card-g"><h2>Pasajeros y asientos libres por día</h2><p>La línea muestra el porcentaje de ocupación.</p><div class="chart"><canvas id="cDia"></canvas></div></div></div>
+        <div class="col-12 col-xl-5"><div class="panel card-g"><h2>Acumulado por semana</h2><p>Semanas de domingo a sábado.</p><div class="chart"><canvas id="cSem"></canvas></div></div></div>
+        <div class="col-12 col-xl-6"><div class="panel card-g"><h2>Unidades con menor ocupación</h2><p>Las 10 placas con menos pasajeros respecto a su capacidad.</p><div class="chart"><canvas id="cPlaca"></canvas></div></div></div>
+        <div class="col-12 col-xl-6"><div class="panel card-g"><h2>Ocupación por ruta</h2><p>Las 8 rutas con más capacidad en el periodo.</p><div class="chart"><canvas id="cRuta"></canvas></div></div></div>
       </div>
     </div>
-  </nav>
 
-  <div class="container-fluid px-4 mb-3">
-    <!-- Pestañas de Navegación -->
-    <ul class="nav nav-tabs border-bottom-0" id="mainTab" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
-          <i class="fa-solid fa-chart-line me-1"></i> DASHBOARD DE UNIDADES
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pagina1-tab" data-bs-toggle="tab" data-bs-target="#pagina1" type="button" role="tab" aria-controls="pagina1" aria-selected="false">
-          <i class="fa-solid fa-table me-1"></i> REPORTE DE PLACAS
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pagina2-tab" data-bs-toggle="tab" data-bs-target="#pagina2" type="button" role="tab" aria-controls="pagina2" aria-selected="false">
-          <i class="fa-solid fa-list-check me-1"></i> REPORTE PLACAS DETALLADO
-        </button>
-      </li>
-    </ul>
+    <div class="tab-pane fade" id="t2"><div class="panel card-g">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+        <div><h2>Ocupación diaria por placa</h2><p id="n2" class="mb-0"></p></div>
+        <div class="d-flex gap-2 flex-wrap align-items-start"><div class="seg"></div>
+          <button class="btn btn-sm btn-danger" onclick="pdf('b2','Reporte de placas','Reporte_Placas.pdf')"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
+          <button class="btn btn-sm btn-success" onclick="excel()"><i class="fa-solid fa-file-excel me-1"></i>Excel de asientos libres</button></div>
+      </div>
+      <div class="leyenda mb-2"><span><i class="v"></i>90% o más</span><span><i class="n"></i>80% a 89%</span><span><i class="r"></i>Menos de 80%</span><span><i class="nr"></i>Sin registro ese día</span></div>
+      <div id="b2" class="tabla"></div>
+    </div></div>
+
+    <div class="tab-pane fade" id="t3"><div class="panel card-g">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+        <div><h2>Pasajeros y asientos libres por placa</h2><p id="n3" class="mb-0"></p></div>
+        <div class="d-flex gap-2 flex-wrap align-items-start"><div class="seg"></div>
+          <button class="btn btn-sm btn-danger" onclick="pdf('b3','Detalle por placa','Detalle_Placas.pdf')"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button></div>
+      </div>
+      <div id="b3" class="tabla"></div>
+    </div></div>
   </div>
-
-  <div class="container-fluid px-4">
-    <div class="tab-content" id="mainTabContent">
-
-      <!-- PÁGINA PRINCIPAL - DASHBOARD DE UNIDADES -->
-      <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-        <div class="card p-3 mb-4 kpi-card bg-white">
-          <div class="row g-2">
-            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-            
-            <div class="col-12 col-md-4">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">(FECHA)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('dash')">Limpiar</button>
-              </div>
-              <div id="contenedorFechas_dash" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando fechas...</span>
-              </div>
-            </div>
-
-            <div class="col-6 col-md-4">
-              <label class="small text-muted">Semana (SEM)</label>
-              <select id="fSemana_dash" class="form-select form-select-sm" onchange="sincronizarYProcesar('dash', 'sem')"><option value="">Todas</option></select>
-            </div>
-
-            <div class="col-6 col-md-4">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('dash')">Limpiar</button>
-              </div>
-              <div id="contenedorPlacas_dash" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando placas...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Movilidades</span><h3 class="fw-bold mb-0" id="kpiUnidades">0</h3></div><i class="fa-solid fa-bus fa-2x text-success opacity-50"></i></div></div></div>
-          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Capacidad</span><h3 class="fw-bold mb-0" id="kpiCapacidad">0</h3></div><i class="fa-solid fa-people-roof fa-2x text-primary opacity-50"></i></div></div></div>
-          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Pasajeros</span><h3 class="fw-bold mb-0" id="kpiPasajeros">0</h3><span class="badge badge-verde mt-1" id="pctPasajeros">0%</span></div><i class="fa-solid fa-user-check fa-2x text-info opacity-50"></i></div></div></div>
-          <div class="col-6 col-lg-3"><div class="card kpi-card p-3 bg-white"><div class="d-flex justify-content-between align-items-center"><div><span class="text-muted small text-uppercase">Libres</span><h3 class="fw-bold mb-0" id="kpiLibres">0</h3><span class="badge badge-rojo mt-1" id="pctLibres">0%</span></div><i class="fa-solid fa-chair fa-2x text-danger opacity-50"></i></div></div></div>
-        </div>
-
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Comparativo Diario (Pasajeros vs Libres)</h6><div style="height:230px;"><canvas id="canvasDiario"></canvas></div></div></div>
-          <div class="col-12 col-lg-6"><div class="card kpi-card p-3 bg-white"><h6><i class="fa-solid fa-chart-bar"></i> Reporte Semanal Acumulado</h6><div style="height:230px;"><canvas id="canvasSemanal"></canvas></div></div></div>
-        </div>
-      </div>
-
-      <!-- PÁGINA 1 - REPORTE DE PLACAS -->
-      <div class="tab-pane fade" id="pagina1" role="tabpanel" aria-labelledby="pagina1-tab">
-        <div class="card p-3 mb-4 kpi-card bg-white">
-          <div class="row g-2">
-            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-            
-            <div class="col-12 col-md-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">(FECHA)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p1')">Limpiar</button>
-              </div>
-              <div id="contenedorFechas_p1" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando fechas...</span>
-              </div>
-            </div>
-
-            <div class="col-6 col-md-3">
-              <label class="small text-muted">Semana (SEM)</label>
-              <select id="fSemana_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'sem')"><option value="">Todas</option></select>
-            </div>
-
-            <div class="col-6 col-md-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('p1')">Limpiar</button>
-              </div>
-              <div id="contenedorPlacas_p1" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando placas...</span>
-              </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label class="small text-muted">Filtro por Color / Estado</label>
-              <select id="fColor_p1" class="form-select form-select-sm" onchange="sincronizarYProcesar('p1', 'col')">
-                <option value="">Todos los colores</option>
-                <option value="verde">🟢 Verde (Registrado / ≥ 90%)</option>
-                <option value="naranja">🟠 Naranja (80% - 89%)</option>
-                <option value="rojo">🔴 Rojo (< 80%)</option>
-                <option value="blanco">⚪ Blanco / Sin Registro (-)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="card kpi-card p-3 bg-white mb-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <h6 class="mb-0"><i class="fa-solid fa-calendar-days text-success"></i> Reporte Pivoteado (Fechas en Columnas)</h6>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-pdf shadow-sm" onclick="exportarPDFPivoteado()">
-                <i class="fa-solid fa-file-pdf me-1"></i> 📄 Exportar PDF
-              </button>
-              <button class="btn btn-sm btn-success fw-bold" onclick="exportarAsientosLibresExcel()">
-                <i class="fa-solid fa-file-excel me-1"></i> Exportar Asientos Libres Excel
-              </button>
-            </div>
-          </div>
-          <div class="table-responsive" id="contenedorMatrizPivoteada" style="max-height: 500px; overflow-y: auto;">
-            <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 600px;">
-              <thead class="table-dark sticky-top" id="matrizCabecera"></thead>
-              <tbody id="matrizCuerpo"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- PÁGINA 2 - REPORTE PLACAS DETALLADO -->
-      <div class="tab-pane fade" id="pagina2" role="tabpanel" aria-labelledby="pagina2-tab">
-        <div class="card p-3 mb-4 kpi-card bg-white">
-          <div class="row g-2">
-            <div class="col-12"><span class="fw-bold text-secondary text-uppercase small"><i class="fa-solid fa-filter"></i> Filtros de Control</span></div>
-            
-            <div class="col-12 col-md-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">(FECHA)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionFechas('p2')">Limpiar</button>
-              </div>
-              <div id="contenedorFechas_p2" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando fechas...</span>
-              </div>
-            </div>
-
-            <div class="col-6 col-md-3">
-              <label class="small text-muted">Semana (SEM)</label>
-              <select id="fSemana_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'sem')"><option value="">Todas</option></select>
-            </div>
-
-            <div class="col-6 col-md-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small text-muted mb-0">Placa (Selección Múltiple)</label>
-                <button class="btn btn-link p-0 text-decoration-none small text-success fw-bold" style="font-size: 0.75rem;" onclick="limpiarSeleccionPlacas('p2')">Limpiar</button>
-              </div>
-              <div id="contenedorPlacas_p2" class="border rounded p-2 bg-white" style="max-height: 95px; overflow-y: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                <span class="text-muted small">Cargando placas...</span>
-              </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label class="small text-muted">Filtro por Color / Estado</label>
-              <select id="fColor_p2" class="form-select form-select-sm" onchange="sincronizarYProcesar('p2', 'col')">
-                <option value="">Todos los colores</option>
-                <option value="verde">🟢 Verde (≥ 90% Cump.)</option>
-                <option value="naranja">🟠 Naranja (80% - 89% Cump.)</option>
-                <option value="rojo">🔴 Rojo (< 80% Cump.)</option>
-                <option value="blanco">⚪ Blanco / Sin Registro (-)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="card kpi-card p-3 bg-white mb-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <h6 class="mb-0"><i class="fa-solid fa-table-cells text-success"></i> Detalle de Pasajeros por Fecha (Fechas en Columnas)</h6>
-            <button class="btn btn-sm btn-pdf shadow-sm" onclick="exportarPDFDetalle()">
-              <i class="fa-solid fa-file-pdf me-1"></i> 📄 Exportar PDF
-            </button>
-          </div>
-          <div class="table-responsive" id="contenedorTablaDetalle" style="max-height: 500px; overflow-y: auto;">
-            <table class="table table-sm table-bordered align-middle matriz-asistencia" style="min-width: 900px;">
-              <thead class="table-dark sticky-top" id="tablaDetalleCabecera"></thead>
-              <tbody id="tablaDetalleCuerpo"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Plugin de etiquetas de datos para Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-  <script>
-    // Registrar plugin de etiquetas para Chart.js
-    if (typeof ChartDataLabels !== 'undefined') {
-      Chart.register(ChartDataLabels);
-    }
-
-    const URL_API_EXTERNA = "https://script.google.com/macros/s/AKfycbyik79Vw9qMca_WYCsFxb7yTztcRjmK4_AJ9AIp_6wGuT9uIYMlHGA4ZpUosjk8XUnb/exec";
-
-    let datasetOriginal = [];
-    let ultimoDatasetFiltrado = []; 
-    let chartD = null, chartS = null;
-
-    const VISTAS = ['dash', 'p1', 'p2'];
-
-    document.addEventListener("DOMContentLoaded", () => {
-      obtenerDatosAPIExterno();
-    });
-
-    function formatearNumero(valor) {
-      if (typeof valor !== 'number' || isNaN(valor)) return valor;
-      return valor.toLocaleString('en-US');
-    }
-
-    function obtenerDatosAPIExterno() {
-      document.getElementById('loader').style.display = 'flex';
-      let badge = document.getElementById('dbStatusBadge');
-      
-      badge.className = "status-badge status-loading";
-      badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i> Conectando...';
-
-      fetch(URL_API_EXTERNA, {
-        method: "GET",
-        mode: "cors",
-        redirect: "follow"
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("Status: " + response.status);
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          marcarDesconectado(data.message);
-        } else {
-          datasetOriginal = data;
-          
-          badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Base de datos conectado con éxito...';
-          
-          construirCombosFiltros();
-          procesarFiltros();
-        }
-        document.getElementById('loader').style.display = 'none';
-      })
-      .catch(err => {
-        marcarDesconectado("Error CORS o URL Errónea");
-        document.getElementById('loader').style.display = 'none';
-      });
-    }
-
-    function marcarDesconectado(mensaje) {
-      let badge = document.getElementById('dbStatusBadge');
-      badge.className = "status-badge status-offline";
-      badge.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i> BD Desconectada';
-      console.error("Fallo de enlace: ", mensaje);
-    }
-
-    function convertirAFechaLatina(fechaRaw) {
-      if (!fechaRaw) return "";
-      let texto = fechaRaw.toString().trim();
-      
-      if (texto.includes("/") && !texto.includes("-")) return texto;
-      
-      if (isNaN(texto.charAt(0)) && (texto.includes(" ") || texto.includes(","))) {
-        let textoLimpio = texto.split("GMT")[0].trim();
-        let d = new Date(textoLimpio);
-        
-        if (isNaN(d.getTime()) || d.getFullYear() < 2020) {
-          const mesesEng = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
-          let partes = texto.replace(/,/g, "").split(/\s+/);
-          if (partes.length >= 3) {
-            let mStr = partes[1].toLowerCase().substring(0,3);
-            let dia = parseInt(partes[2], 10);
-            let anio = 2026; 
-            
-            for (let i = 0; i < partes.length; i++) {
-              if (partes[i].length === 4 && !isNaN(partes[i])) {
-                anio = parseInt(partes[i], 10);
-                break;
-              }
-            }
-            if (mesesEng[mStr] !== undefined) {
-              d = new Date(anio, mesesEng[mStr], dia);
-            }
-          }
-        }
-        
-        if (!isNaN(d.getTime())) {
-          let dd = String(d.getDate()).padStart(2, '0');
-          let mm = String(d.getMonth() + 1).padStart(2, '0');
-          let yyyy = d.getFullYear() < 2020 ? 2026 : d.getFullYear(); 
-          return `${dd}/${mm}/${yyyy}`;
-        }
-      }
-
-      if (texto.includes("-")) {
-        let soloFecha = texto.split(" ")[0].split("T")[0];
-        let partes = soloFecha.split("-");
-        if (partes.length === 3) {
-          if (partes[0].length === 4) {
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-          }
-          return `${partes[0]}/${partes[1]}/${partes[2]}`;
-        }
-      }
-      return texto;
-    }
-
-    function construirCombosFiltros() {
-      let sems = new Set();
-      
-      datasetOriginal.forEach(r => {
-        if(r.semana) sems.add(r.semana);
-      });
-
-      let opcionesSem = '<option value="">Todas</option>';
-      Array.from(sems).sort((a,b)=>a-b).forEach(s => opcionesSem += `<option value="${s}">Semana ${s}</option>`);
-
-      VISTAS.forEach(v => {
-        let elSem = document.getElementById(`fSemana_${v}`);
-        if (elSem) elSem.innerHTML = opcionesSem;
-      });
-
-      renderizarComboFechasDinamico();
-      renderizarComboPlacasDinamico();
-    }
-
-    function renderizarComboFechasDinamico() {
-      let fSem = document.getElementById('fSemana_dash').value;
-      let placasSeleccionadas = Array.from(document.querySelectorAll('.chk-placa-dash:checked')).map(cb => cb.value);
-
-      let seleccionadasAnterior = new Set();
-      let primerContenedor = document.getElementById('contenedorFechas_dash');
-      if(primerContenedor) {
-        primerContenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-          seleccionadasAnterior.add(cb.value);
-        });
-      }
-
-      let fechasFiltradas = new Set();
-      datasetOriginal.forEach(r => {
-        if (fSem && r.semana.toString() !== fSem.toString()) return;
-        if (placasSeleccionadas.length > 0 && !placasSeleccionadas.includes(r.placa)) return;
-        
-        if (r.columnaK) {
-          fechasFiltradas.add(convertirAFechaLatina(r.columnaK));
-        }
-      });
-
-      let listaFechas = Array.from(fechasFiltradas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pB[2], pB[1]-1, pB[0]) - new Date(pA[2], pA[1]-1, pA[0]);
-      });
-
-      VISTAS.forEach(v => {
-        let contenedor = document.getElementById(`contenedorFechas_${v}`);
-        if(!contenedor) return;
-        contenedor.innerHTML = '';
-
-        if(listaFechas.length === 0) {
-          contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay fechas disponibles</span>';
-          return;
-        }
-
-        listaFechas.forEach(f => {
-          let checked = seleccionadasAnterior.has(f) ? 'checked' : '';
-          contenedor.innerHTML += `
-            <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
-              <input class="form-check-input chk-fecha chk-fecha-${v}" type="checkbox" value="${f}" id="chk_fecha_${v}_${f}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk_fecha', '${f}')">
-              <label class="form-check-label small" for="chk_fecha_${v}_${f}" style="cursor: pointer; font-size:0.85rem;">
-                ${f}
-              </label>
-            </div>`;
-        });
-      });
-    }
-
-    function renderizarComboPlacasDinamico() {
-      let fSem = document.getElementById('fSemana_dash').value;
-      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha-dash:checked')).map(cb => cb.value);
-
-      let seleccionadasAnterior = new Set();
-      let primerContenedor = document.getElementById('contenedorPlacas_dash');
-      if(primerContenedor) {
-        primerContenedor.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-          seleccionadasAnterior.add(cb.value);
-        });
-      }
-
-      let placasFiltradas = new Set();
-      datasetOriginal.forEach(r => {
-        let itemFechaKVisual = convertirAFechaLatina(r.columnaK);
-        if (fSem && r.semana.toString() !== fSem.toString()) return;
-        if (fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return;
-        
-        if (r.placa) {
-          placasFiltradas.add(r.placa);
-        }
-      });
-
-      let listaPlacas = Array.from(placasFiltradas).sort();
-
-      VISTAS.forEach(v => {
-        let contenedor = document.getElementById(`contenedorPlacas_${v}`);
-        if(!contenedor) return;
-        contenedor.innerHTML = '';
-
-        if(listaPlacas.length === 0) {
-          contenedor.innerHTML = '<span class="text-muted small d-block p-1">No hay placas disponibles</span>';
-          return;
-        }
-
-        listaPlacas.forEach(p => {
-          let checked = seleccionadasAnterior.has(p) ? 'checked' : '';
-          contenedor.innerHTML += `
-            <div class="form-check py-0" style="min-height: auto; margin-bottom: 2px;">
-              <input class="form-check-input chk-placa chk-placa-${v}" type="checkbox" value="${p}" id="chk_placa_${v}_${p}" ${checked} onchange="sincronizarYProcesar('${v}', 'chk_placa', '${p}')">
-              <label class="form-check-label small" for="chk_placa_${v}_${p}" style="cursor: pointer; font-size:0.85rem;">
-                ${p}
-              </label>
-            </div>`;
-        });
-      });
-    }
-
-    function sincronizarYProcesar(origenVista, tipo, valor) {
-      if (tipo === 'sem') {
-        let val = document.getElementById(`fSemana_${origenVista}`).value;
-        VISTAS.forEach(v => { 
-          let el = document.getElementById(`fSemana_${v}`);
-          if (el) el.value = val; 
-        });
-        renderizarComboFechasDinamico();
-        renderizarComboPlacasDinamico();
-      } else if (tipo === 'col') {
-        let val = document.getElementById(`fColor_${origenVista}`).value;
-        ['p1', 'p2'].forEach(v => {
-          let el = document.getElementById(`fColor_${v}`);
-          if (el) el.value = val;
-        });
-      } else if (tipo === 'chk_fecha') {
-        let estaMarcado = document.getElementById(`chk_fecha_${origenVista}_${valor}`).checked;
-        VISTAS.forEach(v => {
-          let target = document.getElementById(`chk_fecha_${v}_${valor}`);
-          if(target) target.checked = estaMarcado;
-        });
-        renderizarComboPlacasDinamico();
-      } else if (tipo === 'chk_placa') {
-        let estaMarcado = document.getElementById(`chk_placa_${origenVista}_${valor}`).checked;
-        VISTAS.forEach(v => {
-          let target = document.getElementById(`chk_placa_${v}_${valor}`);
-          if(target) target.checked = estaMarcado;
-        });
-        renderizarComboFechasDinamico();
-      }
-      procesarFiltros();
-    }
-
-    function obtenerColorDeRegistro(item) {
-      if (!item) return "blanco";
-      let cap = item.capacidad || 0;
-      let pas = item.pasajeros || 0;
-      let pct = cap > 0 ? (pas / cap) * 100 : 0;
-
-      if (pct >= 90) return "verde";
-      if (pct >= 80) return "naranja";
-      return "rojo";
-    }
-
-    function procesarFiltros() {
-      let fSem = document.getElementById('fSemana_dash').value;
-      let fechasSeleccionadas = Array.from(document.querySelectorAll('.chk-fecha-dash:checked')).map(cb => cb.value);
-      let placasSeleccionadas = Array.from(document.querySelectorAll('.chk-placa-dash:checked')).map(cb => cb.value);
-
-      let filtrados = datasetOriginal.filter(item => {
-        let itemFechaKVisual = convertirAFechaLatina(item.columnaK);
-
-        if(fechasSeleccionadas.length > 0 && !fechasSeleccionadas.includes(itemFechaKVisual)) return false;
-        if(fSem && item.semana.toString() !== fSem.toString()) return false;
-        if(placasSeleccionadas.length > 0 && !placasSeleccionadas.includes(item.placa)) return false;
-        return true;
-      });
-
-      ultimoDatasetFiltrado = filtrados; 
-      renderizarContenidos(filtrados);
-    }
-
-    function limpiarSeleccionFechas(origenVista) {
-      document.querySelectorAll('.chk-fecha').forEach(cb => cb.checked = false);
-      renderizarComboPlacasDinamico();
-      procesarFiltros();
-    }
-
-    function limpiarSeleccionPlacas(origenVista) {
-      document.querySelectorAll('.chk-placa').forEach(cb => cb.checked = false);
-      renderizarComboFechasDinamico();
-      procesarFiltros();
-    }
-
-    function renderizarContenidos(datos) {
-      let u = datos.length, c = 0, p = 0, l = 0;
-
-      datos.forEach(f => {
-        c += f.capacidad; p += f.pasajeros; l += f.libres;
-      });
-
-      document.getElementById('kpiUnidades').innerText = formatearNumero(u);
-      document.getElementById('kpiCapacidad').innerText = formatearNumero(c);
-      document.getElementById('kpiPasajeros').innerText = formatearNumero(p);
-      document.getElementById('kpiLibres').innerText = formatearNumero(l);
-
-      let pPVal = c > 0 ? (p / c) * 100 : 0;
-      let pLVal = c > 0 ? (l / c) * 100 : 0;
-      let pP = pPVal.toFixed(1);
-      let pL = pLVal.toFixed(1);
-
-      let badgePas = document.getElementById('pctPasajeros');
-      let badgeLib = document.getElementById('pctLibres');
-
-      badgePas.innerText = pP + "% Ocupado";
-      badgeLib.innerText = pL + "% Libre";
-
-      badgePas.className = "badge mt-1 " + (pPVal >= 90 ? "badge-verde" : (pPVal >= 80 ? "badge-naranja" : "badge-rojo"));
-      badgeLib.className = "badge mt-1 " + (pLVal <= 10 ? "badge-verde" : (pLVal <= 20 ? "badge-naranja" : "badge-rojo"));
-
-      armarGraficos(datos);
-      generarMatrizPlacasFechas(datos);
-      generarMatrizDetalleFechas(datos);
-    }
-
-    function generarMatrizPlacasFechas(datosFiltrados) {
-      let tHead = document.getElementById('matrizCabecera');
-      let tBody = document.getElementById('matrizCuerpo');
-      if (!tHead || !tBody) return;
-
-      let filtroColor = document.getElementById('fColor_p1') ? document.getElementById('fColor_p1').value : "";
-
-      let conjuntoFechas = new Set();
-      let conjuntoPlacas = new Set();
-      let registroCruces = {};
-      let registroItems = {};
-
-      datosFiltrados.forEach(item => {
-        let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placaFormato = item.placa;
-
-        if(fechaFormato && placaFormato) {
-          conjuntoFechas.add(fechaFormato);
-          conjuntoPlacas.add(placaFormato);
-
-          if (!registroCruces[placaFormato]) registroCruces[placaFormato] = {};
-          if (!registroItems[placaFormato]) registroItems[placaFormato] = {};
-          
-          registroCruces[placaFormato][fechaFormato] = true;
-          registroItems[placaFormato][fechaFormato] = item;
-        }
-      });
-
-      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
-
-      if (listaFechasOrdenadas.length === 0) {
-        tHead.innerHTML = '<tr><th>Orden</th><th>Placas registradas</th></tr>';
-        tBody.innerHTML = '<tr><td colspan="2" class="text-muted text-center p-3">Selecciona fechas u otros filtros para construir la matriz</td></tr>';
-        return;
-      }
-
-      let htmlCabecera = '<tr><th class="bg-secondary text-white text-center" style="width: 50px;">Orden</th><th class="bg-secondary text-white">Placa / Unidades</th>';
-      listaFechasOrdenadas.forEach(fecha => {
-        htmlCabecera += `<th class="text-center text-nowrap">${fecha}</th>`;
-      });
-      htmlCabecera += '</tr>';
-      tHead.innerHTML = htmlCabecera;
-
-      let htmlCuerpo = '';
-      let numOrden = 1;
-      
-      listaPlacasOrdenadas.forEach(placa => {
-        let celdasFila = [];
-        let coincideFiltro = false;
-
-        listaFechasOrdenadas.forEach(fecha => {
-          let existe = registroCruces[placa] && registroCruces[placa][fecha];
-          let item = registroItems[placa] ? registroItems[placa][fecha] : null;
-          let color = existe ? obtenerColorDeRegistro(item) : "blanco";
-
-          if (!filtroColor || filtroColor === color) {
-            coincideFiltro = true;
-          }
-
-          if (existe) {
-            celdasFila.push({ html: `<td class="cell-active"><i class="fa-solid fa-circle-check"></i> OK</td>`, color });
-          } else {
-            celdasFila.push({ html: `<td class="cell-inactive"><i class="fa-solid fa-circle-minus opacity-50"></i> -</td>`, color: "blanco" });
-          }
-        });
-
-        if (coincideFiltro) {
-          htmlCuerpo += `<tr>
-            <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
-            <td class="fw-bold bg-light"><i class="fa-solid fa-truck-monster text-muted me-1"></i> ${placa}</td>`;
-          
-          celdasFila.forEach(c => {
-            if (filtroColor && c.color !== filtroColor) {
-              htmlCuerpo += `<td class="text-center text-muted bg-light opacity-25">-</td>`;
-            } else {
-              htmlCuerpo += c.html;
-            }
-          });
-          
-          htmlCuerpo += '</tr>';
-        }
-      });
-
-      if (htmlCuerpo === '') {
-        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 2}" class="text-muted text-center p-3">No existen registros para los filtros seleccionados</td></tr>`;
-      }
-
-      tBody.innerHTML = htmlCuerpo;
-    }
-
-    function generarMatrizDetalleFechas(datosFiltrados) {
-      let tHead = document.getElementById('tablaDetalleCabecera');
-      let tBody = document.getElementById('tablaDetalleCuerpo');
-      if (!tHead || !tBody) return;
-
-      let filtroColor = document.getElementById('fColor_p2') ? document.getElementById('fColor_p2').value : "";
-
-      let conjuntoFechas = new Set();
-      let mapaFilasUnicas = {}; 
-      let mapaDetalle = {};     
-
-      datosFiltrados.forEach(item => {
-        let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placa = item.placa || "";
-        let conductor = item.conductor || "";
-        let rutaCultivo = item.ruta || item.cultivo ? `${item.ruta || ''} / ${item.cultivo || ''}` : "";
-        let tipoMovilidad = item.tipo || "Movilidad";
-        let capacidadReg = item.capacidad || 0;
-
-        if(fechaFormato && placa) {
-          conjuntoFechas.add(fechaFormato);
-
-          let claveUnica = `${placa}_${conductor}_${rutaCultivo}`;
-          if (!mapaFilasUnicas[claveUnica]) {
-            mapaFilasUnicas[claveUnica] = { placa, conductor, tipo: tipoMovilidad, rutaCultivo, capacidad: capacidadReg };
-          } else if (capacidadReg > mapaFilasUnicas[claveUnica].capacidad) {
-            mapaFilasUnicas[claveUnica].capacidad = capacidadReg;
-          }
-
-          if (!mapaDetalle[claveUnica]) mapaDetalle[claveUnica] = {};
-          mapaDetalle[claveUnica][fechaFormato] = {
-            pasajeros: item.pasajeros || 0,
-            libres: item.libres || 0,
-            capacidad: capacidadReg,
-            itemOriginal: item
-          };
-        }
-      });
-
-      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      let llavesFilas = Object.keys(mapaFilasUnicas).sort((a,b) => mapaFilasUnicas[a].placa.localeCompare(mapaFilasUnicas[b].placa));
-
-      if (listaFechasOrdenadas.length === 0) {
-        tHead.innerHTML = '<tr><th>Orden</th><th>Placa</th><th>Conductor</th><th>Tipo</th><th>Ruta / Cultivo</th><th>Capacidad</th></tr>';
-        tBody.innerHTML = '<tr><td colspan="6" class="text-muted text-center p-3">No hay datos disponibles para mostrar</td></tr>';
-        return;
-      }
-
-      let htmlCabecera = `<tr>
-        <th class="bg-secondary text-white text-center" style="width: 50px;">Orden</th>
-        <th class="bg-secondary text-white">Placa</th>
-        <th class="bg-secondary text-white">Conductor</th>
-        <th class="bg-secondary text-white">Tipo</th>
-        <th class="bg-secondary text-white">Ruta / Cultivo</th>
-        <th class="bg-secondary text-white text-center">Capacidad</th>`;
-      
-      listaFechasOrdenadas.forEach(fecha => {
-        htmlCabecera += `<th class="text-center text-nowrap bg-secondary text-white">${fecha}</th>`;
-      });
-      htmlCabecera += '</tr>';
-      tHead.innerHTML = htmlCabecera;
-
-      let htmlCuerpo = '';
-      let numOrden = 1;
-
-      llavesFilas.forEach(clave => {
-        let info = mapaFilasUnicas[clave];
-        let celdasFila = [];
-        let coincideFiltro = false;
-
-        listaFechasOrdenadas.forEach(fecha => {
-          let reg = mapaDetalle[clave] && mapaDetalle[clave][fecha];
-          if (reg) {
-            let color = obtenerColorDeRegistro(reg.itemOriginal);
-            if (!filtroColor || filtroColor === color) coincideFiltro = true;
-
-            let pct = reg.capacidad > 0 ? Math.round((reg.pasajeros / reg.capacidad) * 100) : 0;
-            let claseCelda = "cell-detalle-verde";
-            if (color === "rojo") claseCelda = "cell-detalle-rojo";
-            else if (color === "naranja") claseCelda = "cell-detalle-naranja";
-
-            let libresStr = reg.libres >= 1000 ? formatearNumero(reg.libres) : String(reg.libres).padStart(2, '0');
-            
-            celdasFila.push({
-              color,
-              html: `<td class="text-center">
-                <div class="${claseCelda}">
-                  <div class="fw-bold">${libresStr} LIBRES</div>
-                  <div>${pct}% Cump. / <span class="texto-pasajeros-azul">${formatearNumero(reg.pasajeros)} pas.</span></div>
-                </div>
-              </td>`
-            });
-          } else {
-            if (!filtroColor || filtroColor === "blanco") coincideFiltro = true;
-            celdasFila.push({
-              color: "blanco",
-              html: `<td class="text-center text-muted bg-light">-</td>`
-            });
-          }
-        });
-
-        if (coincideFiltro) {
-          htmlCuerpo += `<tr>
-            <td class="text-center fw-bold text-muted bg-light">${formatearNumero(numOrden++)}</td>
-            <td class="fw-bold"><i class="fa-solid fa-bus text-success me-1"></i> ${info.placa}</td>
-            <td><small>${info.conductor}</small></td>
-            <td><small class="badge bg-light text-dark border">${info.tipo}</small></td>
-            <td><small>${info.rutaCultivo}</small></td>
-            <td class="text-center fw-bold text-primary">${formatearNumero(info.capacidad)}</td>`;
-          
-          celdasFila.forEach(c => {
-            if (filtroColor && c.color !== filtroColor) {
-              htmlCuerpo += `<td class="text-center text-muted bg-light opacity-25">-</td>`;
-            } else {
-              htmlCuerpo += c.html;
-            }
-          });
-          
-          htmlCuerpo += '</tr>';
-        }
-      });
-
-      if (htmlCuerpo === '') {
-        htmlCuerpo = `<tr><td colspan="${listaFechasOrdenadas.length + 6}" class="text-muted text-center p-3">No existen registros para los filtros seleccionados</td></tr>`;
-      }
-
-      tBody.innerHTML = htmlCuerpo;
-    }
-
-    function exportarAsientosLibresExcel() {
-      let datos = ultimoDatasetFiltrado;
-      if (!datos || datos.length === 0) {
-        alert("No hay datos disponibles para exportar con los filtros actuales.");
-        return;
-      }
-
-      let conjuntoFechas = new Set();
-      let conjuntoPlacas = new Set();
-      let mapaLibres = {}; 
-
-      datos.forEach(item => {
-        let fechaFormato = convertirAFechaLatina(item.columnaK);
-        let placaFormato = item.placa;
-
-        if (fechaFormato && placaFormato) {
-          conjuntoFechas.add(fechaFormato);
-          conjuntoPlacas.add(placaFormato);
-
-          if (!mapaLibres[placaFormato]) mapaLibres[placaFormato] = {};
-          mapaLibres[placaFormato][fechaFormato] = (mapaLibres[placaFormato][fechaFormato] || 0) + (item.libres || 0);
-        }
-      });
-
-      let listaFechasOrdenadas = Array.from(conjuntoFechas).sort((a, b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      let listaPlacasOrdenadas = Array.from(conjuntoPlacas).sort();
-
-      let datosMatrizExcel = [];
-      let numOrden = 1;
-
-      listaPlacasOrdenadas.forEach(placa => {
-        let filaObj = { "Orden": numOrden++, "Placa / Unidades": placa };
-        let totalLibresFila = 0;
-
-        listaFechasOrdenadas.forEach(fecha => {
-          let libresVal = (mapaLibres[placa] && mapaLibres[placa][fecha]) ? mapaLibres[placa][fecha] : 0;
-          filaObj[fecha] = libresVal;
-          totalLibresFila += libresVal;
-        });
-
-        filaObj["Total Asientos Libres"] = totalLibresFila;
-        datosMatrizExcel.push(filaObj);
-      });
-
-      let worksheet = XLSX.utils.json_to_sheet(datosMatrizExcel);
-      let workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Asientos Libres");
-
-      XLSX.writeFile(workbook, "Reporte_Asientos_Libres_Huarmey.xlsx");
-    }
-
-    /* FUNCIONALIDAD DE EXPORTACIÓN A PDF COMPLETA CON ESTILOS, COLORES Y TABLA COMPLETA */
-    function exportarPDFGenerico(idContenedor, nombreArchivo) {
-      let elemento = document.getElementById(idContenedor);
-      if (!elemento) return;
-
-      // Guardar estilos originales de scroll
-      let maxHeightOriginal = elemento.style.maxHeight;
-      let overflowYOriginal = elemento.style.overflowY;
-
-      // Expandir contenedor para renderizar la totalidad de los datos filtrados
-      elemento.style.maxHeight = 'none';
-      elemento.style.overflowY = 'visible';
-
-      let opciones = {
-        margin:       [8, 8, 8, 8],
-        filename:     nombreArchivo,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-      };
-
-      html2pdf().set(opciones).from(elemento).save().then(() => {
-        // Restaurar scroll de pantalla
-        elemento.style.maxHeight = maxHeightOriginal;
-        elemento.style.overflowY = overflowYOriginal;
-      }).catch(err => {
-        elemento.style.maxHeight = maxHeightOriginal;
-        elemento.style.overflowY = overflowYOriginal;
-        console.error("Error al generar PDF:", err);
-      });
-    }
-
-    function exportarPDFPivoteado() {
-      exportarPDFGenerico('contenedorMatrizPivoteada', 'Reporte_Pivoteado_Placas.pdf');
-    }
-
-    function exportarPDFDetalle() {
-      exportarPDFGenerico('contenedorTablaDetalle', 'Reporte_Placas_Detallado.pdf');
-    }
-
-    function armarGraficos(datos) {
-      let rDias = {};
-      datos.forEach(x => {
-        let fechaFormateada = convertirAFechaLatina(x.fechaAgrupada || x.columnaK);
-        if(!rDias[fechaFormateada]) rDias[fechaFormateada] = {p:0, l:0};
-        rDias[fechaFormateada].p += x.pasajeros; rDias[fechaFormateada].l += x.libres;
-      });
-      
-      let lDiasVisuales = Object.keys(rDias).sort((a,b) => {
-        let pA = a.split('/'), pB = b.split('/');
-        return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
-      });
-
-      if(chartD) chartD.destroy();
-      chartD = new Chart(document.getElementById('canvasDiario'), {
-        type: 'bar',
-        data: { 
-          labels: lDiasVisuales,
-          datasets: [
-            { label: 'Pasajeros', data: lDiasVisuales.map(d => rDias[d].p), backgroundColor: '#7ba236' },
-            { label: 'Libres', data: lDiasVisuales.map(d => rDias[d].l), backgroundColor: '#dc3545' }
-          ]
-        },
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false,
-          scales: {
-            x: { stacked: true },
-            y: {
-              stacked: true,
-              ticks: {
-                callback: function(value) { return formatearNumero(value); }
-              }
-            }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  if (label) label += ': ';
-                  if (context.parsed.y !== null) label += formatearNumero(context.parsed.y);
-                  return label;
-                },
-                footer: function(tooltipItems) {
-                  let total = 0;
-                  tooltipItems.forEach(item => { total += item.parsed.y; });
-                  return 'Total Pasajeros (Capacidad): ' + formatearNumero(total);
-                }
-              }
-            },
-            datalabels: {
-              anchor: 'center',
-              align: 'center',
-              color: '#ffffff',
-              font: { weight: 'bold', size: 10 },
-              formatter: function(value) {
-                return value > 0 ? formatearNumero(value) : '';
-              }
-            }
-          }
-        }
-      });
-
-      let rSem = {};
-      datos.forEach(x => {
-        let k = "Sem " + x.semana;
-        if(!rSem[k]) rSem[k] = {p:0, l:0};
-        rSem[k].p += x.pasajeros; rSem[k].l += x.libres;
-      });
-      let lSem = Object.keys(rSem).sort();
-
-      if(chartS) chartS.destroy();
-      chartS = new Chart(document.getElementById('canvasSemanal'), {
-        type: 'bar',
-        data: { labels: lSem, datasets: [
-          { label: 'Pasajeros', data: lSem.map(s => rSem[s].p), backgroundColor: '#1b4d3e' },
-          { label: 'Libres', data: lSem.map(s => rSem[s].l), backgroundColor: '#ffc107' }
-        ]},
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          scales: { 
-            x:{stacked:true}, 
-            y:{
-              stacked:true,
-              ticks: {
-                callback: function(value) { return formatearNumero(value); }
-              }
-            } 
-          },
-          plugins: {
-            datalabels: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  if (label) label += ': ';
-                  if (context.parsed.y !== null) label += formatearNumero(context.parsed.y);
-                  return label;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-  </script>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script>
+const URL_API = "https://script.google.com/macros/s/AKfycbyik79Vw9qMca_WYCsFxb7yTztcRjmK4_AJ9AIp_6wGuT9uIYMlHGA4ZpUosjk8XUnb/exec";
+const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
+const C = {pas:'#3f8f2a', lib:'#f1c9c3', ink:'#17391f', v:'#3f8f2a', n:'#e8a317', r:'#cf2d1b'};
+const F = {desde:'', hasta:'', sem:'', placas:new Set(), ruta:'', tipo:'', color:''};
+let datos = [], vista = [], graf = {}, primera = true;
+const $ = id => document.getElementById(id);
+const nf = n => Number(n || 0).toLocaleString('es-PE');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct = r => r.capacidad > 0 ? r.pasajeros / r.capacidad * 100 : 0;
+const clase = p => p >= 90 ? 'v' : p >= 80 ? 'n' : 'r';
+const fmt = iso => iso.slice(8,10) + '/' + iso.slice(5,7) + '/' + iso.slice(0,4);
+const dia = iso => DIAS[new Date(iso + 'T00:00:00').getDay()];
+const corta = r => String(r).split(' - ')[0];
+const isoDe = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const uniq = a => [...new Set(a)];
+
+if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+Chart.defaults.font.family = "Figtree, 'Segoe UI', sans-serif";
+Chart.defaults.color = '#3c4d3e';
+Chart.defaults.set('plugins.datalabels', {display:false});
+
+/* Acepta tanto el formato nuevo (fecha aaaa-mm-dd) como el antiguo del script (columnaK / fechaAgrupada). */
+function normalizar(r) {
+  let f = String(r.fecha || r.columnaK || r.fechaAgrupada || '').trim(), m;
+  if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(f))) f = m[0];
+  else if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f))) f = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  else f = '';
+  const cap = Math.round(+r.capacidad) || 0, pas = Math.round(+r.pasajeros) || 0;
+  return {fecha:f, hora:r.hora || '', placa:String(r.placa || '').trim().toUpperCase(), conductor:r.conductor || 'Sin conductor',
+    tipo:r.tipo || 'Otros', ruta:r.ruta || 'Sin ruta', cultivo:r.cultivo || '', capacidad:cap, pasajeros:pas,
+    libres:Math.max(cap - pas, 0), semana:+r.semana || 0, obs:r.observaciones || '', envios:r.envios || 1};
+}
+
+function estado(t, txt) {
+  const e = $('estado'); e.className = 'pill ' + t;
+  e.innerHTML = '<i class="fa-solid ' + (t === 'ok' ? 'fa-circle-check' : t === 'off' ? 'fa-circle-xmark' : 'fa-circle-notch fa-spin') + ' me-1"></i>' + esc(txt);
+}
+function aviso(tipo, html) { $('aviso').innerHTML = html ? '<div class="alert alert-' + tipo + ' py-2">' + html + '</div>' : ''; }
+
+async function cargar() {
+  $('loader').style.display = 'flex'; estado('load', 'Conectando…');
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), 60000);
+  try {
+    const resp = await fetch(URL_API, {redirect:'follow', signal:ac.signal});
+    if (!resp.ok) throw new Error('El servidor respondió con el estado ' + resp.status);
+    const data = await resp.json();
+    if (data && data.error) throw new Error(data.message || 'Error en el servidor');
+    const lista = Array.isArray(data) ? data : data.registros;
+    if (!Array.isArray(lista)) throw new Error('La respuesta no trae registros');
+    datos = lista.map(normalizar).filter(r => r.fecha && r.placa);
+    aviso('warning', (Array.isArray(data) || !data.version)
+      ? '<b>Falta actualizar el script.</b> Estás usando la versión anterior de dashboard.js, que omite registros cuando un conductor maneja dos placas. Pega el nuevo dashboard.js en Apps Script y publica una nueva versión de la implementación.' : '');
+    iniciar();
+    estado('ok', 'Conectado, ' + nf(datos.length) + ' registros');
+    aplicar();
+  } catch (e) {
+    console.error(e); estado('off', 'Sin conexión');
+    aviso('danger', '<b>No se pudo leer la base de datos.</b> ' + esc(e.name === 'AbortError' ? 'La consulta tardó demasiado.' : e.message) + ' Revisa que la implementación del script permita acceso a "Cualquier usuario" y vuelve a intentar.');
+  } finally { clearTimeout(to); $('loader').style.display = 'none'; }
+}
+
+function opciones(id, lista, todas, f) {
+  $(id).innerHTML = '<option value="">' + todas + '</option>' + lista.map(v => '<option value="' + esc(v) + '">' + esc(f ? f(v) : v) + '</option>').join('');
+}
+function iniciar() {
+  const fechas = uniq(datos.map(r => r.fecha)).sort();
+  $('fDesde').min = $('fHasta').min = fechas[0]; $('fDesde').max = $('fHasta').max = fechas[fechas.length - 1];
+  opciones('fSem', uniq(datos.map(r => r.semana)).filter(Boolean).sort((a,b) => b - a), 'Todas', s => 'Semana ' + s);
+  opciones('fRuta', uniq(datos.map(r => r.ruta)).sort(), 'Todas', corta);
+  opciones('fTipo', uniq(datos.map(r => r.tipo)).sort(), 'Todos');
+  if (primera) { primera = false; rango(15, true); }
+  else { $('fSem').value = F.sem; $('fRuta').value = F.ruta; $('fTipo').value = F.tipo; }
+}
+
+function rango(n, sinAplicar) {
+  const fechas = uniq(datos.map(r => r.fecha)).sort(); if (!fechas.length) return;
+  const max = fechas[fechas.length - 1]; let min = fechas[0];
+  if (n > 0) { const d = new Date(max + 'T00:00:00'); d.setDate(d.getDate() - n + 1); min = isoDe(d); }
+  F.desde = $('fDesde').value = min; F.hasta = $('fHasta').value = max; F.sem = ''; $('fSem').value = '';
+  if (!sinAplicar) aplicar();
+}
+$('fDesde').onchange = $('fHasta').onchange = () => { F.desde = $('fDesde').value; F.hasta = $('fHasta').value; F.sem = ''; $('fSem').value = ''; aplicar(); };
+$('fSem').onchange = e => {
+  F.sem = e.target.value;
+  if (F.sem) { const f = datos.filter(r => r.semana == F.sem).map(r => r.fecha).sort(); F.desde = $('fDesde').value = f[0]; F.hasta = $('fHasta').value = f[f.length - 1]; }
+  aplicar();
+};
+$('fRuta').onchange = e => { F.ruta = e.target.value; aplicar(); };
+$('fTipo').onchange = e => { F.tipo = e.target.value; aplicar(); };
+$('listaPlacas').onchange = e => { e.target.checked ? F.placas.add(e.target.value) : F.placas.delete(e.target.value); aplicar(true); };
+function limpiarPlacas() { F.placas.clear(); aplicar(); }
+
+function filtrar(todasPlacas) {
+  return datos.filter(r => (!F.desde || r.fecha >= F.desde) && (!F.hasta || r.fecha <= F.hasta) && (!F.sem || r.semana == F.sem)
+    && (!F.ruta || r.ruta === F.ruta) && (!F.tipo || r.tipo === F.tipo) && (todasPlacas || !F.placas.size || F.placas.has(r.placa)));
+}
+
+function aplicar(sinLista) {
+  vista = filtrar(false);
+  const dias = uniq(filtrar(true).map(r => r.fecha)).length;
+  $('resumenFiltro').textContent = F.desde ? 'Periodo del ' + fmt(F.desde) + ' al ' + fmt(F.hasta) + ': ' + nf(dias) + ' días con registros, ' + nf(vista.length) + ' viajes de ' + nf(uniq(vista.map(r => r.placa)).length) + ' placas.' : '';
+  $('btnPlacas').textContent = F.placas.size ? F.placas.size + ' seleccionada' + (F.placas.size > 1 ? 's' : '') : 'Todas';
+  if (!sinLista) listaPlacas();
+  kpis(); graficos(); matriz(); detalle();
+}
+
+function listaPlacas() {
+  const cuenta = {}; filtrar(true).forEach(r => cuenta[r.placa] = (cuenta[r.placa] || 0) + 1);
+  $('listaPlacas').innerHTML = uniq(datos.map(r => r.placa)).sort().map(p =>
+    '<label class="d-flex justify-content-between small px-2 py-1' + (cuenta[p] ? '' : ' text-muted') + '"><span><input class="form-check-input me-2" type="checkbox" value="' + p + '"' + (F.placas.has(p) ? ' checked' : '') + '>' + p + '</span><span>' + (cuenta[p] || 0) + '</span></label>').join('');
+}
+
+function kpis() {
+  const cap = vista.reduce((a, r) => a + r.capacidad, 0), pas = vista.reduce((a, r) => a + r.pasajeros, 0), lib = vista.reduce((a, r) => a + r.libres, 0);
+  const p = cap ? pas / cap * 100 : 0, k = (t, v, x) => '<div class="kpi"><span>' + t + '</span><b class="num">' + v + '</b>' + (x || '') + '</div>';
+  $('kpis').innerHTML = k('Viajes registrados', nf(vista.length)) + k('Placas con registro', nf(uniq(vista.map(r => r.placa)).length)) + k('Capacidad', nf(cap)) + k('Pasajeros', nf(pas)) + k('Asientos libres', nf(lib))
+    + k('Ocupación', p.toFixed(1) + '%', '<div class="gauge"><i style="width:' + Math.min(p, 100) + '%;background:' + C[clase(p)] + '"></i><b style="left:80%"></b><b style="left:90%"></b></div>');
+}
+
+/* ---------- Gráficos ---------- */
+function dibujar(id, cfg) { if (graf[id]) graf[id].destroy(); graf[id] = new Chart($(id), cfg); }
+function agrupar(clave) {
+  const g = {}; vista.forEach(r => { const k = clave(r); const o = g[k] = g[k] || {p:0, l:0, c:0}; o.p += r.pasajeros; o.l += r.libres; o.c += r.capacidad; });
+  return g;
+}
+function combinado(id, g, etiqueta) {
+  const ks = Object.keys(g).sort(), poco = ks.length <= 10;
+  const lb = {display:poco, color:'#fff', font:{weight:'bold', size:10}, formatter:v => v > 0 ? nf(v) : ''};
+  dibujar(id, {type:'bar', data:{labels:ks.map(etiqueta), datasets:[
+    {type:'bar', label:'Pasajeros', data:ks.map(k => g[k].p), backgroundColor:C.pas, stack:'a', yAxisID:'y', datalabels:lb},
+    {type:'bar', label:'Asientos libres', data:ks.map(k => g[k].l), backgroundColor:C.lib, stack:'a', yAxisID:'y', datalabels:{...lb, color:'#7d1a10'}},
+    {type:'line', label:'Ocupación %', data:ks.map(k => g[k].c ? +(g[k].p / g[k].c * 100).toFixed(1) : 0), borderColor:C.ink, backgroundColor:C.ink, yAxisID:'y1', tension:.25, pointRadius:3, borderWidth:2}]},
+    options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      scales:{x:{stacked:true, grid:{display:false}, ticks:{maxRotation:60, autoSkip:true}}, y:{stacked:true, beginAtZero:true, ticks:{callback:nf}}, y1:{position:'right', min:0, suggestedMax:100, grid:{display:false}, ticks:{callback:v => v + '%'}}},
+      plugins:{legend:{position:'bottom', labels:{usePointStyle:true}}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + nf(c.parsed.y) + (c.dataset.yAxisID === 'y1' ? '%' : '')}}}}});
+}
+function barrasH(id, ks, datasets, extra) {
+  dibujar(id, {type:'bar', data:{labels:ks, datasets}, options:{indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    scales:Object.assign({x:{beginAtZero:true, grid:{color:'#eef2ea'}}, y:{grid:{display:false}}}, extra || {}), plugins:{legend:{display:datasets.length > 1, position:'bottom', labels:{usePointStyle:true}}}}});
+}
+function graficos() {
+  combinado('cDia', agrupar(r => r.fecha), k => k.slice(8) + '/' + k.slice(5,7) + ' ' + dia(k));
+  combinado('cSem', agrupar(r => String(r.semana).padStart(3, '0')), k => 'Sem ' + (+k));
+  const pl = agrupar(r => r.placa), pk = Object.keys(pl).sort((a, b) => pl[a].p / pl[a].c - pl[b].p / pl[b].c).slice(0, 10);
+  const pv = pk.map(k => pl[k].c ? +(pl[k].p / pl[k].c * 100).toFixed(1) : 0);
+  barrasH('cPlaca', pk, [{label:'Ocupación %', data:pv, backgroundColor:pv.map(v => C[clase(v)]),
+    datalabels:{display:true, anchor:'end', align:'end', formatter:v => v + '%', font:{weight:'bold'}}}], {x:{beginAtZero:true, suggestedMax:110, ticks:{callback:v => v + '%'}, grid:{color:'#eef2ea'}}});
+  const ru = agrupar(r => corta(r.ruta)), rk = Object.keys(ru).sort((a, b) => ru[b].c - ru[a].c).slice(0, 8);
+  const lb = {display:true, color:'#fff', font:{weight:'bold', size:10}, formatter:v => v > 0 ? nf(v) : ''};
+  barrasH('cRuta', rk, [{label:'Pasajeros', data:rk.map(k => ru[k].p), backgroundColor:C.pas, stack:'a', datalabels:lb},
+    {label:'Asientos libres', data:rk.map(k => ru[k].l), backgroundColor:C.lib, stack:'a', datalabels:{...lb, color:'#7d1a10'}}],
+    {x:{stacked:true, beginAtZero:true, grid:{color:'#eef2ea'}, ticks:{callback:nf}}, y:{stacked:true, grid:{display:false}}});
+}
+
+/* ---------- Tablas ---------- */
+function segmentos() {
+  const op = [['', 'Todos'], ['v', 'Verde'], ['n', 'Naranja'], ['r', 'Rojo'], ['nr', 'Sin registro']];
+  document.querySelectorAll('.seg').forEach(s => {
+    s.innerHTML = op.map(o => '<button data-c="' + o[0] + '" class="' + (F.color === o[0] ? 'on' : '') + '">' + o[1] + '</button>').join('');
+    s.onclick = e => { if (e.target.dataset.c === undefined) return; F.color = e.target.dataset.c; segmentos(); matriz(); detalle(); };
+  });
+}
+function estructura() {
+  const dias = uniq(filtrar(true).map(r => r.fecha)).sort(), mapa = {};
+  vista.forEach(r => { (mapa[r.placa] = mapa[r.placa] || {})[r.fecha] = r; });
+  const placas = uniq(Object.keys(mapa).concat([...F.placas])).sort();
+  return {dias, mapa, placas};
+}
+const tip = r => esc(r.placa + ', ' + fmt(r.fecha) + '. ' + r.pasajeros + ' de ' + r.capacidad + ' pasajeros, ' + r.libres + ' libres. Conductor: ' + r.conductor + '. Ruta: ' + corta(r.ruta)
+  + (r.envios > 1 ? '. Se enviaron ' + r.envios + ' registros ese día; se usa el último.' : '') + (r.obs ? '. Obs.: ' + r.obs : ''));
+const coincide = (cl, fc) => !fc || cl === fc;
+
+function vacio(id, msg) { $(id).innerHTML = '<p class="text-center text-muted p-4 mb-0">' + msg + '</p>'; }
+function matriz() {
+  const {dias, mapa, placas} = estructura(); $('n2').textContent = '';
+  if (!dias.length) return vacio('b2', 'No hay registros en este periodo. Amplía el rango de fechas o cambia los filtros.');
+  let h = '<table><thead><tr><th class="c1">N°</th><th class="c2">Placa</th><th>Cobertura</th>' + dias.map(d => '<th title="' + fmt(d) + '"><small>' + dia(d) + '</small>' + fmt(d).slice(0, 5) + '</th>').join('') + '</tr></thead><tbody>';
+  let n = 0;
+  placas.forEach(p => {
+    const cel = dias.map(d => { const r = (mapa[p] || {})[d]; return r ? {cl:clase(pct(r)), r} : {cl:'nr'}; });
+    if (F.color && !cel.some(c => c.cl === F.color)) return;
+    const con = cel.filter(c => c.r), cob = Math.round(con.length / dias.length * 100);
+    h += '<tr><td class="c1 f">' + (++n) + '</td><td class="c2 f">' + p + '</td><td class="f" title="' + con.length + ' de ' + dias.length + ' días con registro">' + con.length + '/' + dias.length + '<span class="mini"><i style="width:' + cob + '%"></i></span></td>'
+      + cel.map(c => '<td class="' + c.cl + (coincide(c.cl, F.color) ? '' : ' fade') + '"' + (c.r ? ' title="' + tip(c.r) + '">' + Math.round(pct(c.r)) + '%' : ' title="Sin registro">–') + '</td>').join('') + '</tr>';
+  });
+  h += '</tbody><tfoot><tr><td class="c1"></td><td class="c2">Total del día</td><td></td>' + dias.map(d => {
+    const rs = vista.filter(r => r.fecha === d), c = rs.reduce((a, r) => a + r.capacidad, 0), p = c ? rs.reduce((a, r) => a + r.pasajeros, 0) / c * 100 : 0;
+    return '<td class="' + (rs.length ? clase(p) : 'nr') + '">' + (rs.length ? Math.round(p) + '%' : '–') + '</td>'; }).join('') + '</tr></tfoot></table>';
+  $('b2').innerHTML = n ? h : ''; if (!n) vacio('b2', 'Ninguna placa coincide con el filtro de color elegido.');
+  $('n2').textContent = n + ' placas en ' + dias.length + ' días. Pasa el cursor sobre una celda para ver el detalle.';
+}
+function detalle() {
+  const {dias, mapa, placas} = estructura(); $('n3').textContent = '';
+  if (!dias.length) return vacio('b3', 'No hay registros en este periodo. Amplía el rango de fechas o cambia los filtros.');
+  let h = '<table><thead><tr><th class="c1">N°</th><th class="c2">Placa</th><th>Conductor</th><th>Tipo</th><th>Ruta y cultivo</th><th>Capac.</th><th>Ocupación</th>' + dias.map(d => '<th><small>' + dia(d) + '</small>' + fmt(d).slice(0, 5) + '</th>').join('') + '</tr></thead><tbody>';
+  let n = 0;
+  placas.forEach(p => {
+    const regs = Object.values(mapa[p] || {}).sort((a, b) => a.fecha < b.fecha ? 1 : -1), ult = regs[0];
+    const cel = dias.map(d => { const r = (mapa[p] || {})[d]; return r ? {cl:clase(pct(r)), r} : {cl:'nr'}; });
+    if (F.color && !cel.some(c => c.cl === F.color)) return;
+    const c = regs.reduce((a, r) => a + r.capacidad, 0), pp = c ? regs.reduce((a, r) => a + r.pasajeros, 0) / c * 100 : 0, otros = uniq(regs.map(r => r.conductor)).length - 1;
+    h += '<tr><td class="c1 f">' + (++n) + '</td><td class="c2 f">' + p + '</td>'
+      + (ult ? '<td class="f">' + esc(ult.conductor) + (otros > 0 ? ' <span class="badge text-bg-light border" title="Otros conductores en el periodo">+' + otros + '</span>' : '') + '</td><td class="f">' + esc(ult.tipo) + '</td><td class="f">' + esc(corta(ult.ruta)) + '<br><small class="text-muted">' + esc(ult.cultivo) + '</small></td><td class="f">' + ult.capacidad + '</td><td class="' + clase(pp) + '"><b>' + pp.toFixed(0) + '%</b></td>'
+        : '<td class="f" colspan="5">Sin registros en el periodo</td>')
+      + cel.map(x => x.r ? '<td class="cel ' + x.cl + (coincide(x.cl, F.color) ? '' : ' fade') + '" title="' + tip(x.r) + '"><b>' + x.r.pasajeros + '/' + x.r.capacidad + '</b><small>' + x.r.libres + ' libres</small></td>' : '<td class="nr' + (coincide('nr', F.color) ? '' : ' fade') + '">–</td>').join('') + '</tr>';
+  });
+  h += '</tbody></table>';
+  if (!n) return vacio('b3', 'Ninguna placa coincide con el filtro de color elegido.');
+  $('b3').innerHTML = h; $('n3').textContent = n + ' placas. Cada celda muestra pasajeros sobre capacidad y los asientos libres.';
+}
+
+/* ---------- Exportar ---------- */
+function pdf(id, titulo, archivo) {
+  const t = $(id).querySelector('table'); if (!t) return alert('No hay datos para exportar con los filtros actuales.');
+  const w = document.createElement('div'); w.className = 'pdfdoc';
+  w.innerHTML = '<h2>' + esc(titulo) + ' - Fundo Frusan</h2><p>' + esc($('resumenFiltro').textContent) + '</p>'; w.appendChild(t.cloneNode(true)); document.body.appendChild(w);
+  const ancha = t.rows[0].cells.length > 24;
+  html2pdf().set({margin:8, filename:archivo, image:{type:'jpeg', quality:.95}, html2canvas:{scale:2, scrollX:0, scrollY:0}, pagebreak:{mode:['css', 'legacy']},
+    jsPDF:{unit:'mm', format:ancha ? 'a3' : 'a4', orientation:'landscape'}}).from(w).save().catch(e => console.error('Error al generar el PDF', e)).finally(() => w.remove());
+}
+function excel() {
+  const {dias, mapa, placas} = estructura(); if (!dias.length || !placas.length) return alert('No hay datos para exportar con los filtros actuales.');
+  const filas = placas.map((p, i) => { const o = {'N°':i + 1, 'Placa':p}; let t = 0; dias.forEach(d => { const v = ((mapa[p] || {})[d] || {}).libres || 0; o[fmt(d)] = v; t += v; }); o['Total asientos libres'] = t; return o; });
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(filas), 'Asientos libres');
+  XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(vista.map(r => ({Fecha:fmt(r.fecha), Semana:r.semana, Placa:r.placa, Conductor:r.conductor, Tipo:r.tipo, Ruta:r.ruta, Cultivo:r.cultivo, Capacidad:r.capacidad, Pasajeros:r.pasajeros, Libres:r.libres, 'Ocupación %':Math.round(pct(r)), Observaciones:r.obs}))), 'Detalle');
+  XLSX.writeFile(libro, 'Reporte_Asientos_Libres_Huarmey.xlsx');
+}
+
+segmentos();
+document.addEventListener('DOMContentLoaded', cargar);
+</script>
 </body>
 </html>
